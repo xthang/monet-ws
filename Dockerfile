@@ -29,9 +29,11 @@ FROM base as deps
 # Leverage a cache mount to /root/.local/share/pnpm/store to speed up subsequent builds.
 # Leverage bind mounts to package.json and pnpm-lock.yaml to avoid having to copy them
 # into this layer.
-RUN --mount=type=bind,source=package.json,target=package.json \
-    --mount=type=bind,source=pnpm-lock.yaml,target=pnpm-lock.yaml \
+COPY package.json .
+
+RUN --mount=type=bind,source=pnpm-lock.yaml,target=pnpm-lock.yaml \
     --mount=type=cache,target=/root/.local/share/pnpm/store \
+    --mount=type=bind,source=prisma,target=prisma \
     pnpm pkg delete scripts.prepare && pnpm install --prod --frozen-lockfile
 
 ################################################################################
