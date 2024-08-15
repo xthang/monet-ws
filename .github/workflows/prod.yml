@@ -18,6 +18,8 @@ env:
   IMAGE_NAME: monet-ws
   VM_IP: 15.235.184.142
   VM_USER: ubuntu
+  LOCAL_PORT: 8080
+  PUBLIC_PORT: 127.0.0.1:8081
 
 jobs:
   setup-build-publish:
@@ -71,4 +73,4 @@ jobs:
             docker logout
             docker stop ${{ env.IMAGE_NAME }} || true
             docker rm ${{ env.IMAGE_NAME }}  || true
-            docker run -d --restart=always --name ${{ env.IMAGE_NAME }} --add-host=host.docker.internal:host-gateway ghcr.io/${{ env.NAMESPACE }}/${{ env.IMAGE_NAME }}:latest
+            docker run -d --restart=always --name ${{ env.IMAGE_NAME }} --add-host=host.docker.internal:host-gateway -p ${{ env.PUBLIC_PORT }}:${{ env.LOCAL_PORT }} ghcr.io/${{ env.NAMESPACE }}/${{ env.IMAGE_NAME }}:latest
