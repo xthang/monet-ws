@@ -11,14 +11,15 @@ ARG PNPM_VERSION=9.7.1
 
 ################################################################################
 # Use node image for base image for all stages.
-FROM node:${NODE_VERSION}-alpine as base
+FROM node:${NODE_VERSION}-slim as base
 
 # Set working directory for all build stages.
 WORKDIR /usr/src/app
 
 # Install pnpm.
-RUN --mount=type=cache,target=/root/.npm \
-    npm install -g pnpm@${PNPM_VERSION}
+ENV PNPM_HOME="/pnpm"
+ENV PATH="$PNPM_HOME:$PATH"
+RUN corepack enable
 
 ################################################################################
 # Create a stage for installing production dependecies.
@@ -28,15 +29,15 @@ FROM base as deps
 # Leverage a cache mount to /root/.local/share/pnpm/store to speed up subsequent builds.
 # Leverage bind mounts to package.json and pnpm-lock.yaml to avoid having to copy them
 # into this layer.
-RUN --mount=type=bind,source=package.json,target=package.json \
-    --mount=type=bind,source=pnpm-lock.yaml,target=pnpm-lock.yaml \
-    --mount=type=cache,target=/root/.local/share/pnpm/store \
+
+COPY package.json .
+COPY pnpm-lock.yaml .
+COPY prisma .
+
+RUN --mount=type=cache,target=/root/.local/share/pnpm/store \
     pnpm i -D husky prisma
 
-RUN --mount=type=bind,source=package.json,target=package.json \
-    --mount=type=bind,source=pnpm-lock.yaml,target=pnpm-lock.yaml \
-    --mount=type=cache,target=/root/.local/share/pnpm/store \
-    --mount=type=bind,source=prisma,target=prisma \
+RUN --mount=type=cache,target=/root/.local/share/pnpm/store \
     pnpm install --prod --frozen-lockfile
 
 ################################################################################
