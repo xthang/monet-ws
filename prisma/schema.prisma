@@ -1,0 +1,1091 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ##############
+
+// shared
+
+enum Locale {
+  en_US
+  vi
+}
+
+enum Currency {
+  ALL
+  AFN
+  ARS
+  AWG
+  AUD
+  AZN
+  BSD
+  BBD
+  BYN
+  BZD
+  BMD
+  BOB
+  BAM
+  BWP
+  BGN
+  BRL
+  BND
+  KHR
+  CAD
+  KYD
+  CLP
+  CNY
+  COP
+  CRC
+  HRK
+  CUP
+  CZK
+  DKK
+  DOP
+  XCD
+  EGP
+  SVC
+  EUR
+  FKP
+  FJD
+  GHS
+  GIP
+  GTQ
+  GGP
+  GYD
+  HNL
+  HKD
+  HUF
+  ISK
+  INR
+  IDR
+  IRR
+  IMP
+  ILS
+  JMD
+  JPY
+  JEP
+  KZT
+  KPW
+  KRW
+  KGS
+  LAK
+  LBP
+  LRD
+  MKD
+  MYR
+  MUR
+  MXN
+  MNT
+  MZN
+  NAD
+  NPR
+  ANG
+  NZD
+  NIO
+  NGN
+  NOK
+  OMR
+  PKR
+  PAB
+  PYG
+  PEN
+  PHP
+  PLN
+  QAR
+  RON
+  RUB
+  SHP
+  SAR
+  RSD
+  SCR
+  SGD
+  SBD
+  SOS
+  ZAR
+  LKR
+  SEK
+  CHF
+  SRD
+  SYP
+  TWD
+  THB
+  TTD
+  TRY
+  TVD
+  UAH
+  GBP
+  USD
+  UYU
+  UZS
+  VEF
+  VND
+  YER
+  ZWD
+  // 
+  AED
+  AMD
+  AOA
+  BDT
+  XOF
+  BHD
+  BIF
+  BTN
+  CDF
+  XAF
+  CVE
+  DJF
+  DZD
+  MAD
+  ERN
+  ETB
+  GEL
+  GMD
+  GNF
+  HTG
+  IQD
+  JOD
+  KES
+  KMF
+  KWD
+  LSL
+  LYD
+  MDL
+  MGA
+  MMK
+  MOP
+  MRO
+  MVR
+  MWK
+  XPF
+  PGK
+  RWF
+  SDG
+  SLL
+  STD
+  SZL
+  TJS
+  TMT
+  TND
+  TOP
+  TZS
+  UGX
+  VUV
+  WST
+  ZMW
+  ZWL
+}
+
+// common/shared features/functionalities
+
+model Config {
+  id    String @id @default(cuid()) @db.VarChar(25)
+  key   String
+  value Json
+
+  // Technical Fields
+  createdAt DateTime  @default(now()) @db.Timestamptz(3)
+  createdBy String    @db.VarChar(50)
+  updatedAt DateTime? @updatedAt @db.Timestamptz(3)
+  updatedBy String?   @db.VarChar(50)
+  deletedAt DateTime? @db.Timestamptz(3)
+  deletedBy String?   @db.VarChar(50)
+  isActive  Boolean?  @default(true)
+
+  @@unique([key, isActive])
+}
+
+model Job {
+  // Functional Fields
+  id                 String         @id @default(cuid()) @db.VarChar(25)
+  accountId          String?        @db.VarChar(50)
+  orgId              String?        @db.VarChar(50)
+  type               JobType
+  subType            String?        @db.VarChar(30)
+  requestType        String?        @db.VarChar(30)
+  requestId          String?        @db.VarChar(50)
+  requestData        String         @db.Text
+  requestDataVersion String?        @db.VarChar(10)
+  resultType         JobResultType?
+  resultData         String?        @db.Text // LongText
+  resultDataVersion  String?        @db.VarChar(10)
+  errorClassname     String?        @db.VarChar(50)
+  errorName          String?        @db.VarChar(50)
+  errorCode          String?        @db.VarChar(50)
+  errorMessage       String?        @db.Text
+  errorDetail        String?        @db.Text
+  errorStack         String?        @db.Text
+
+  // Technical Fields
+  createdAt DateTime  @default(now()) @db.Timestamptz(3)
+  createdBy String    @db.VarChar(50)
+  updatedAt DateTime? @updatedAt @db.Timestamptz(3)
+  updatedBy String?   @db.VarChar(50)
+  deletedAt DateTime? @db.Timestamptz(3)
+  deletedBy String?   @db.VarChar(50)
+  // isTestData Boolean
+
+  requestedAt DateTime  @db.Timestamptz(3)
+  startedAt   DateTime? @db.Timestamptz(3)
+  finishedAt  DateTime? @db.Timestamptz(3)
+  processTime Float? // @db.Float
+}
+
+enum JobType {
+  assistantChatRequest
+}
+
+enum JobResultType {
+  inProgress
+  done
+  failed
+}
+
+model TextTemplate {
+  // Functional Fields
+  id          String             @id @default(cuid()) @db.VarChar(25)
+  type        TextTemplateType
+  key         String             @db.VarChar(200)
+  description String?            @db.Text
+  version     String             @db.VarChar(20)
+  locale      Locale
+  content     String             @db.Text
+  params      String?            @db.Text
+  status      TextTemplateStatus
+
+  // Technical Fields
+  createdAt DateTime  @default(now()) @db.Timestamptz(3)
+  createdBy String    @db.VarChar(50)
+  updatedAt DateTime? @updatedAt @db.Timestamptz(3)
+  updatedBy String?   @db.VarChar(50)
+  deletedAt DateTime? @db.Timestamptz(3)
+  deletedBy String?   @db.VarChar(50)
+  accountId String?   @db.VarChar(50)
+  orgId     String?   @db.VarChar(50)
+
+  @@unique([key, version, locale])
+}
+
+enum TextTemplateType {
+  textContent
+}
+
+enum TextTemplateStatus {
+  active
+  inactive
+}
+
+model NotificationTemplate {
+  // Functional Fields
+  id        String                     @id @default(cuid()) @db.VarChar(25)
+  accountId String?                    @db.VarChar(50)
+  orgId     String?                    @db.VarChar(50)
+  type      NotificationType // provisional
+  subType   String?                    @db.VarChar(30)
+  key       String                     @db.VarChar(50)
+  version   String?                    @db.VarChar(20)
+  locale    Locale
+  header    String?                    @db.Text
+  content   String                     @db.Text
+  url       String?                    @db.Text
+  status    NotificationTemplateStatus
+
+  // Technical Fields
+  createdAt DateTime  @default(now()) @db.Timestamptz(3)
+  createdBy String    @db.VarChar(50)
+  updatedAt DateTime? @updatedAt @db.Timestamptz(3)
+  updatedBy String?   @db.VarChar(50)
+  deletedAt DateTime? @db.Timestamptz(3)
+  deletedBy String?   @db.VarChar(50)
+  // isTestData Boolean
+
+  @@unique([key, version, locale])
+}
+
+enum NotificationTemplateStatus {
+  active
+  inactive
+}
+
+model Notification {
+  // Functional Fields
+  id              String             @id @default(cuid()) @db.VarChar(25)
+  accountId       String?            @db.VarChar(50)
+  orgId           String?            @db.VarChar(50)
+  type            NotificationType // provisional
+  subType         String?            @db.VarChar(30)
+  templateKey     String?            @db.VarChar(50)
+  templateVersion String?            @db.VarChar(20)
+  templateParams  String?            @db.Text
+  header          String?            @db.Text
+  content         String?            @db.Text
+  dataVersion     String?            @db.VarChar(10)
+  data            String?            @db.Text
+  status          NotificationStatus
+  availableAfter  DateTime?          @db.Timestamptz(3)
+
+  // Technical Fields
+  createdAt DateTime  @default(now()) @db.Timestamptz(3)
+  createdBy String    @db.VarChar(50)
+  updatedAt DateTime? @updatedAt @db.Timestamptz(3)
+  updatedBy String?   @db.VarChar(50)
+  deletedAt DateTime? @db.Timestamptz(3)
+  deletedBy String?   @db.VarChar(50)
+  // isTestData Boolean
+
+  // User interactions
+  sentAt          DateTime? @db.Timestamptz(3)
+  seenAt          DateTime? @db.Timestamptz(3)
+  readAt          DateTime? @db.Timestamptz(3)
+  markedAsReadAt  DateTime? @db.Timestamptz(3)
+  contentViewedAt DateTime? @db.Timestamptz(3)
+}
+
+enum NotificationType {
+  normal
+}
+
+enum NotificationStatus {
+  active
+  inactive
+}
+
+model TaskSendEmail {
+  id       Int    @id @default(autoincrement())
+  category String
+  from     String
+  to       Json[]
+  cc       Json[]
+  bcc      Json[]
+  subject  String @db.Text
+  text     String @db.Text
+  html     String @db.Text
+
+  // Technical Fields
+  createdAt DateTime  @default(now()) @db.Timestamptz(3)
+  createdBy String    @db.VarChar(50)
+  updatedAt DateTime? @updatedAt @db.Timestamptz(3)
+  updatedBy String?   @db.VarChar(50)
+  deletedAt DateTime? @db.Timestamptz(3)
+  deletedBy String?   @db.VarChar(50)
+
+  jobStartedAt DateTime? @db.Timestamptz(3)
+  sentAt       DateTime? @db.Timestamptz(3)
+  sentBy       String?   @db.VarChar(50)
+  jobError     String?   @db.Text
+}
+
+model TaskSendSms {
+  id       Int    @id @default(autoincrement())
+  category String
+  to       Json[]
+  content  String @db.Text
+
+  // Technical Fields
+  createdAt DateTime  @default(now()) @db.Timestamptz(3)
+  createdBy String    @db.VarChar(50)
+  updatedAt DateTime? @updatedAt @db.Timestamptz(3)
+  updatedBy String?   @db.VarChar(50)
+  deletedAt DateTime? @db.Timestamptz(3)
+  deletedBy String?   @db.VarChar(50)
+
+  jobStartedAt DateTime? @db.Timestamptz(3)
+  sentAt       DateTime? @db.Timestamptz(3)
+  sentBy       String?   @db.VarChar(50)
+  jobError     String?   @db.Text
+}
+
+//
+
+model CurrencyInfo {
+  // Functional Fields
+  code                Currency @id
+  name                String   @db.VarChar(50)
+  country             String   @db.VarChar(50)
+  imageUrl            String   @db.VarChar(200)
+  url                 String   @db.VarChar(200)
+  font_Code2000       String   @db.VarChar(30)
+  font_arialUnicodeMs String   @db.VarChar(30)
+  unicode_decimal     String   @db.VarChar(30)
+  unicode_hex         String   @db.VarChar(30)
+
+  // Technical Fields
+  createdAt DateTime  @default(now()) @db.Timestamptz(3)
+  createdBy String    @db.VarChar(50)
+  updatedAt DateTime? @updatedAt @db.Timestamptz(3)
+  updatedBy String?   @db.VarChar(50)
+  deletedAt DateTime? @db.Timestamptz(3)
+  deletedBy String?   @db.VarChar(50)
+}
+
+model CurrencyExchangeRate {
+  id String @id @default(cuid()) @db.VarChar(25)
+
+  // Functional Fields
+  isDefault      Boolean?
+  conversationId String?  @db.VarChar(50)
+  base           Currency
+  to             Currency
+  quote          Decimal
+  source         String?  @db.VarChar(100)
+  order          Int
+
+  // Technical Fields
+  createdAt DateTime  @default(now()) @db.Timestamptz(3)
+  createdBy String    @db.VarChar(50)
+  updatedAt DateTime? @updatedAt @db.Timestamptz(3)
+  updatedBy String?   @db.VarChar(50)
+  deletedAt DateTime? @db.Timestamptz(3)
+  deletedBy String?   @db.VarChar(50)
+  isActive  Boolean?  @default(true)
+
+  conversation Conversation? @relation(fields: [conversationId], references: [id], onDelete: Restrict)
+
+  @@unique([isDefault, base, to, isActive])
+  @@unique([conversationId, base, to, isActive])
+  @@index([isDefault, isActive])
+  @@index([conversationId, isActive])
+}
+
+// Monet's specific features
+
+model Account {
+  // Functional Fields
+  id            String @id @default(cuid()) @db.VarChar(50)
+  authAccountId String @db.VarChar(50) // Clerk userId
+
+  // Info
+  imageUrl   String?    @db.Text
+  gender     String?    @db.VarChar(10)
+  birthday   DateTime?  @db.Timestamptz(3)
+  username   String?    @db.VarChar(100)
+  firstName  String?    @db.VarChar(100)
+  middleName String?    @db.VarChar(100)
+  lastName   String?    @db.VarChar(100)
+  nameOrder  NameOrder?
+  fullName   String?    @db.VarChar(200)
+  nickname   String?    @db.VarChar(100)
+
+  externalId            String? @db.VarChar(50)
+  primaryEmailAddressId String? @db.VarChar(50)
+  primaryPhoneNumberId  String? @db.VarChar(50)
+  primaryWeb3WalletId   String? @db.VarChar(50)
+
+  publicMetadata  Json?
+  privateMetadata Json?
+  unsafeMetadata  Json?
+  otherData       Json?
+
+  role AccountRole @default(user)
+
+  // Security
+  password              String?  @db.VarChar(200)
+  clerkPasswordEnabled  Boolean?
+  clerkTotpEnabled      Boolean?
+  clerkTwoFactorEnabled Boolean?
+
+  // User configs
+  systemLocale   String?   @db.VarChar(10)
+  systemTimezone String?   @db.VarChar(50)
+  systemDarkMode String?   @db.VarChar(10)
+  locale         Locale?
+  darkMode       String?   @db.VarChar(10)
+  currency       Currency?
+  theme          String?   @db.VarChar(20)
+
+  // Status
+  status      AccountStatus?
+  clerkBanned Boolean?
+
+  // Subscription
+  subscriptionPlan           SubscriptionPlan?
+  subscriptionPaymentTransId String?           @db.VarChar(50)
+  subscribeAt                DateTime?         @db.Timestamptz(3)
+  subscriptionEndedAt        DateTime?         @db.Timestamptz(3)
+
+  // Technical Fields
+  createdAt         DateTime  @default(now()) @db.Timestamptz(3)
+  createdBy         String    @db.VarChar(50)
+  updatedAt         DateTime? @updatedAt @db.Timestamptz(3)
+  updatedBy         String?   @db.VarChar(50)
+  deletedAt         DateTime? @db.Timestamptz(3)
+  deletedBy         String?   @db.VarChar(50)
+  isActive          Boolean?  @default(true)
+  // Clerk Technical Fields
+  clerkCreatedAt    DateTime  @db.Timestamptz(3)
+  clerkUpdatedAt    DateTime? @db.Timestamptz(3)
+  clerkLastSignInAt DateTime? @db.Timestamptz(3)
+  clerkLastActiveAt DateTime? @db.Timestamptz(3)
+
+  // User activities
+  logInCount  Int       @default(0)
+  lastLogInAt DateTime? @db.Timestamptz(3)
+
+  // Admin related
+  notifiedAt DateTime? @db.Timestamptz(3)
+
+  // Foreign Key Relations
+  accountAliases               AccountAlias[]
+  conversationMemberships      ConversationMembership[]
+  conversationAddedMemberships ConversationMembership[] @relation(name: "addedByAccount")
+  organizationMemberships      OrganizationMembership[]
+  messages                     Message[]
+  orders                       Order[]
+  subscriptionPaymentTrans     PaymentTransaction?      @relation(fields: [subscriptionPaymentTransId], references: [id])
+
+  @@unique([authAccountId])
+  @@unique([username, isActive])
+  @@unique([subscriptionPaymentTransId])
+}
+
+enum NameOrder {
+  firstLast
+  lastFirst
+}
+
+enum AccountRole {
+  admin
+  moderator
+  user
+}
+
+enum AccountStatus {
+  banned
+}
+
+enum SubscriptionPlan {
+  advanced
+  pro
+}
+
+model AccountAlias {
+  // Functional Fields
+  id                 String           @id @default(cuid()) @db.VarChar(25)
+  accountId          String?          @db.VarChar(50)
+  type               AccountAliasType
+  rawValue           String           @db.VarChar(350)
+  contactValue       String           @db.VarChar(350)
+  valueType          String?          @db.VarChar(20)
+  contactGroup       String?          @db.VarChar(50) // for phone no, it is the country calling code
+  contactGroupName   String?          @db.VarChar(50) // for phone no, it is the country code
+  contactGroup1      String?          @db.VarChar(50) // for phone no, it is the carrier/area code
+  contactBody        String?          @db.VarChar(300) // for phone no, it is the main part
+  contactExt         String?          @db.VarChar(20) // for phone no, it is the ext code
+  formatted          String?          @db.VarChar(350)
+  verification       Json?
+  verificationStatus String?          @db.VarChar(20)
+
+  // Technical Fields
+  createdAt DateTime  @default(now()) @db.Timestamptz(3)
+  createdBy String    @db.VarChar(50)
+  updatedAt DateTime? @updatedAt @db.Timestamptz(3)
+  updatedBy String?   @db.VarChar(50)
+  deletedAt DateTime? @db.Timestamptz(3)
+  deletedBy String?   @db.VarChar(50)
+  isActive  Boolean?  @default(true)
+  notified  Int       @default(0) // notify unregistered user about the invitation to a group
+
+  // User activities
+  logInCount  Int       @default(0)
+  lastLogInAt DateTime? @db.Timestamptz(3)
+
+  // Foreign Key Relations
+  account                 Account?                 @relation(fields: [accountId], references: [id], onDelete: Restrict)
+  accountPartnerAliases   AccountPartnerAlias[]
+  conversationMemberships ConversationMembership[]
+
+  // @@unique([type, contactValue, (CASE WHEN "deletedAt" IS NULL THEN true ELSE NULL END)])
+  @@unique([type, contactValue, isActive])
+}
+
+enum AccountAliasType {
+  emailAddr
+  phoneNo
+  web3Wallet
+  Clerk
+}
+
+model AccountPartnerAlias {
+  // Functional Fields
+  id                 String  @id @db.VarChar(50)
+  accountAliasId     String  @db.VarChar(50)
+  partnerId          Partner
+  partnerAppId       String? @db.VarChar(50)
+  verification       Json?
+  verificationStatus String? @db.VarChar(20)
+  otherData          Json?
+
+  // Technical Fields
+  createdAt DateTime  @default(now()) @db.Timestamptz(3)
+  createdBy String    @db.VarChar(50)
+  updatedAt DateTime? @updatedAt @db.Timestamptz(3)
+  updatedBy String?   @db.VarChar(50)
+  deletedAt DateTime? @db.Timestamptz(3)
+  deletedBy String?   @db.VarChar(50)
+  isActive  Boolean?  @default(true)
+
+  // User activities
+  logInCount  Int       @default(0)
+  lastLogInAt DateTime? @db.Timestamptz(3)
+
+  accountAlias AccountAlias @relation(fields: [accountAliasId], references: [id])
+
+  // @@unique([accountAliasId, partnerId, (CASE WHEN "deletedAt" IS NULL THEN true ELSE NULL END)])
+  @@unique([accountAliasId, partnerId, isActive])
+}
+
+enum Partner {
+  Clerk
+  Facebook
+  AppleID
+  GameCenter
+  Google
+  GooglePlay
+  EpicGames
+  Tiktok
+  Coinbase
+  LINE
+}
+
+model AccountPlaceholder {
+  // Functional Fields
+  id   String @id @default(cuid()) @db.VarChar(25)
+  name String @db.Text
+
+  // Technical Fields
+  createdAt DateTime  @default(now()) @db.Timestamptz(3)
+  createdBy String    @db.VarChar(50)
+  updatedAt DateTime? @updatedAt @db.Timestamptz(3)
+  updatedBy String?   @db.VarChar(50)
+  deletedAt DateTime? @db.Timestamptz(3)
+  deletedBy String?   @db.VarChar(50)
+
+  // Foreign Key Relations
+  conversationMemberships ConversationMembership[]
+}
+
+model Organization {
+  // Functional Fields
+  id String @id @db.VarChar(50)
+
+  // Clerk
+  name     String  @db.VarChar(100)
+  slug     String? @db.VarChar(100)
+  imageUrl String? @db.Text
+
+  publicMetadata  Json?
+  privateMetadata Json?
+
+  maxAllowedMemberships Int
+  adminDeleteEnabled    Boolean
+  membersCount          Int?
+
+  otherData Json?
+
+  // Technical Fields
+  createdAt      DateTime  @default(now()) @db.Timestamptz(3)
+  createdBy      String    @db.VarChar(50)
+  updatedAt      DateTime? @updatedAt @db.Timestamptz(3)
+  updatedBy      String?   @db.VarChar(50)
+  deletedAt      DateTime? @db.Timestamptz(3)
+  deletedBy      String?   @db.VarChar(50)
+  // Clerk Technical Fields
+  clerkCreatedBy String    @db.VarChar(50)
+  clerkCreatedAt DateTime  @db.Timestamptz(3)
+  clerkUpdatedAt DateTime? @db.Timestamptz(3)
+
+  // Foreign Key Relations
+  memberships OrganizationMembership[]
+}
+
+model OrganizationMembership {
+  // Functional Fields
+  id String @id @default(cuid()) @db.VarChar(50)
+
+  // Clerk
+  orgId     String                     @db.VarChar(50)
+  accountId String                     @db.VarChar(50)
+  role      OrganizationMembershipRole
+
+  publicMetadata  Json?
+  privateMetadata Json?
+
+  otherData Json?
+
+  // Technical Fields
+  createdAt      DateTime  @default(now()) @db.Timestamptz(3)
+  createdBy      String    @db.VarChar(50)
+  updatedAt      DateTime? @updatedAt @db.Timestamptz(3)
+  updatedBy      String?   @db.VarChar(50)
+  deletedAt      DateTime? @db.Timestamptz(3)
+  deletedBy      String?   @db.VarChar(50)
+  // Clerk Technical Fields
+  clerkCreatedAt DateTime  @db.Timestamptz(3)
+  clerkUpdatedAt DateTime? @db.Timestamptz(3)
+
+  // Foreign Key Relations
+  organization Organization @relation(fields: [orgId], references: [id])
+  account      Account      @relation(fields: [accountId], references: [id])
+
+  @@unique([orgId, accountId])
+  @@index([orgId])
+  @@index([accountId])
+}
+
+enum OrganizationMembershipRole {
+  admin
+  member
+  basic_member
+  guest_member
+}
+
+model Conversation {
+  // Functional Fields
+  id           String           @id @default(cuid()) @db.VarChar(25)
+  type         ConversationType
+  orgId        String?          @db.VarChar(50)
+  name         String?          @db.Text
+  description  String?          @db.Text
+  photo        String?          @db.Text
+  theme        String?          @db.VarChar(20)
+  darkMode     String?          @db.VarChar(10)
+  emoji        String?          @db.VarChar(20)
+  // status    ConversationStatus?
+  baseCurrency Currency
+  baseRates    String?          @db.Text
+  note         String?          @db.Text
+
+  lastActivityAt     DateTime? @db.Timestamptz(3)
+  lastTabId          String?   @db.VarChar(50)
+  lastMessageId      String?   @db.VarChar(50)
+  lastMessageAt      DateTime? @db.Timestamptz(3)
+  lastActiveAccounts String?   @db.VarChar(200)
+
+  // Technical Fields
+  createdAt DateTime  @default(now()) @db.Timestamptz(3)
+  createdBy String    @db.VarChar(50)
+  updatedAt DateTime? @updatedAt @db.Timestamptz(3)
+  updatedBy String?   @db.VarChar(50)
+  deletedAt DateTime? @db.Timestamptz(3)
+  deletedBy String?   @db.VarChar(50)
+  // isTestData Boolean
+
+  // Foreign Key Relations
+  memberships           ConversationMembership[]
+  messages              Message[]
+  moneyRecords          MoneyRecord[]
+  currencyExchangeRates CurrencyExchangeRate[]
+  lastMessage           Message?                 @relation("lastMessage", fields: [lastMessageId], references: [id])
+  tabs                  ConversationTab[]
+
+  @@unique([lastMessageId])
+}
+
+enum ConversationType {
+  direct
+  group
+}
+
+model ConversationMembership {
+  // Functional Fields
+  id                     String                  @id @default(cuid()) @db.VarChar(25)
+  conversationId         String                  @db.VarChar(50)
+  accountId              String?                 @db.VarChar(50)
+  accountAliasId         String?                 @db.VarChar(50)
+  accountPlaceholderId   String?                 @db.VarChar(50)
+  accountOrPlaceholderId String                  @db.VarChar(50)
+  role                   ConversationMemberRole?
+  nickname               String?                 @db.Text
+  addedByAccountId       String                  @db.VarChar(50)
+  order                  Int
+
+  // Technical Fields
+  createdAt DateTime  @default(now()) @db.Timestamptz(3)
+  createdBy String    @db.VarChar(50)
+  updatedAt DateTime? @updatedAt @db.Timestamptz(3)
+  updatedBy String?   @db.VarChar(50)
+  deletedAt DateTime? @db.Timestamptz(3)
+  deletedBy String?   @db.VarChar(50)
+  isActive  Boolean?  @default(true)
+
+  // user activities
+  openTabId String? @db.VarChar(50)
+
+  // Foreign Key Relations
+  conversation                     Conversation                         @relation(fields: [conversationId], references: [id])
+  account                          Account?                             @relation(fields: [accountId], references: [id], onDelete: Restrict, map: "ConversationMembership_accountOrPlaceholderId_Account_fkey")
+  accountAlias                     AccountAlias?                        @relation(fields: [accountAliasId], references: [id], onDelete: Restrict, map: "ConversationMembership_accountOrPlaceholderId_AccAlias_fkey")
+  accountPlaceholder               AccountPlaceholder?                  @relation(fields: [accountPlaceholderId], references: [id], onDelete: Restrict, map: "ConversationMembership_accountOrPlaceholderId_AccPlhdr_fkey")
+  addedByAccount                   Account                              @relation(fields: [addedByAccountId], references: [id], name: "addedByAccount")
+  moneyRecordPartakers             MoneyRecordPartaker[]
+  moneyRecordPayers                MoneyRecord[]
+  conversationTabSettlements_Payor ConversationTabSuggestedSettlement[] @relation(name: "ConversationTabSuggestedSettlement_payorMember")
+  conversationTabSettlements_Payee ConversationTabSuggestedSettlement[] @relation(name: "ConversationTabSuggestedSettlement_payeeMember")
+
+  @@unique([conversationId, accountId, isActive])
+  @@unique([conversationId, accountAliasId, isActive])
+  @@unique([conversationId, accountPlaceholderId, isActive])
+  @@unique([conversationId, accountOrPlaceholderId, isActive])
+  // @@unique([conversationId, order, isActive])
+  @@index([conversationId, isActive])
+  @@index([accountOrPlaceholderId, isActive])
+}
+
+enum ConversationMemberRole {
+  admin
+  mod
+}
+
+model ActivityLog {
+  // Functional Fields
+  id             Int                   @id @default(autoincrement())
+  objectType     ActivityLogObjectType
+  objectId       String                @db.VarChar(50)
+  type           String                @db.VarChar(50)
+  details        Json?
+  detailsVersion String?               @db.VarChar(10)
+
+  // Technical Fields
+  createdAt DateTime  @default(now()) @db.Timestamptz(3)
+  createdBy String    @db.VarChar(50)
+  updatedAt DateTime? @updatedAt @db.Timestamptz(3)
+  updatedBy String?   @db.VarChar(50)
+  deletedAt DateTime? @db.Timestamptz(3)
+  deletedBy String?   @db.VarChar(50)
+
+  @@index([objectType, objectId])
+}
+
+enum ActivityLogObjectType {
+  conversation
+}
+
+model ConversationTab {
+  // Functional Fields
+  id             String  @id @default(cuid()) @db.VarChar(25)
+  conversationId String  @db.VarChar(50)
+  title          String  @db.Text
+  color          String? @db.VarChar(20)
+  note           String? @db.Text
+
+  // Technical Fields
+  createdAt DateTime  @default(now()) @db.Timestamptz(3)
+  createdBy String    @db.VarChar(50)
+  updatedAt DateTime? @updatedAt @db.Timestamptz(3)
+  updatedBy String?   @db.VarChar(50)
+  deletedAt DateTime? @db.Timestamptz(3)
+  deletedBy String?   @db.VarChar(50)
+
+  conversation Conversation                         @relation(fields: [conversationId], references: [id])
+  messages     Message[]
+  settlements  ConversationTabSuggestedSettlement[]
+
+  @@index([conversationId])
+}
+
+model Message {
+  // Functional Fields
+  id             String  @id @default(cuid()) @db.VarChar(25)
+  uiId           String? @db.VarChar(50)
+  conversationId String  @db.VarChar(50)
+  tabId          String  @db.VarChar(50)
+
+  text          String? @db.Text // LongText
+  moneyRecordId String? @db.VarChar(50)
+
+  // Technical Fields
+  createdAt DateTime  @default(now()) @db.Timestamptz(3)
+  createdBy String    @db.VarChar(50)
+  updatedAt DateTime? @updatedAt @db.Timestamptz(3)
+  updatedBy String?   @db.VarChar(50)
+  deletedAt DateTime? @db.Timestamptz(3)
+  deletedBy String?   @db.VarChar(50)
+
+  // User activities
+  sentAt               DateTime  @db.Timestamptz(3)
+  sentBy               String    @db.VarChar(50)
+  deletedForEveryoneAt DateTime? @db.Timestamptz(3)
+  deletedForEveryoneBy String?   @db.VarChar(50)
+
+  // Foreign Key Relations
+  conversation             Conversation    @relation(fields: [conversationId], references: [id])
+  conversationTab          ConversationTab @relation(fields: [tabId], references: [id])
+  sentByAccount            Account         @relation(fields: [sentBy], references: [id])
+  moneyRecord              MoneyRecord?
+  conversation_lastMessage Conversation?   @relation("lastMessage")
+}
+
+model MoneyRecord {
+  // Functional Fields
+  id                String             @id @default(cuid()) @db.VarChar(25)
+  conversationId    String             @db.VarChar(50)
+  tabId             String             @db.VarChar(50)
+  messageId         String             @db.VarChar(50)
+  time              DateTime?          @default(now()) @db.Timestamptz(3)
+  type              MoneyRecordType?
+  // subType        String?            @db.VarChar(30)
+  description       String             @db.Text // LongText
+  note              String?            @db.Text // LongText
+  payerMemberId     String             @db.VarChar(50)
+  amount            Decimal?
+  currency          Currency
+  ratePerBase       Boolean?
+  rate              Decimal?
+  amountPerPartaker Decimal?
+  status            MoneyRecordStatus?
+
+  settlementId String? @db.VarChar(50)
+
+  // Technical Fields
+  createdAt DateTime  @default(now()) @db.Timestamptz(3)
+  createdBy String    @db.VarChar(50)
+  updatedAt DateTime? @updatedAt @db.Timestamptz(3)
+  updatedBy String?   @db.VarChar(50)
+  deletedAt DateTime? @db.Timestamptz(3)
+  deletedBy String?   @db.VarChar(50)
+  // isTestData Boolean
+
+  // Foreign Key Relations
+  conversation Conversation           @relation(fields: [conversationId], references: [id])
+  message      Message                @relation(fields: [messageId], references: [id])
+  payerMember  ConversationMembership @relation(fields: [payerMemberId], references: [id])
+  partakers    MoneyRecordPartaker[]
+
+  @@unique([messageId])
+  @@unique([conversationId, messageId])
+}
+
+enum MoneyRecordType {
+  settlement
+}
+
+enum MoneyRecordStatus {
+  inactive
+}
+
+model MoneyRecordPartaker {
+  // Functional Fields
+  id            String   @id @default(cuid()) @db.VarChar(25)
+  moneyRecordId String   @db.VarChar(50)
+  memberId      String   @db.VarChar(50)
+  proportion    Decimal?
+  // amount       Decimal
+
+  // Technical Fields
+  createdAt DateTime  @default(now()) @db.Timestamptz(3)
+  createdBy String    @db.VarChar(50)
+  updatedAt DateTime? @updatedAt @db.Timestamptz(3)
+  updatedBy String?   @db.VarChar(50)
+  deletedAt DateTime? @db.Timestamptz(3)
+  deletedBy String?   @db.VarChar(50)
+  isActive  Boolean?  @default(true)
+  // isTestData Boolean
+
+  // Foreign Key Relations
+  moneyRecord MoneyRecord            @relation(fields: [moneyRecordId], references: [id])
+  member      ConversationMembership @relation(fields: [memberId], references: [id])
+
+  @@unique([moneyRecordId, memberId, isActive])
+  @@index([moneyRecordId, isActive])
+  @@index([memberId, isActive])
+}
+
+model ConversationTabSuggestedSettlement {
+  // Functional Fields
+  id             String  @id @default(cuid()) @db.VarChar(25)
+  conversationId String  @db.VarChar(50)
+  tabId          String  @db.VarChar(50)
+  payorMemberId  String  @db.VarChar(50)
+  payeeMemberId  String  @db.VarChar(50)
+  amount         Decimal
+
+  settlementRecordId String?   @db.VarChar(50)
+  settledAt          DateTime? @db.Timestamptz(3)
+
+  // Technical Fields
+  createdAt DateTime  @default(now()) @db.Timestamptz(3)
+  createdBy String    @db.VarChar(50)
+  updatedAt DateTime? @updatedAt @db.Timestamptz(3)
+  updatedBy String?   @db.VarChar(50)
+  deletedAt DateTime? @db.Timestamptz(3)
+  deletedBy String?   @db.VarChar(50)
+  isActive  Boolean?  @default(true)
+
+  conversationTab ConversationTab        @relation(fields: [tabId], references: [id])
+  payorMember     ConversationMembership @relation(fields: [payorMemberId], references: [id], name: "ConversationTabSuggestedSettlement_payorMember")
+  payeeMember     ConversationMembership @relation(fields: [payeeMemberId], references: [id], name: "ConversationTabSuggestedSettlement_payeeMember")
+}
+
+model Order {
+  id           String  @id @default(cuid()) @db.VarChar(25)
+  accountId    String  @db.VarChar(50)
+  currencyCode String  @db.VarChar(5)
+  amount       Decimal
+
+  paymentProvider         PaymentProvider
+  paymentRequestId        String?         @db.VarChar(50)
+  paymentRequestStatus    String?         @db.VarChar(20)
+  paymentRequestOtherData Json?           @db.Json
+
+  // Technical Fields
+  createdAt DateTime  @default(now()) @db.Timestamptz(3)
+  createdBy String    @db.VarChar(50)
+  updatedAt DateTime? @updatedAt @db.Timestamptz(3)
+  updatedBy String?   @db.VarChar(50)
+  deletedAt DateTime? @db.Timestamptz(3)
+  deletedBy String?   @db.VarChar(50)
+
+  account             Account              @relation(fields: [accountId], references: [id])
+  // items OrderItem[]
+  paymentTransactions PaymentTransaction[]
+
+  @@unique([paymentProvider, paymentRequestId])
+  @@index([paymentProvider])
+}
+
+enum PaymentProvider {
+  // global
+  Paypal
+  Stripe
+  // Vietnam
+  Momo
+}
+
+model PaymentTransaction {
+  id      String @id @default(cuid()) @db.VarChar(25)
+  orderId String @db.VarChar(50)
+
+  paymentProvider             PaymentProvider
+  paymentRequestId            String?         @db.VarChar(50)
+  paymentTransactionId        String?         @db.VarChar(50)
+  paymentTransactionStatus    String          @db.VarChar(20)
+  paymentTransactionMessage   String?         @db.Text
+  paymentSource               Json?           @db.Json
+  payer                       Json?           @db.Json
+  paymentTransactionOtherData Json?           @db.Json
+
+  // Technical Fields
+  createdAt DateTime  @default(now()) @db.Timestamptz(3)
+  createdBy String    @db.VarChar(50)
+  updatedAt DateTime? @updatedAt @db.Timestamptz(3)
+  updatedBy String?   @db.VarChar(50)
+  deletedAt DateTime? @db.Timestamptz(3)
+  deletedBy String?   @db.VarChar(50)
+
+  subscriptionAccount Account?
+  order               Order    @relation(fields: [orderId], references: [id])
+
+  @@unique([paymentProvider, paymentTransactionId])
+  @@index([paymentProvider])
+}

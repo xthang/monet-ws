@@ -1,0 +1,38 @@
+{
+  "compilerOptions": {
+    /* Basic Options */
+    "target": "ESNext",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "esModuleInterop": true,
+    "lib": ["esnext"],
+    "isolatedModules": true,
+    "resolveJsonModule": true,
+    "allowJs": true,
+    "checkJs": true,
+
+    /* Strict Type-Checking Options */
+    "strict": true,
+    "strictNullChecks": true,
+    "noImplicitAny": true,
+    "skipLibCheck": true,
+
+    "plugins": [],
+    "baseUrl": "src",
+    "paths": {
+      "@/*": ["./*"]
+    },
+    "outDir": "build",
+    "incremental": true
+    // "typeRoots": ["./node_modules/@types", "./src/types"]
+  },
+  "include": ["**/*.ts", "**/*.tsx"],
+  "exclude": ["node_modules"],
+  "ts-node": {
+    "esm": true,
+    "experimentalSpecifierResolution": "node",
+    "files": true,
+    "transpileOnly": true,
+    "require": ["tsconfig-paths/register"]
+  }
+}
