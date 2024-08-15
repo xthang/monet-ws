@@ -7,7 +7,7 @@
 # Want to help us make this template better? Share your feedback here: https://forms.gle/ybq9Krt8jtBL3iCk7
 
 ARG NODE_VERSION=20
-ARG PNPM_VERSION=9.7.1
+# ARG PNPM_VERSION=9.7.1
 
 ################################################################################
 # Use node image for base image for all stages.
@@ -17,8 +17,6 @@ FROM node:${NODE_VERSION}-alpine as base
 WORKDIR /usr/src/app
 
 # Enable pnpm.
-ENV PNPM_HOME="/pnpm"
-ENV PATH="$PNPM_HOME:$PATH"
 RUN corepack enable
 
 ################################################################################
