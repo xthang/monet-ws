@@ -11,12 +11,12 @@ ARG PNPM_VERSION=9.7.1
 
 ################################################################################
 # Use node image for base image for all stages.
-FROM node:${NODE_VERSION}-slim as base
+FROM node:${NODE_VERSION}-alpine as base
 
 # Set working directory for all build stages.
 WORKDIR /usr/src/app
 
-# Install pnpm.
+# Enable pnpm.
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
 RUN corepack enable
@@ -29,16 +29,10 @@ FROM base as deps
 # Leverage a cache mount to /root/.local/share/pnpm/store to speed up subsequent builds.
 # Leverage bind mounts to package.json and pnpm-lock.yaml to avoid having to copy them
 # into this layer.
-
-COPY package.json .
-COPY pnpm-lock.yaml .
-COPY prisma .
-
-RUN --mount=type=cache,target=/root/.local/share/pnpm/store \
-    pnpm i -D husky prisma
-
-RUN --mount=type=cache,target=/root/.local/share/pnpm/store \
-    pnpm install --prod --frozen-lockfile
+RUN --mount=type=bind,source=package.json,target=package.json \
+    --mount=type=bind,source=pnpm-lock.yaml,target=pnpm-lock.yaml \
+    --mount=type=cache,target=/root/.local/share/pnpm/store \
+    pnpm pkg delete scripts.prepare && pnpm install --prod --frozen-lockfile
 
 ################################################################################
 # Create a stage for building the application.
