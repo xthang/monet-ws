@@ -1,0 +1,77 @@
+name: Build, Publish and Deploy - dev
+
+defaults:
+  run:
+    working-directory: email-service
+
+on:
+  push:
+    branches:
+      - dev
+      - develop
+      - cicd
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+# Allow only one concurrent deployment, skipping runs queued between the run in-progress and latest queued.
+concurrency:
+  group: development
+  cancel-in-progress: true
+
+env:
+  NAMESPACE: xthang
+  IMAGE_NAME: monet-ws-dev
+  VM_IP: 15.235.184.142
+  VM_USER: ubuntu
+
+jobs:
+  setup-build-publish:
+    name: Setup, Build, and Publish
+    runs-on: ubuntu-latest
+    environment: DEVELOPMENT
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Create .env.local file
+        run: |
+          touch .env.local
+          echo '${{ vars.ENV_LOCAL_FILE }}' >> .env.local
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push Docker image to Github Container Registry
+        run: |
+          docker buildx build . -f Dockerfile --build-arg CI_COMMIT_SHA=${{ github.sha }} --platform=linux/amd64 -t ghcr.io/${{ env.NAMESPACE }}/${{ env.IMAGE_NAME }}:latest 
+          docker push ghcr.io/${{ env.NAMESPACE }}/${{ env.IMAGE_NAME }}:latest
+
+  deploy:
+    name: Deploy to VM
+    needs: setup-build-publish
+    runs-on: ubuntu-latest
+    permissions:
+      packages: read
+
+    steps:
+      - name: Deploying to VM using SSH
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ env.VM_IP }}
+          username: ${{ env.VM_USER }}
+          key: ${{ secrets.VM_SSH_KEY }}
+          script: |
+            echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin 
+            docker pull ghcr.io/${{ env.NAMESPACE }}/${{ env.IMAGE_NAME }}:latest
+            docker logout
+            docker stop ${{ env.IMAGE_NAME }} || true
+            docker rm ${{ env.IMAGE_NAME }}  || true
+            docker run -d --restart=always --name ${{ env.IMAGE_NAME }} ghcr.io/${{ env.NAMESPACE }}/${{ env.IMAGE_NAME }}:latest

@@ -1,0 +1,7 @@
+{
+  "watch": ["src", "tsconfig.json", ".env", ".env.local", ".env.development", ".env.development.local"],
+  "ext": ".ts,.js",
+  "ignore": ["**/*.test.ts", "**/*.spec.ts", ".git", "node_modules"],
+  "exec": "node --loader ts-node/esm ./src/index.ts",
+  "exec-": "ts-node-esm --project tsconfig.json --files --experimentalSpecifierResolution=node --transpileOnly -r tsconfig-paths/register ./src/index.ts"
+}

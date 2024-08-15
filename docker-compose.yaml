@@ -1,0 +1,5 @@
+services:
+  server:
+    container_name: email-service
+    build:
+      context: .
