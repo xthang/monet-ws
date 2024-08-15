@@ -64,7 +64,10 @@ export default async function handleNewMessage(wss: WebSocketServer, ws: WebSock
     }
 
     // send receipt back to itself
-    const payload: WsResponseData = { event: 'chat-message-receipt', data: { message_id: createdMsg.id, ui_id: createdMsg.uiId!, sent_to: Array.from(sentTo) } }
+    const payload: WsResponseData = {
+      event: 'chat-message-receipt',
+      data: { conversation_id: conversationId, tab_id: tabId, message_id: createdMsg.id, ui_id: createdMsg.uiId!, sent_to: Array.from(sentTo) }
+    }
     ws.send(JSON.stringify(payload))
 
     return createdMsg

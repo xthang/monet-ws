@@ -12,7 +12,7 @@ type WsResponseData =
     }
   | {
       event: 'chat-message-receipt'
-      data: { ui_id: string; message_id: string; sent_to: string[] }
+      data: { conversation_id: string; tab_id: string; ui_id: string; message_id: string; sent_to: string[] }
     }
   | {
       event: 'new-chat-message'
