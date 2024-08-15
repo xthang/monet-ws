@@ -31,11 +31,9 @@ FROM base as deps
 RUN --mount=type=bind,source=package.json,target=package.json \
     --mount=type=bind,source=pnpm-lock.yaml,target=pnpm-lock.yaml \
     --mount=type=cache,target=/root/.local/share/pnpm/store \
-    pnpm i -D husky && \
+    --mount=type=bind,source=prisma,target=prisma \
+    pnpm i -D husky prisma && \
     pnpm install --prod --frozen-lockfile
-
-RUN --mount=type=bind,source=prisma,target=prisma \
-    npx prisma generate
 
 ################################################################################
 # Create a stage for building the application.
