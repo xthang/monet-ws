@@ -31,8 +31,9 @@ FROM base as deps
 RUN --mount=type=bind,source=package.json,target=package.json \
     --mount=type=bind,source=pnpm-lock.yaml,target=pnpm-lock.yaml \
     --mount=type=cache,target=/root/.local/share/pnpm/store \
-    pnpm i -D husky prisma && \
-    --mount=type=bind,source=package.json,target=package.json \
+    pnpm i -D husky prisma
+
+RUN --mount=type=bind,source=package.json,target=package.json \
     --mount=type=bind,source=pnpm-lock.yaml,target=pnpm-lock.yaml \
     --mount=type=cache,target=/root/.local/share/pnpm/store \
     --mount=type=bind,source=prisma,target=prisma \
