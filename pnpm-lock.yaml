@@ -57,7 +57,7 @@ importers:
         specifier: ^9
         version: 9.1.4
       lint-staged:
-        specifier: ^15.2.9
+        specifier: ^15
         version: 15.2.9
       nodemon:
         specifier: ^3
