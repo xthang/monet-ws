@@ -1,9 +1,5 @@
 name: Build, Publish and Deploy - dev
 
-defaults:
-  run:
-    working-directory: email-service
-
 on:
   push:
     branches:
