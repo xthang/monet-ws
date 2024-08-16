@@ -9,6 +9,7 @@ export function verifyToken(token: string) {
     const verified = jwt.verify(token, CLERK_PUBLIC_KEY, { algorithms: ['RS256'] })
 
     if (typeof verified === 'string') {
+      console.error(`!-  Failed to verify Clerk token: verified is:`, verified)
       return null
     } else {
       const { sub: userId, org_id: ordId } = verified

@@ -67,7 +67,7 @@ async function main() {
 
       ws.auth = { accountId, authAccountId: auth.userId, orgId: auth.ordId }
 
-      console.log(`<-> WSS on.connection:`, request.method, maskedUrl, `[${auth.userId}]`)
+      console.log(`<-> WSS on.connection:`, request.method, maskedUrl, `[${accountId}-${auth.userId}-${auth.ordId}]`)
 
       if (!wss.socketsByAccount[accountId]) wss.socketsByAccount[accountId] = { clients: new Set([ws]) }
       else wss.socketsByAccount[accountId].clients.add(ws)
@@ -93,15 +93,17 @@ async function main() {
 
         console.log(`<-- WS [${this.auth.accountId}] received: [%s] [%s]`, requestId, event, _otherData)
 
-        const user = verifyToken(token)
-        if (!user) {
+        const auth = verifyToken(token)
+        if (!auth) {
           console.warn(`<-- WS [${this.auth.accountId}] received: Not authenticated`)
           return
         }
 
+        this.auth = { accountId, authAccountId: auth.userId, orgId: auth.ordId }
+
         switch (event) {
           case 'send-msg':
-            await handleNewMessage(wss, ws, locale, { ...data, sentAt: new Date(Date.parse(data.sentAt as unknown as string)) })
+            await handleNewMessage(wss, this, locale, { ...data, sentAt: new Date(Date.parse(data.sentAt as any)) })
             break
           default:
             console.warn(`<!- Unknown event:`, event)
