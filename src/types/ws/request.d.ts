@@ -4,9 +4,9 @@ export type Auth = {
   orgId?: string
 }
 
-export type WsRequestFullPayload = { id: string; token: string; locale: $Enums.Locale } & WsRequestPayload
+export type WsRequestFullPayload = { requestId: string; token: string; locale: $Enums.Locale } & WsRequestPayload
 
-export type WsRequestPayload = { requestId?: string } & {
+export type WsRequestPayload = {
   event: 'send-msg'
   data: WsSendMessageRequestData
 }

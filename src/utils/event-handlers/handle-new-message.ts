@@ -55,7 +55,7 @@ export default async function handleNewMessage(wss: WebSocketServer, ws: WebSock
     const sentTo = new Set<string>()
     for (const { accountId: mAccountId } of memberships.concat([{ accountId }])) {
       wss.socketsByAccount[mAccountId!]?.clients.forEach(function each(client) {
-        if (client !== ws && client.readyState === WebSocket.OPEN && ws.auth.orgId == orgId) {
+        if (client !== ws && client.readyState === WebSocket.OPEN && client.auth.orgId == orgId) {
           const payload: WsResponseData = { event: 'new-chat-message', orgId, data: createdMsg }
           client.send(JSON.stringify(payload))
           sentTo.add(mAccountId!)

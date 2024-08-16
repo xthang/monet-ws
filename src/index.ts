@@ -89,7 +89,7 @@ async function main() {
       })
 
       ws.on('message', async function message(rawData, _isBinary) {
-        const { id: requestId, token, locale, event, data, ..._otherData } = JSON.parse(rawData.toString()) as WsRequestFullPayload
+        const { requestId, token, locale, event, data, ..._otherData } = JSON.parse(rawData.toString()) as WsRequestFullPayload
 
         console.log(`<-- WS [${this.auth.accountId}] received: [%s] [%s]`, requestId, event, _otherData)
 
@@ -115,7 +115,7 @@ async function main() {
       })
 
       ws.on('close', function (code, reason) {
-        console.log(`-x- WS [${this.auth.accountId}] CLOSED:`, code, '-', reason)
+        console.log(`-x- WS [${this.auth.accountId}] CLOSED:`, code, '-', reason.toString())
 
         wss.socketsByAccount[accountId].clients.delete(this)
         if (!wss.socketsByAccount[accountId].clients.size) delete wss.socketsByAccount[accountId]
