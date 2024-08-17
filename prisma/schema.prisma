@@ -730,6 +730,7 @@ model OrganizationMembership {
   updatedBy      String?   @db.VarChar(50)
   deletedAt      DateTime? @db.Timestamptz(3)
   deletedBy      String?   @db.VarChar(50)
+  isActive       Boolean?  @default(true)
   // Clerk Technical Fields
   clerkCreatedAt DateTime  @db.Timestamptz(3)
   clerkUpdatedAt DateTime? @db.Timestamptz(3)
@@ -738,7 +739,7 @@ model OrganizationMembership {
   organization Organization @relation(fields: [orgId], references: [id])
   account      Account      @relation(fields: [accountId], references: [id])
 
-  @@unique([orgId, accountId])
+  @@unique([orgId, accountId, isActive])
   @@index([orgId])
   @@index([accountId])
 }
@@ -755,8 +756,8 @@ model Conversation {
   id           String           @id @default(cuid()) @db.VarChar(25)
   type         ConversationType
   orgId        String?          @db.VarChar(50)
-  name         String?          @db.Text
-  description  String?          @db.Text
+  name         String?          @db.Text /// @encrypted
+  description  String?          @db.Text /// @encrypted
   photo        String?          @db.Text
   theme        String?          @db.VarChar(20)
   darkMode     String?          @db.VarChar(10)
@@ -764,7 +765,7 @@ model Conversation {
   // status    ConversationStatus?
   baseCurrency Currency
   baseRates    String?          @db.Text
-  note         String?          @db.Text
+  note         String?          @db.Text /// @encrypted
 
   lastActivityAt     DateTime? @db.Timestamptz(3)
   lastTabId          String?   @db.VarChar(50)
@@ -901,7 +902,7 @@ model Message {
   conversationId String  @db.VarChar(50)
   tabId          String  @db.VarChar(50)
 
-  text          String? @db.Text // LongText
+  text          String? @db.Text /// @encrypted // LongText
   moneyRecordId String? @db.VarChar(50)
 
   // Technical Fields
@@ -935,8 +936,8 @@ model MoneyRecord {
   time              DateTime?          @default(now()) @db.Timestamptz(3)
   type              MoneyRecordType?
   // subType        String?            @db.VarChar(30)
-  description       String             @db.Text // LongText
-  note              String?            @db.Text // LongText
+  description       String             @db.Text /// @encrypted // LongText 
+  note              String?            @db.Text /// @encrypted // LongText 
   payerMemberId     String             @db.VarChar(50)
   amount            Decimal?
   currency          Currency

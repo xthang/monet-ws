@@ -40,6 +40,7 @@ jobs:
           echo '${{ vars.ENV_LOCAL_FILE }}' >> .env.local
 
           echo 'DATABASE_URL=${{ secrets.DATABASE_URL }}' >> .env.local
+          echo 'PRISMA_FIELD_ENCRYPTION_KEY=${{ secrets.PRISMA_FIELD_ENCRYPTION_KEY }}' >> .env.local
 
       - name: Log in to GitHub Container Registry
         uses: docker/login-action@v3
@@ -67,6 +68,7 @@ jobs:
           host: ${{ env.VM_IP }}
           username: ${{ env.VM_USER }}
           key: ${{ secrets.VM_SSH_KEY }}
+          # --add-host host.docker.internal:host-gateway : so that we can call to EVM localhost (eg local Database)
           script: |
             echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin 
             docker pull ghcr.io/${{ env.NAMESPACE }}/${{ env.IMAGE_NAME }}:latest

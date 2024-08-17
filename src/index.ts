@@ -63,6 +63,8 @@ async function main() {
         return
       }
 
+      ws.isAlive = true
+
       const { id: accountId } = await findUniqueAccountByAuthAccIdOrThrow(db, auth.userId)
 
       ws.auth = { accountId, authAccountId: auth.userId, orgId: auth.ordId }
@@ -73,10 +75,10 @@ async function main() {
       else wss.socketsByAccount[accountId].clients.add(ws)
 
       ws.on('ping', function (data) {
-        console.dev(`<-- WS [${this.auth.accountId}] on.ping:`, data)
+        console.dev(`<-- WS [${this.auth.accountId}] on.ping:`, data.toString())
       })
       ws.on('pong', function (data) {
-        console.dev(`<-- WS [${this.auth.accountId}] on.pong:`, data)
+        console.dev(`<-- WS [${this.auth.accountId}] on.pong:`, data.toString())
         this.isAlive = true
       })
 
