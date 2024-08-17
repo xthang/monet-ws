@@ -2,8 +2,8 @@ import assert from 'assert'
 
 import { $Enums, type Prisma } from '@prisma/client'
 
+import db from '../../db/index.js'
 import { ApiError } from '../../types/error.js'
-import db from '../index.js'
 
 import { ACCOUNT_SELECT } from './const.js'
 

@@ -2,10 +2,10 @@ import { WebSocketServer, type WebSocket } from 'ws'
 
 import { PORT } from './constants/env.js'
 import db from './db/index.js'
-import { findUniqueAccountByAuthAccIdOrThrow } from './db/utils/index.js'
 import { verifyToken } from './security/token-verification.js'
 import { ApiError, ApiErrorCode } from './types/error.js'
 import type { WsRequestFullPayload } from './types/ws/request.js'
+import { findUniqueAccountByAuthAccIdOrThrow } from './utils/db/index.js'
 import handleNewMessage from './utils/event-handlers/handle-new-message.js'
 
 import './utils/polyfills/console.js'

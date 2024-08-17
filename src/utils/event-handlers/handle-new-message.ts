@@ -2,10 +2,10 @@ import type { $Enums } from '@prisma/client'
 import { type WebSocketServer, WebSocket } from 'ws'
 
 import db from '../../db/index.js'
-import { findUniqueConversationMembershipOrThrow } from '../../db/utils/index.js'
 import { ApiError, ApiErrorCode } from '../../types/error.js'
 import type { WsSendMessageRequestData } from '../../types/ws/request.js'
 import { WsResponseData } from '../../types/ws/response.js'
+import { findUniqueConversationMembershipOrThrow } from '../db/index.js'
 
 export default async function handleNewMessage(wss: WebSocketServer, ws: WebSocket, locale: $Enums.Locale, message: WsSendMessageRequestData) {
   const { accountId, orgId } = ws.auth
