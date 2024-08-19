@@ -4,10 +4,10 @@ import type { ClientRequest, IncomingMessage } from 'node:http'
 import 'ws'
 import type { RawData } from 'ws'
 
-import type { Auth } from './request.js'
+import type { Auth } from './request.ts'
 
 declare module 'ws' {
-  declare interface WebSocket {
+  interface WebSocket {
     isAlive: boolean
     auth: Auth
 
@@ -18,7 +18,10 @@ declare module 'ws' {
     on(event: 'message', listener: (this: WebSocket, data: RawData, isBinary: boolean) => void): this
     on(event: 'open', listener: (this: WebSocket) => void): this
     on(event: 'ping' | 'pong', listener: (this: WebSocket, data: Buffer) => void): this
-    on(event: 'unexpected-response', listener: (this: WebSocket, request: ClientRequest, response: IncomingMessage) => void): this
+    on(
+      event: 'unexpected-response',
+      listener: (this: WebSocket, request: ClientRequest, response: IncomingMessage) => void
+    ): this
     on(event: string | symbol, listener: (this: WebSocket, ...args: any[]) => void): this
   }
 
@@ -26,7 +29,7 @@ declare module 'ws' {
     clients: Set<WebSocket>
   }
 
-  declare interface WebSocketServer {
+  interface WebSocketServer {
     clients: Set<WebSocket>
     socketsByAccount: { [accountId: string]: AccountData }
   }

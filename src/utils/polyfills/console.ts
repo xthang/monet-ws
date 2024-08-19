@@ -17,7 +17,8 @@ console.error = (...data: any[]) => {
 
   console.errorNotSend(...(hasOptions ? d : data))
 
-  if (options.sendNoti ?? true) sendNotification('console', 'error', [formatToLog(...(hasOptions ? d : data))], options.throttle)
+  if (options.sendNoti ?? true)
+    sendNotification('console', 'error', [formatToLog(...(hasOptions ? d : data))], options.throttle)
 }
 console.errorAsync = async (...data: any[]) => {
   const [options, ...d] = data
@@ -25,7 +26,8 @@ console.errorAsync = async (...data: any[]) => {
 
   console.errorNotSend(...(hasOptions ? d : data))
 
-  if (options.sendNoti ?? true) await sendNotification('console', 'error', [formatToLog(...(hasOptions ? d : data))], options.throttle)
+  if (options.sendNoti ?? true)
+    await sendNotification('console', 'error', [formatToLog(...(hasOptions ? d : data))], options.throttle)
 }
 console.warn = (...data: any[]) => {
   const [options, ...d] = data
@@ -33,7 +35,8 @@ console.warn = (...data: any[]) => {
 
   console.warnNotSend(...(hasOptions ? d : data))
 
-  if (options.sendNoti ?? true) sendNotification('console', 'warn', [formatToLog(...(hasOptions ? d : data))], options.throttle)
+  if (options.sendNoti ?? true)
+    sendNotification('console', 'warn', [formatToLog(...(hasOptions ? d : data))], options.throttle)
 }
 console.warnAsync = async (...data: any[]) => {
   const [options, ...d] = data
@@ -41,7 +44,8 @@ console.warnAsync = async (...data: any[]) => {
 
   console.warnNotSend(...(hasOptions ? d : data))
 
-  if (options.sendNoti ?? true) await sendNotification('console', 'warn', [formatToLog(...(hasOptions ? d : data))], options.throttle)
+  if (options.sendNoti ?? true)
+    await sendNotification('console', 'warn', [formatToLog(...(hasOptions ? d : data))], options.throttle)
 }
 console.logAndSend = (...data: any[]) => {
   const [options, ...d] = data
@@ -49,7 +53,8 @@ console.logAndSend = (...data: any[]) => {
 
   console.log(...(hasOptions ? d : data))
 
-  if (options.sendNoti ?? true) sendNotification('console', 'log', [formatToLog(...(hasOptions ? d : data))], options.throttle)
+  if (options.sendNoti ?? true)
+    sendNotification('console', 'log', [formatToLog(...(hasOptions ? d : data))], options.throttle)
 }
 console.logAndSendAsync = async (...data: any[]) => {
   const [options, ...d] = data
@@ -57,5 +62,6 @@ console.logAndSendAsync = async (...data: any[]) => {
 
   console.log(...(hasOptions ? d : data))
 
-  if (options.sendNoti ?? true) await sendNotification('console', 'log', [formatToLog(...(hasOptions ? d : data))], options.throttle)
+  if (options.sendNoti ?? true)
+    await sendNotification('console', 'log', [formatToLog(...(hasOptions ? d : data))], options.throttle)
 }

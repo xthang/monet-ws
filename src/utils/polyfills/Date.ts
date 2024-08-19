@@ -1,6 +1,10 @@
 const Date_toLocaleString = Date.prototype.toLocaleString
 
-Date.prototype.toLocaleString = function (this: Date, locales?: Intl.LocalesArgument, options?: Intl.DateTimeFormatOptions): string {
+Date.prototype.toLocaleString = function (
+  this: Date,
+  locales?: Intl.LocalesArgument,
+  options?: Intl.DateTimeFormatOptions
+): string {
   // if (locales?.valueOf() == 'en-US')
   return Date_toLocaleString.call(
     this,
@@ -16,4 +20,8 @@ Date.prototype.toLocaleString = function (this: Date, locales?: Intl.LocalesArgu
       timeZoneName: 'short'
     }
   )
+}
+
+Date.prototype.toJSON = function () {
+  return { _type: 'date', _value: this.toISOString() } as any
 }

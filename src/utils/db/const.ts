@@ -1,52 +1,47 @@
-import { Prisma } from '@prisma/client'
+import type { Prisma } from '@prisma/client'
 
 export const ACCOUNT_SELECT = {
+  id: true,
+  authAccountId: true,
+  username: true,
+  firstName: true,
+  middleName: true,
+  lastName: true,
+  nameOrder: true,
+  fullName: true,
+  nickname: true,
+  imageUrl: true,
+  role: true
+} as const satisfies Prisma.AccountSelect
+
+const ACCOUNT_SELECT_WHERE = {
   where: { deletedAt: null, isActive: true },
-  select: {
-    id: true,
-    authAccountId: true,
-    username: true,
-    nickname: true,
-    firstName: true,
-    middleName: true,
-    lastName: true,
-    nameOrder: true,
-    fullName: true,
-    imageUrl: true,
-    role: true,
-
-    subscriptionPlan: true,
-    subscriptionEndedAt: true,
-
-    locale: true
-  }
+  select: ACCOUNT_SELECT
 } as const satisfies { where: Prisma.AccountWhereInput; select: Prisma.AccountSelect }
 
-const MEMBER_INCLUDE = {
-  account: ACCOUNT_SELECT,
-  accountAlias: {
-    where: { deletedAt: null, isActive: true },
-    select: {
-      id: true,
-      accountId: true,
-      account: ACCOUNT_SELECT, // TODO: only select the connected account if the alias is 'verified'. We are fixing this in code
-      type: true,
-      rawValue: true,
-      contactValue: true,
-      valueType: true,
-      contactGroup: true,
-      contactGroupName: true,
-      contactGroup1: true,
-      contactBody: true,
-      contactExt: true,
-      formatted: true,
-      verificationStatus: true
-    }
-  },
-  accountPlaceholder: { where: { deletedAt: null }, select: { id: true, name: true } }
-} as const satisfies Prisma.ConversationMembershipInclude
+const ACCOUNT_ALIAS_SELECT = {
+  id: true,
+  accountId: true,
+  account: ACCOUNT_SELECT_WHERE, // TODO: only select the connected account if the alias is 'verified' and the account is in the current org. We are fixing this in code
+  type: true,
+  rawValue: true,
+  contactValue: true,
+  valueType: true,
+  contactGroup: true,
+  contactGroupName: true,
+  contactGroup1: true,
+  contactBody: true,
+  contactExt: true,
+  formatted: true,
+  verificationStatus: true
+} as const satisfies Prisma.AccountAliasSelect
 
-export const MEMBER_SELECT = {
+const ACCOUNT_PLACEHOLDER_SELECT = {
+  id: true,
+  name: true
+} as const satisfies Prisma.AccountPlaceholderSelect
+
+export const MEMBER_SELECT_WHERE = {
   id: true,
   accountId: true,
   accountAliasId: true,
@@ -56,7 +51,12 @@ export const MEMBER_SELECT = {
   role: true,
   order: true,
 
-  ...MEMBER_INCLUDE
+  account: ACCOUNT_SELECT_WHERE,
+  accountAlias: {
+    where: { deletedAt: null, isActive: true },
+    select: ACCOUNT_ALIAS_SELECT
+  },
+  accountPlaceholder: { where: { deletedAt: null }, select: ACCOUNT_PLACEHOLDER_SELECT }
 } as const satisfies Prisma.ConversationMembershipSelect
 
 export const MEMBER_SELECT_NO_WHERE = {
@@ -69,9 +69,9 @@ export const MEMBER_SELECT_NO_WHERE = {
   role: true,
   order: true,
 
-  account: { select: MEMBER_SELECT.account.select },
-  accountAlias: { select: MEMBER_SELECT.accountAlias.select },
-  accountPlaceholder: { select: MEMBER_SELECT.accountPlaceholder.select }
+  account: { select: ACCOUNT_SELECT },
+  accountAlias: { select: ACCOUNT_ALIAS_SELECT },
+  accountPlaceholder: { select: ACCOUNT_PLACEHOLDER_SELECT }
 } as const satisfies Prisma.ConversationMembershipSelect
 
 export const MEMBER_SELECT_FOR_NOTIFY = {
@@ -80,7 +80,7 @@ export const MEMBER_SELECT_FOR_NOTIFY = {
   account: {
     where: { deletedAt: null, isActive: true },
     select: {
-      ...ACCOUNT_SELECT.select,
+      ...ACCOUNT_SELECT,
       locale: true,
       accountAliases: { where: { verificationStatus: 'verified', deletedAt: null, isActive: true } }
     }
@@ -92,3 +92,60 @@ export const MEMBER_SELECT_FULL_FOR_NOTIFY = {
   ...MEMBER_SELECT_FOR_NOTIFY,
   accountPlaceholder: { where: { deletedAt: null } }
 } as const satisfies Prisma.ConversationMembershipSelect
+
+export const MESSAGE_SELECT = {
+  id: true,
+  uiId: true,
+  conversationId: true,
+  tabId: true,
+  text: true,
+  moneyRecordId: true,
+  // moneyRecord: true,
+  createdAt: true,
+  createdBy: true,
+  updatedAt: true,
+  updatedBy: true,
+  deletedAt: true,
+  deletedBy: true,
+  sentAt: true,
+  sentBy: true,
+  deletedForEveryoneAt: true,
+  deletedForEveryoneBy: true
+} as const satisfies Prisma.MessageSelect
+
+export const MONEY_RECORD_PARTAKER_SELECT = {
+  id: true,
+  memberId: true,
+  member: { select: { ...MEMBER_SELECT_NO_WHERE, deletedAt: true, deletedBy: true } },
+  proportion: true
+}
+
+export const MONEY_RECORD_SELECT = {
+  id: true,
+  conversationId: true,
+  tabId: true,
+  messageId: true,
+  time: true,
+  type: true,
+  description: true,
+  note: true,
+  payerMemberId: true,
+  payerMember: { select: { ...MEMBER_SELECT_NO_WHERE, deletedAt: true, deletedBy: true } },
+  amount: true,
+  currency: true,
+  ratePerBase: true,
+  rate: true,
+  partakers: {
+    where: { deletedAt: null, isActive: true },
+    select: MONEY_RECORD_PARTAKER_SELECT
+  },
+  amountPerPartaker: true,
+  createdAt: true,
+  createdBy: true,
+  updatedAt: true,
+  updatedBy: true,
+  deletedAt: true,
+  deletedBy: true,
+  settlementId: true,
+  status: true
+} as const satisfies Prisma.MoneyRecordSelect

@@ -1,0 +1,33 @@
+import { type WebSocketServer, WebSocket } from 'ws'
+
+import type { PrismaClient, PrismaTransactionClient } from '@/db/types.js'
+
+import type { WsMessageFullPayload } from '../../types/ws/message.js'
+
+// A client WebSocket broadcasting to every other connected WebSocket clients, excluding itself.
+export async function broadcastToGroupMembersExceptMe(
+  wss: WebSocketServer,
+  ws: WebSocket,
+  db: PrismaClient | PrismaTransactionClient,
+  accountId: string,
+  orgId: string | undefined,
+  conversationId: string,
+  payload: WsMessageFullPayload
+) {
+  const memberships = await db.conversationMembership.findMany({
+    where: { conversationId, AND: [{ accountId: { not: null } }, { accountId: { not: accountId } }], isActive: true },
+    select: { accountId: true }
+  })
+
+  const sentTo = new Set<string>()
+  for (const { accountId: mAccountId } of memberships.concat([{ accountId }])) {
+    wss.socketsByAccount[mAccountId!]?.clients.forEach(function each(client) {
+      if (client !== ws && client.readyState === WebSocket.OPEN && client.auth.orgId == orgId) {
+        client.send(JSON.stringify(payload))
+        sentTo.add(mAccountId!)
+      }
+    })
+  }
+
+  return sentTo
+}
