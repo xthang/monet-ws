@@ -3,7 +3,7 @@ import assert from 'assert'
 import { $Enums, type Prisma } from '@prisma/client'
 
 import db from '../../db/index.js'
-import { ApiError } from '../../types/error.js'
+import { WsError } from '../../types/error.js'
 
 import { ACCOUNT_SELECT } from './const.js'
 
@@ -69,7 +69,7 @@ export async function findUniqueConversationMembershipOrThrow<
   const conversationIds = new Set(memberships.map((m) => m.conversationId))
   assert(
     conversationIds.size === 1,
-    new ApiError(
+    new WsError(
       'INVALID_MEMBERSHIPS',
       `memberships found: ${memberships.length} | conversations found: ${conversationIds.size}`
     )

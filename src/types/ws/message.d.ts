@@ -1,5 +1,6 @@
 import type { Message, MoneyRecord, MoneyRecordPartaker } from '@prisma/client'
 
+import type { AccountBasicInfo } from '../db/index.js'
 import type { ParticipantMember } from '../participant-member.js'
 
 type WsMessageFullPayload = WsMessagePayload & {}
@@ -28,10 +29,18 @@ type WsMessagePayload =
       orgId: string | undefined
       data: RequiredProps<WsChatMessage, 'moneyRecord'>
     }
+  | {
+      event: 'deleted-message'
+      orgId: string | undefined
+      data: WsChatMessage
+    }
 
 type WsNotification = any
 
-type WsChatMessage = Omit<Message, 'uiId'> & { moneyRecord?: WsMoneyRecord | null }
+type WsChatMessage = Omit<Message, 'uiId'> & {
+  moneyRecord?: WsMoneyRecord | null
+  deletedByAccount?: AccountBasicInfo | null
+}
 
 type WsMoneyRecord = Omit<MoneyRecord, 'amount' | 'rate' | 'amountPerPartaker'> & {
   amount: number | null

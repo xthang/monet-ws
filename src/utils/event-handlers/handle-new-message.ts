@@ -4,7 +4,7 @@ import type { WsSendMessageRequestData } from '@/types/ws/request.js'
 
 import type { Locale } from '../../constants/locales.js'
 import db from '../../db/index.js'
-import { ApiError, ApiErrorCode } from '../../types/error.js'
+import { WsError, WsErrorCode } from '../../types/error.js'
 import type { WsChatMessageReceipt, WsResponseFullPayload } from '../../types/ws/response.js'
 import { MESSAGE_SELECT } from '../db/const.js'
 import { findUniqueConversationMembershipOrThrow } from '../db/index.js'
@@ -26,8 +26,8 @@ export default async function handleNewMessage(
     // check if the diff between sent time & current server time is too large
     const timeDiff = Math.abs(sentAt.getTime() - Date.now())
     if (timeDiff > 5 * 60 * 10e3) {
-      throw new ApiError(
-        ApiErrorCode.BAD_REQUEST,
+      throw new WsError(
+        WsErrorCode.BAD_REQUEST,
         `the diff between sent time (${sentAt}) & current server time (${new Date()}) is too large (${timeDiff})`
       )
     }

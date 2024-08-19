@@ -107,10 +107,9 @@ export const MESSAGE_SELECT = {
   updatedBy: true,
   deletedAt: true,
   deletedBy: true,
+  deletedByAccount: { select: ACCOUNT_SELECT },
   sentAt: true,
-  sentBy: true,
-  deletedForEveryoneAt: true,
-  deletedForEveryoneBy: true
+  sentBy: true
 } as const satisfies Prisma.MessageSelect
 
 export const MONEY_RECORD_PARTAKER_SELECT = {
@@ -146,6 +145,7 @@ export const MONEY_RECORD_SELECT = {
   updatedBy: true,
   deletedAt: true,
   deletedBy: true,
+  deletedByAccount: { select: ACCOUNT_SELECT },
   settlementId: true,
   status: true
 } as const satisfies Prisma.MoneyRecordSelect

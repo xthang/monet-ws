@@ -32,6 +32,10 @@ export type WsRequestData =
       event: 'upsert-money-record-partakers'
       data: WsUpsertMoneyRecordPartakersRequestData
     }
+  | {
+      event: 'delete-message'
+      data: WsDeleteMessageRequestData
+    }
 
 export type WsSendMessageRequestData = {
   conversationId: string
@@ -103,3 +107,11 @@ export const WsUpsertMoneyRecordPartakersRequestData = z.object({
 })
 
 export type WsUpsertMoneyRecordPartakersRequestData = z.infer<typeof WsUpsertMoneyRecordPartakersRequestData>
+
+export const WsDeleteMessageRequestData = z.object({
+  conversationId: z.string(),
+  tabId: z.string(),
+  id: z.string()
+})
+
+export type WsDeleteMessageRequestData = z.infer<typeof WsDeleteMessageRequestData>

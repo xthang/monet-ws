@@ -79,7 +79,7 @@ export default async function handleUpdateMoneyRecord(
         }
       })
 
-      // Broadcast
+      // BROADCAST ...
 
       const { payerMember, amount, rate, partakers, amountPerPartaker, ...otherMoneyRecordData } = updatedMoneyRecord
 

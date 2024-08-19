@@ -540,7 +540,9 @@ model Account {
   conversationMemberships      ConversationMembership[]
   conversationAddedMemberships ConversationMembership[] @relation(name: "addedByAccount")
   organizationMemberships      OrganizationMembership[]
-  messages                     Message[]
+  messages                     Message[]                @relation(name: "Message_sentByAccount")
+  deletedMessages              Message[]                @relation(name: "Message_deletedByAccount")
+  deletedMoneyRecords          MoneyRecord[]            @relation(name: "MoneyRecord_deletedByAccount")
   orders                       Order[]
   subscriptionPaymentTrans     PaymentTransaction?      @relation(fields: [subscriptionPaymentTransId], references: [id])
 
@@ -914,16 +916,15 @@ model Message {
   deletedBy String?   @db.VarChar(50)
 
   // User activities
-  sentAt               DateTime  @db.Timestamptz(3)
-  sentBy               String    @db.VarChar(50)
-  deletedForEveryoneAt DateTime? @db.Timestamptz(3)
-  deletedForEveryoneBy String?   @db.VarChar(50)
+  sentAt DateTime @db.Timestamptz(3)
+  sentBy String   @db.VarChar(50)
 
   // Foreign Key Relations
   conversation             Conversation    @relation(fields: [conversationId], references: [id])
   conversationTab          ConversationTab @relation(fields: [tabId], references: [id])
-  sentByAccount            Account         @relation(fields: [sentBy], references: [id])
   moneyRecord              MoneyRecord?
+  sentByAccount            Account         @relation("Message_sentByAccount", fields: [sentBy], references: [id])
+  deletedByAccount         Account?        @relation("Message_deletedByAccount", fields: [deletedBy], references: [id])
   conversation_lastMessage Conversation?   @relation("lastMessage")
 }
 
@@ -958,10 +959,11 @@ model MoneyRecord {
   // isTestData Boolean
 
   // Foreign Key Relations
-  conversation Conversation           @relation(fields: [conversationId], references: [id])
-  message      Message                @relation(fields: [messageId], references: [id])
-  payerMember  ConversationMembership @relation(fields: [payerMemberId], references: [id])
-  partakers    MoneyRecordPartaker[]
+  conversation     Conversation           @relation(fields: [conversationId], references: [id])
+  message          Message                @relation(fields: [messageId], references: [id])
+  payerMember      ConversationMembership @relation(fields: [payerMemberId], references: [id])
+  partakers        MoneyRecordPartaker[]
+  deletedByAccount Account?               @relation("MoneyRecord_deletedByAccount", fields: [deletedBy], references: [id])
 
   @@unique([messageId])
   @@unique([conversationId, messageId])

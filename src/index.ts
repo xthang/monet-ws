@@ -3,12 +3,13 @@ import { WebSocketServer, type WebSocket } from 'ws'
 import { PORT } from './constants/env.js'
 import db from './db/index.js'
 import { verifyToken } from './security/token-verification.js'
-import { ApiError, ApiErrorCode } from './types/error.js'
+import { WsError, WsErrorCode } from './types/error.js'
 import type { WsMessageFullPayload } from './types/ws/message.js'
 import { WsRequestFullPayload } from './types/ws/request.js'
 import type { WsResponseFullPayload } from './types/ws/response.js'
 import { findUniqueAccountByAuthAccIdOrThrow } from './utils/db/index.js'
 import handleUpsertMoneyRecordPartakers from './utils/event-handlers/handle-bunk-upsert-money-record-partakers.js'
+import handleDeleteMessage from './utils/event-handlers/handle-delete-message.js'
 import handleNewMessage from './utils/event-handlers/handle-new-message.js'
 import handleCreateMoneyRecord from './utils/event-handlers/handle-new-money-record.js'
 import handleUpdateMoneyRecord from './utils/event-handlers/handle-update-money-record.js'
@@ -58,7 +59,7 @@ async function main() {
       if (!token) {
         console.warn(`<-> WSS on.connection:`, request.method, maskedUrl, 'Not authenticated')
         ws.terminate()
-        request.destroy(new ApiError(ApiErrorCode.NOT_AUTHENTICATED, 'Not authenticated'))
+        request.destroy(new WsError(WsErrorCode.NOT_AUTHENTICATED, 'Not authenticated'))
         return
       }
 
@@ -66,7 +67,7 @@ async function main() {
       if (!auth) {
         console.warn(`<-> WSS on.connection:`, request.method, maskedUrl, 'Not authenticated')
         ws.terminate()
-        request.destroy(new ApiError(ApiErrorCode.NOT_AUTHENTICATED, 'Not authenticated'))
+        request.destroy(new WsError(WsErrorCode.NOT_AUTHENTICATED, 'Not authenticated'))
         return
       }
 
@@ -130,8 +131,19 @@ async function main() {
               case 'upsert-money-record-partakers':
                 await handleUpsertMoneyRecordPartakers(wss, this, requestId, locale, data)
                 break
-              default:
+              case 'delete-message':
+                await handleDeleteMessage(wss, this, requestId, locale, data)
+                break
+              default: {
                 console.warn(`<!- Unknown event:`, event)
+
+                const payload: WsResponseFullPayload = {
+                  event: 'callback',
+                  requestId,
+                  error: transformError(new WsError(WsErrorCode.BAD_REQUEST, `Invalid event: ${event}`))
+                }
+                ws.send(JSON.stringify(payload))
+              }
             }
           } catch (e: any) {
             console.error(`<-- WS [${this.auth.accountId}] on.message ERROR:`, e)

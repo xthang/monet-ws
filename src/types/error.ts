@@ -2,7 +2,7 @@ export enum ErrorCode {
   WS_STATE_CLOSED = 'WS_STATE_CLOSED'
 }
 
-export enum ApiErrorCode {
+export enum WsErrorCode {
   NOT_AUTHENTICATED = 'NOT_AUTHENTICATED',
   FORBIDDEN = 'FORBIDDEN',
   BAD_REQUEST = 'BAD_REQUEST',
@@ -29,6 +29,6 @@ export class XError extends BaseError {
   declare code: ErrorCode
 }
 
-export class ApiError extends BaseError {
-  declare code: ApiErrorCode
+export class WsError extends BaseError {
+  declare code: WsErrorCode
 }

@@ -101,7 +101,7 @@ export default async function handleUpsertMoneyRecordPartakers(
 
     await calculateTabSettlement(accountId, db, conversationId, conversation, tabId)
 
-    // Broadcast
+    // BROADCAST ...
 
     const partakers = await db.moneyRecordPartaker.findMany({
       where: { moneyRecordId },

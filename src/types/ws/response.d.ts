@@ -11,7 +11,11 @@ type WsResponsePayload = {
 
 type WsErrorData = { code: string; message: string; details?: any }
 
-type WsResponseData = WsChatMessageReceipt | WsUpdateChatMessageReceipt | WsUpdateMoneyRecordReceipt
+type WsResponseData =
+  | WsChatMessageReceipt
+  | WsUpdateChatMessageReceipt
+  | WsUpdateMoneyRecordReceipt
+  | WsDeleteMessageReceipt
 
 type WsChatMessageReceipt = {
   conversation_id: string
@@ -36,6 +40,15 @@ type WsUpdateMoneyRecordReceipt = {
   tab_id: string
   message_id: string
   money_record_id: string
+  message?: WsChatMessage
+  sent_to?: string[]
+  error?: { code: string; message: string; details?: any }
+}
+
+type WsDeleteMessageReceipt = {
+  conversation_id: string
+  tab_id: string
+  message_id: string
   message?: WsChatMessage
   sent_to?: string[]
   error?: { code: string; message: string; details?: any }
