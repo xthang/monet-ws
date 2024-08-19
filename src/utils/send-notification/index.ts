@@ -3,7 +3,9 @@ import lodash from 'lodash'
 import sendTelegramMessage from './telegram.js'
 
 const throttles: {
-  [key: string]: lodash.DebouncedFunc<(tag: string, level: 'error' | 'warn' | 'info' | 'log', messages: string[]) => Promise<void>>
+  [key: string]: lodash.DebouncedFunc<
+    (tag: string, level: 'error' | 'warn' | 'info' | 'log', messages: string[]) => Promise<void>
+  >
 } = {}
 const deleteDebounces: { [key: string]: lodash.DebouncedFunc<() => void> } = {}
 
@@ -16,7 +18,8 @@ export async function sendNotification(
   if (throttle) {
     if (!throttles[throttle.key])
       throttles[throttle.key] = lodash.throttle(
-        (tag: string, level: 'error' | 'warn' | 'info' | 'log', messages: string[]) => sendTelegramMessage(tag, level, messages),
+        (tag: string, level: 'error' | 'warn' | 'info' | 'log', messages: string[]) =>
+          sendTelegramMessage(tag, level, messages),
         throttle.wait,
         throttle.options ?? { leading: true }
       )

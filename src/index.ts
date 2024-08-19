@@ -4,11 +4,18 @@ import { PORT } from './constants/env.js'
 import db from './db/index.js'
 import { verifyToken } from './security/token-verification.js'
 import { ApiError, ApiErrorCode } from './types/error.js'
-import type { WsRequestFullPayload } from './types/ws/request.js'
+import type { WsMessageFullPayload } from './types/ws/message.js'
+import { WsRequestFullPayload } from './types/ws/request.js'
+import type { WsResponseFullPayload } from './types/ws/response.js'
 import { findUniqueAccountByAuthAccIdOrThrow } from './utils/db/index.js'
+import handleUpsertMoneyRecordPartakers from './utils/event-handlers/handle-bunk-upsert-money-record-partakers.js'
 import handleNewMessage from './utils/event-handlers/handle-new-message.js'
+import handleCreateMoneyRecord from './utils/event-handlers/handle-new-money-record.js'
+import handleUpdateMoneyRecord from './utils/event-handlers/handle-update-money-record.js'
+import { transformError } from './utils/ws/transform-error.js'
 
 import './utils/polyfills/console.js'
+import './utils/polyfills/Date.js'
 
 const TAG = '🟢'
 
@@ -91,24 +98,52 @@ async function main() {
       })
 
       ws.on('message', async function message(rawData, _isBinary) {
-        const { requestId, token, locale, event, data, ..._otherData } = JSON.parse(rawData.toString()) as WsRequestFullPayload
+        try {
+          const { requestId, token, locale, event, data, ..._otherData } = JSON.parse(
+            rawData.toString()
+          ) as WsRequestFullPayload
 
-        console.log(`<-- WS [${this.auth.accountId}] received: [%s] [%s]`, requestId, event, _otherData)
+          try {
+            console.log(`<-- WS [${this.auth.accountId}] received: [%s] [%s]`, requestId, event, _otherData)
 
-        const auth = verifyToken(token)
-        if (!auth) {
-          console.warn(`<-- WS [${this.auth.accountId}] received: Not authenticated`)
-          return
-        }
+            const auth = verifyToken(token)
+            if (!auth) {
+              console.warn(`<-- WS [${this.auth.accountId}] received: Not authenticated`)
+              return
+            }
 
-        this.auth = { accountId, authAccountId: auth.userId, orgId: auth.ordId }
+            this.auth = { accountId, authAccountId: auth.userId, orgId: auth.ordId }
 
-        switch (event) {
-          case 'send-msg':
-            await handleNewMessage(wss, this, locale, { ...data, sentAt: new Date(Date.parse(data.sentAt as any)) })
-            break
-          default:
-            console.warn(`<!- Unknown event:`, event)
+            switch (event) {
+              case 'new-text-message':
+                await handleNewMessage(wss, this, requestId, locale, {
+                  ...data,
+                  sentAt: new Date(Date.parse(data.sentAt as any))
+                })
+                break
+              case 'new-money-record':
+                await handleCreateMoneyRecord(wss, this, requestId, locale, data)
+                break
+              case 'update-money-record':
+                await handleUpdateMoneyRecord(wss, this, requestId, locale, data)
+                break
+              case 'upsert-money-record-partakers':
+                await handleUpsertMoneyRecordPartakers(wss, this, requestId, locale, data)
+                break
+              default:
+                console.warn(`<!- Unknown event:`, event)
+            }
+          } catch (e: any) {
+            console.error(`<-- WS [${this.auth.accountId}] on.message ERROR:`, e)
+
+            const payload: WsResponseFullPayload = { event: 'callback', requestId, error: transformError(e) }
+            ws.send(JSON.stringify(payload))
+          }
+        } catch (e: any) {
+          console.error(`<-- WS [${this.auth.accountId}] on.message ERROR:`, e)
+
+          const payload: WsMessageFullPayload = { event: 'error', data: transformError(e) }
+          ws.send(JSON.stringify(payload))
         }
       })
 
