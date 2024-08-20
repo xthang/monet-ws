@@ -117,7 +117,7 @@ export const MONEY_RECORD_PARTAKER_SELECT = {
   memberId: true,
   member: { select: { ...MEMBER_SELECT_NO_WHERE, deletedAt: true, deletedBy: true } },
   proportion: true
-}
+} as const satisfies Prisma.MoneyRecordPartakerSelect
 
 export const MONEY_RECORD_SELECT = {
   id: true,

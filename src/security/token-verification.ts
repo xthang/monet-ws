@@ -2,7 +2,7 @@ import assert from 'assert'
 
 import jwt from 'jsonwebtoken'
 
-import { CLERK_PUBLIC_KEY } from '../constants/env.js'
+import { CLERK_PUBLIC_KEY } from '@/constants/env'
 
 export function verifyToken(token: string) {
   try {

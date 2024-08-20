@@ -1,16 +1,16 @@
 import { ActivityLogObjectType } from '@prisma/client'
 import { type WebSocketServer, WebSocket } from 'ws'
 
-import type { WsDeleteMessageRequestData } from '@/types/ws/request.js'
+import { ActivityLogType } from '@/constants/data'
+import type { Locale } from '@/constants/locales'
+import db from '@/db/index'
+import type { WsDeleteMessageRequestData } from '@/types/ws/request'
+import type { WsDeleteMessageReceipt, WsResponseFullPayload } from '@/types/ws/response'
 
-import { ActivityLogType } from '../../constants/data.js'
-import type { Locale } from '../../constants/locales.js'
-import db from '../../db/index.js'
-import type { WsDeleteMessageReceipt, WsResponseFullPayload } from '../../types/ws/response.js'
-import calculateTabSettlement from '../db/calculate-conversation-tab-settlement.js'
-import { findUniqueConversationMembershipOrThrow } from '../db/index.js'
-import { broadcastToGroupMembersExceptMe } from '../ws/broadcast-to-group-members-except-me.js'
-import { transformError } from '../ws/transform-error.js'
+import calculateTabSettlement from '../db/calculate-conversation-tab-settlement'
+import { findUniqueConversationMembershipOrThrow } from '../db/index'
+import { broadcastToGroupMembersExceptMe } from '../ws/broadcast-to-group-members-except-me'
+import { transformError } from '../ws/transform-error'
 
 export default async function handleDeleteMessage(
   wss: WebSocketServer,
@@ -100,8 +100,6 @@ export default async function handleDeleteMessage(
         } satisfies WsDeleteMessageReceipt
       }
       ws.send(JSON.stringify(payload))
-
-      return deleted
     })
   } catch (e: any) {
     console.error(`<!- WS [${accountId}] handleDeleteMessage ERROR:`, e)

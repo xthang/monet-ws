@@ -7,6 +7,8 @@ export type Auth = {
   accountId: string
   authAccountId: string
   orgId?: string
+
+  locale: Locale | null
 }
 
 export type WsRequestFullPayload = { requestId: string; token: string; locale: Locale } & WsRequestData
@@ -35,6 +37,10 @@ export type WsRequestData =
   | {
       event: 'delete-message'
       data: WsDeleteMessageRequestData
+    }
+  | {
+      event: 'settle-up-payable'
+      data: WsSettleUpPayableRequestData
     }
 
 export type WsSendMessageRequestData = {
@@ -115,3 +121,12 @@ export const WsDeleteMessageRequestData = z.object({
 })
 
 export type WsDeleteMessageRequestData = z.infer<typeof WsDeleteMessageRequestData>
+
+export const WsSettleUpPayableRequestData = z.object({
+  conversationId: z.string(),
+  tabId: z.string(),
+  settlementId: z.string(),
+  description: z.string().optional()
+})
+
+export type WsSettleUpPayableRequestData = z.infer<typeof WsSettleUpPayableRequestData>

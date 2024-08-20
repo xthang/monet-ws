@@ -21,9 +21,9 @@ import type {
 } from '@prisma/client'
 import type { GetBatchResult } from '@prisma/client/runtime/library'
 
-import type { PrismaTransactionClient } from './types.js'
+import type { PrismaTransactionClient } from './types'
 
-import db from './index.js'
+import db from './index'
 
 type model =
   | 'notification'

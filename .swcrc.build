@@ -1,0 +1,36 @@
+{
+  "$schema": "https://swc.rs/schema.json",
+  // "$schema": "https://json.schemastore.org/swcrc",
+  "jsc": {
+    "parser": {
+      "syntax": "typescript",
+      "topLevelAwait": true
+    },
+    "target": "esnext",
+    "baseUrl": "src",
+    "paths": {
+      "@/*": ["*"]
+    },
+    "experimental": {
+      "plugins": [
+        [
+          "@lingui/swc-plugin",
+          {
+            // Optional
+            // Unlike the JS version this option must be passed as object only.
+            // Docs https://lingui.dev/ref/conf#runtimeconfigmodule
+            // "runtimeModules": {
+            //   "i18n": ["@lingui/core", "i18n"],
+            //   "trans": ["@lingui/react", "Trans"]
+            // }
+          }
+        ]
+      ]
+    }
+  },
+  "module": {
+    "type": "es6",
+    "resolveFully": true
+  },
+  "exclude": "node_modules/"
+}

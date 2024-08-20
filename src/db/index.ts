@@ -1,8 +1,8 @@
 import { PrismaClient } from '@prisma/client'
 import { fieldEncryptionExtension } from 'prisma-field-encryption'
 
-import { extendedModels } from './extendedModels.js'
-import { extendedQueries } from './extendedQueries.js'
+import { extendedModels } from './extendedModels'
+import { extendedQueries } from './extendedQueries'
 
 const db = new PrismaClient()
   .$extends({

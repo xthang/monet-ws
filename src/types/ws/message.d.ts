@@ -1,7 +1,7 @@
 import type { Message, MoneyRecord, MoneyRecordPartaker } from '@prisma/client'
 
-import type { AccountBasicInfo } from '../db/index.js'
-import type { ParticipantMember } from '../participant-member.js'
+import type { AccountBasicInfo } from '../db/index'
+import type { ParticipantMember } from '../participant-member'
 
 type WsMessageFullPayload = WsMessagePayload & {}
 
@@ -33,6 +33,11 @@ type WsMessagePayload =
       event: 'deleted-message'
       orgId: string | undefined
       data: WsChatMessage
+    }
+  | {
+      event: 'new-payable-settlement'
+      orgId: string | undefined
+      data: RequiredProps<WsChatMessage, 'moneyRecord'>
     }
 
 type WsNotification = any

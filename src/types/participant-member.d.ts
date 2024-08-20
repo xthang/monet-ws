@@ -1,6 +1,6 @@
 import type { ConversationMembership } from '@prisma/client'
 
-import type { AccountBasicInfo, AccountAlias, AccountPlaceholder } from './db/index.js'
+import type { AccountBasicInfo, AccountAlias, AccountPlaceholder } from './db/index'
 
 // values which might be members of a conversation or not (is deleted from that conversation)
 type ParticipantMember = Pick<

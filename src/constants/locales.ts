@@ -1,3 +1,4 @@
+import { I18n } from '@lingui/core'
 import { $Enums } from '@prisma/client'
 
 export const LOCALES = [
@@ -45,3 +46,13 @@ export type SupportedLocale = (typeof SUPPORTED_LOCALES)[number]
 
 export const DEFAULT_LOCALE = 'en-US'
 export const DEFAULT_DB_LOCALE = $Enums.Locale.en_US
+
+const i18ns: Map<SupportedLocale, I18n> = new Map()
+
+export async function loadI18n(locale: SupportedLocale) {
+  if (!i18ns.get(locale)) {
+    const { messages } = await import(`../locales/${locale}/messages.js`)
+    i18ns.set(locale, new I18n({ locale, messages: { [locale]: messages } }))
+  }
+  return i18ns.get(locale)!
+}

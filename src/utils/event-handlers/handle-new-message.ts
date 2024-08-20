@@ -1,15 +1,15 @@
 import { type WebSocketServer, WebSocket } from 'ws'
 
-import type { WsSendMessageRequestData } from '@/types/ws/request.js'
+import type { Locale } from '@/constants/locales'
+import db from '@/db/index'
+import { WsError, WsErrorCode } from '@/types/error'
+import type { WsSendMessageRequestData } from '@/types/ws/request'
+import type { WsChatMessageReceipt, WsResponseFullPayload } from '@/types/ws/response'
 
-import type { Locale } from '../../constants/locales.js'
-import db from '../../db/index.js'
-import { WsError, WsErrorCode } from '../../types/error.js'
-import type { WsChatMessageReceipt, WsResponseFullPayload } from '../../types/ws/response.js'
-import { MESSAGE_SELECT } from '../db/const.js'
-import { findUniqueConversationMembershipOrThrow } from '../db/index.js'
-import { broadcastToGroupMembersExceptMe } from '../ws/broadcast-to-group-members-except-me.js'
-import { transformError } from '../ws/transform-error.js'
+import { MESSAGE_SELECT } from '../db/const'
+import { findUniqueConversationMembershipOrThrow } from '../db/index'
+import { broadcastToGroupMembersExceptMe } from '../ws/broadcast-to-group-members-except-me'
+import { transformError } from '../ws/transform-error'
 
 export default async function handleNewMessage(
   wss: WebSocketServer,
@@ -72,8 +72,6 @@ export default async function handleNewMessage(
         } satisfies WsChatMessageReceipt
       }
       ws.send(JSON.stringify(payload))
-
-      return createdMsg
     })
   } catch (e: any) {
     console.error(`<!- WS [${accountId}] handleNewMessage ERROR:`, e)

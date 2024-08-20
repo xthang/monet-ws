@@ -1,8 +1,7 @@
 import { type WebSocketServer, WebSocket } from 'ws'
 
-import type { PrismaClient, PrismaTransactionClient } from '@/db/types.js'
-
-import type { WsMessageFullPayload } from '../../types/ws/message.js'
+import type { PrismaClient, PrismaTransactionClient } from '@/db/types'
+import type { WsMessageFullPayload } from '@/types/ws/message'
 
 // A client WebSocket broadcasting to every other connected WebSocket clients, excluding itself.
 export async function broadcastToGroupMembersExceptMe(

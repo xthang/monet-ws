@@ -2,8 +2,8 @@
   "compilerOptions": {
     /* Basic Options */
     "target": "ESNext",
-    "module": "NodeNext",
-    "moduleResolution": "NodeNext",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
     "esModuleInterop": true,
     "lib": ["esnext"],
     "isolatedModules": true,
@@ -15,6 +15,7 @@
     "strict": true,
     "strictNullChecks": true,
     "noImplicitAny": true,
+    "skipLibCheck": true,
 
     "plugins": [],
     "baseUrl": "src",

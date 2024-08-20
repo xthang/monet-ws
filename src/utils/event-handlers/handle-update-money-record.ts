@@ -1,18 +1,19 @@
 import { $Enums } from '@prisma/client'
 import { type WebSocketServer, WebSocket } from 'ws'
 
-import { ActivityLogType } from '../../constants/data.js'
-import type { Locale } from '../../constants/locales.js'
-import db from '../../db/index.js'
-import type { WsMoneyRecord } from '../../types/ws/message.js'
-import { WsUpdateMoneyRecordRequestData } from '../../types/ws/request.js'
-import type { WsResponseFullPayload, WsUpdateMoneyRecordReceipt } from '../../types/ws/response.js'
-import calculateTabSettlement from '../db/calculate-conversation-tab-settlement.js'
-import { MESSAGE_SELECT, MONEY_RECORD_SELECT } from '../db/const.js'
-import { findUniqueMessageOrThrow } from '../db/index.js'
-import { transformAccountAlias } from '../db/transform.js'
-import { broadcastToGroupMembersExceptMe } from '../ws/broadcast-to-group-members-except-me.js'
-import { transformError } from '../ws/transform-error.js'
+import { ActivityLogType } from '@/constants/data'
+import type { Locale } from '@/constants/locales'
+import db from '@/db/index'
+import type { WsMoneyRecord } from '@/types/ws/message'
+import { WsUpdateMoneyRecordRequestData } from '@/types/ws/request'
+import type { WsResponseFullPayload, WsUpdateMoneyRecordReceipt } from '@/types/ws/response'
+
+import calculateTabSettlement from '../db/calculate-conversation-tab-settlement'
+import { MESSAGE_SELECT, MONEY_RECORD_SELECT } from '../db/const'
+import { findUniqueMessageOrThrow } from '../db/index'
+import { transformAccountAlias } from '../db/transform/account-alias'
+import { broadcastToGroupMembersExceptMe } from '../ws/broadcast-to-group-members-except-me'
+import { transformError } from '../ws/transform-error'
 
 export default async function handleUpdateMoneyRecord(
   wss: WebSocketServer,
@@ -150,8 +151,6 @@ export default async function handleUpdateMoneyRecord(
         } satisfies WsUpdateMoneyRecordReceipt
       }
       ws.send(JSON.stringify(payload))
-
-      return { updated: updatedMoneyRecord }
     })
   } catch (e: any) {
     console.error(`<!- WS [${accountId}] handleUpdateMoneyRecord ERROR:`, e)

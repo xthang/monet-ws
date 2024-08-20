@@ -1,18 +1,19 @@
 import { $Enums } from '@prisma/client'
 import { type WebSocketServer, WebSocket } from 'ws'
 
-import { ActivityLogType } from '../../constants/data.js'
-import type { Locale } from '../../constants/locales.js'
-import db from '../../db/index.js'
-import type { WsMoneyRecord } from '../../types/ws/message.js'
-import { WsCreateMoneyRecordRequestData } from '../../types/ws/request.js'
-import type { WsChatMessageReceipt, WsResponseFullPayload } from '../../types/ws/response.js'
-import calculateTabSettlement from '../db/calculate-conversation-tab-settlement.js'
-import { MESSAGE_SELECT, MONEY_RECORD_SELECT } from '../db/const.js'
-import { findUniqueConversationMembershipOrThrow } from '../db/index.js'
-import { transformAccountAlias } from '../db/transform.js'
-import { broadcastToGroupMembersExceptMe } from '../ws/broadcast-to-group-members-except-me.js'
-import { transformError } from '../ws/transform-error.js'
+import { ActivityLogType } from '@/constants/data'
+import type { Locale } from '@/constants/locales'
+import db from '@/db/index'
+import type { WsMoneyRecord } from '@/types/ws/message'
+import { WsCreateMoneyRecordRequestData } from '@/types/ws/request'
+import type { WsChatMessageReceipt, WsResponseFullPayload } from '@/types/ws/response'
+
+import calculateTabSettlement from '../db/calculate-conversation-tab-settlement'
+import { MESSAGE_SELECT, MONEY_RECORD_SELECT } from '../db/const'
+import { findUniqueConversationMembershipOrThrow } from '../db/index'
+import { transformAccountAlias } from '../db/transform/account-alias'
+import { broadcastToGroupMembersExceptMe } from '../ws/broadcast-to-group-members-except-me'
+import { transformError } from '../ws/transform-error'
 
 export default async function handleCreateMoneyRecord(
   wss: WebSocketServer,
@@ -150,8 +151,6 @@ export default async function handleCreateMoneyRecord(
         } satisfies WsChatMessageReceipt
       }
       ws.send(JSON.stringify(payload))
-
-      return { message: createdMsg, moneyRecord }
     })
   } catch (e: any) {
     console.error(`<!- WS [${accountId}] handleCreateMoneyRecord ERROR:`, e)

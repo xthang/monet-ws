@@ -1,6 +1,9 @@
 const longParentPath = Array.from({ length: 10 }, (_, i) => '../'.repeat(i + 1).slice(0, -1)).join(',')
 
 module.exports = {
+  env: {
+    node: true
+  },
   extends: ['eslint:recommended', 'plugin:@typescript-eslint/recommended', 'prettier'],
   ignorePatterns: ['/node_modules/', 'dist', 'build', 'public', '/ignore/'],
   parser: '@typescript-eslint/parser',

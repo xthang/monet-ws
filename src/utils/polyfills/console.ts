@@ -1,6 +1,7 @@
-import { isDevEnv } from '../../constants/env.js'
-import { formatToLog } from '../errors.js'
-import { sendNotification } from '../send-notification/index.js'
+import { isDevEnv } from '@/constants/env'
+
+import { formatToLog } from '../errors'
+import { sendNotification } from '../send-notification/index'
 
 // ----------
 

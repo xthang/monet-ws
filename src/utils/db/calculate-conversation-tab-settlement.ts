@@ -1,10 +1,10 @@
 import type { Conversation } from '@prisma/client'
 
-import { PrismaClient, PrismaTransactionClient } from '@/db/types.js'
+import type { PrismaClient, PrismaTransactionClient } from '@/db/types'
 
-import calculateMoneyRecord from '../calculations/calculate-money-record.js'
-import calculateBalances from '../calculations/calculate-payables.js'
-import calculateSettlement from '../calculations/calculate-settlement.js'
+import calculateMoneyRecord from '../calculations/calculate-money-record'
+import calculateBalances from '../calculations/calculate-payables'
+import calculateSettlement from '../calculations/calculate-settlement'
 
 export default async function calculateTabSettlement(
   accountId: string,

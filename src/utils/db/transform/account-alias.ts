@@ -1,7 +1,7 @@
 import type { AccountAlias as DbAccountAlias } from '@prisma/client'
 
-import type { AccountAlias, AccountBasicInfo } from '../../types/db/index.js'
-import type { NumberType, PhoneNumber } from '../../types/phone-number.js'
+import type { AccountAlias, AccountBasicInfo } from '@/types/db/index'
+import type { NumberType, PhoneNumber } from '@/types/phone-number'
 
 export function transformAccountAlias<
   A extends AccountBasicInfo,

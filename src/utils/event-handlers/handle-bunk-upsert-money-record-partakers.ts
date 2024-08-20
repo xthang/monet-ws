@@ -1,18 +1,19 @@
 import { $Enums } from '@prisma/client'
 import { type WebSocketServer, WebSocket } from 'ws'
 
-import { ActivityLogType } from '../../constants/data.js'
-import type { Locale } from '../../constants/locales.js'
-import db from '../../db/index.js'
-import type { WsMoneyRecord } from '../../types/ws/message.js'
-import { WsUpsertMoneyRecordPartakersRequestData } from '../../types/ws/request.js'
-import type { WsResponseFullPayload, WsUpdateMoneyRecordReceipt } from '../../types/ws/response.js'
-import calculateTabSettlement from '../db/calculate-conversation-tab-settlement.js'
-import { MESSAGE_SELECT, MONEY_RECORD_PARTAKER_SELECT, MONEY_RECORD_SELECT } from '../db/const.js'
-import { findUniqueMoneyRecordOrThrow } from '../db/index.js'
-import { transformAccountAlias } from '../db/transform.js'
-import { broadcastToGroupMembersExceptMe } from '../ws/broadcast-to-group-members-except-me.js'
-import { transformError } from '../ws/transform-error.js'
+import { ActivityLogType } from '@/constants/data'
+import type { Locale } from '@/constants/locales'
+import db from '@/db/index'
+import type { WsMoneyRecord } from '@/types/ws/message'
+import { WsUpsertMoneyRecordPartakersRequestData } from '@/types/ws/request'
+import type { WsResponseFullPayload, WsUpdateMoneyRecordReceipt } from '@/types/ws/response'
+
+import calculateTabSettlement from '../db/calculate-conversation-tab-settlement'
+import { MESSAGE_SELECT, MONEY_RECORD_PARTAKER_SELECT, MONEY_RECORD_SELECT } from '../db/const'
+import { findUniqueMoneyRecordOrThrow } from '../db/index'
+import { transformAccountAlias } from '../db/transform/account-alias'
+import { broadcastToGroupMembersExceptMe } from '../ws/broadcast-to-group-members-except-me'
+import { transformError } from '../ws/transform-error'
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const { partakers, ...MONEY_RECORD_SELECT_NO_PARTAKERS } = MONEY_RECORD_SELECT
@@ -176,11 +177,6 @@ export default async function handleUpsertMoneyRecordPartakers(
       } satisfies WsUpdateMoneyRecordReceipt
     }
     ws.send(JSON.stringify(payload))
-
-    return {
-      upserted: res.slice(0, upserts.length),
-      updated: res.slice(upserts.length, res.length - 2)
-    }
   } catch (e: any) {
     console.error(`<!- WS [${accountId}] handleUpsertMoneyRecordPartakers ERROR:`, e)
 

@@ -1,4 +1,4 @@
-import type { WsChatMessage } from './message.js'
+import type { WsChatMessage } from './message'
 
 type WsResponseFullPayload = WsResponsePayload & {}
 
@@ -16,6 +16,7 @@ type WsResponseData =
   | WsUpdateChatMessageReceipt
   | WsUpdateMoneyRecordReceipt
   | WsDeleteMessageReceipt
+  | WsSettleUpPayableReceipt
 
 type WsChatMessageReceipt = {
   conversation_id: string
@@ -40,7 +41,7 @@ type WsUpdateMoneyRecordReceipt = {
   tab_id: string
   message_id: string
   money_record_id: string
-  message?: WsChatMessage
+  message?: RequiredProps<WsChatMessage, 'moneyRecord'>
   sent_to?: string[]
   error?: { code: string; message: string; details?: any }
 }
@@ -50,6 +51,15 @@ type WsDeleteMessageReceipt = {
   tab_id: string
   message_id: string
   message?: WsChatMessage
+  sent_to?: string[]
+  error?: { code: string; message: string; details?: any }
+}
+
+type WsSettleUpPayableReceipt = {
+  conversation_id: string
+  tab_id: string
+  settlement_id: string
+  message?: RequiredProps<WsChatMessage, 'moneyRecord'>
   sent_to?: string[]
   error?: { code: string; message: string; details?: any }
 }

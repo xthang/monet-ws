@@ -6,8 +6,9 @@ import type {
   MoneyRecordPartaker as DbMoneyRecordPartaker
 } from '@prisma/client'
 
-import type { Locale } from '../../constants/locales.ts'
-import type { PhoneNumber } from '../phone-number.js'
+import type { Locale } from '@/constants/locales.ts'
+
+import type { PhoneNumber } from '../phone-number'
 
 type Account = Pick<
   DbAccount,

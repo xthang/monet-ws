@@ -2,10 +2,10 @@ import assert from 'assert'
 
 import { $Enums, type Prisma } from '@prisma/client'
 
-import db from '../../db/index.js'
-import { WsError } from '../../types/error.js'
+import db from '@/db/index'
+import { WsError } from '@/types/error'
 
-import { ACCOUNT_SELECT } from './const.js'
+import { ACCOUNT_SELECT } from './const'
 
 export async function findUniqueAccountOrThrow<
   AccountSelect extends Prisma.AccountSelect,

@@ -1,6 +1,6 @@
 import lodash from 'lodash'
 
-import sendTelegramMessage from './telegram.js'
+import sendTelegramMessage from './telegram'
 
 const throttles: {
   [key: string]: lodash.DebouncedFunc<

@@ -133,6 +133,9 @@ dist
 .yarn/install-state.gz
 .pnp.*
 
+# SWC
+.swc
+
 ###########################################
 
 /ignore/
@@ -140,3 +143,6 @@ dist
 
 # Sentry Config File
 .sentryclirc
+
+src/locales/*/messages.ts
+src/locales/*/messages.js

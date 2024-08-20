@@ -1,4 +1,4 @@
-import { XError } from '../types/error.js'
+import { XError } from '@/types/error'
 
 export function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms))

@@ -1,6 +1,6 @@
 /* eslint-disable no-constant-condition */
 
-import '../polyfills/Array.js'
+import '../polyfills/Array'
 
 type Calculated = {
   id: string

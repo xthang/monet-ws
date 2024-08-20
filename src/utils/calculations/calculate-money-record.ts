@@ -1,4 +1,4 @@
-import '../polyfills/Number.js'
+import '../polyfills/Number'
 
 export default function calculateMoneyRecord(
   amount: number | null,

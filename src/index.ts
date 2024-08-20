@@ -1,22 +1,24 @@
 import { WebSocketServer, type WebSocket } from 'ws'
 
-import { PORT } from './constants/env.js'
-import db from './db/index.js'
-import { verifyToken } from './security/token-verification.js'
-import { WsError, WsErrorCode } from './types/error.js'
-import type { WsMessageFullPayload } from './types/ws/message.js'
-import { WsRequestFullPayload } from './types/ws/request.js'
-import type { WsResponseFullPayload } from './types/ws/response.js'
-import { findUniqueAccountByAuthAccIdOrThrow } from './utils/db/index.js'
-import handleUpsertMoneyRecordPartakers from './utils/event-handlers/handle-bunk-upsert-money-record-partakers.js'
-import handleDeleteMessage from './utils/event-handlers/handle-delete-message.js'
-import handleNewMessage from './utils/event-handlers/handle-new-message.js'
-import handleCreateMoneyRecord from './utils/event-handlers/handle-new-money-record.js'
-import handleUpdateMoneyRecord from './utils/event-handlers/handle-update-money-record.js'
-import { transformError } from './utils/ws/transform-error.js'
+import { PORT } from './constants/env'
+import { Locale } from './constants/locales'
+import db from './db/index'
+import { verifyToken } from './security/token-verification'
+import { WsError, WsErrorCode } from './types/error'
+import type { WsMessageFullPayload } from './types/ws/message'
+import { WsRequestFullPayload } from './types/ws/request'
+import type { WsResponseFullPayload } from './types/ws/response'
+import { findUniqueAccountByAuthAccIdOrThrow } from './utils/db/index'
+import handleUpsertMoneyRecordPartakers from './utils/event-handlers/handle-bunk-upsert-money-record-partakers'
+import handleDeleteMessage from './utils/event-handlers/handle-delete-message'
+import handleNewMessage from './utils/event-handlers/handle-new-message'
+import handleCreateMoneyRecord from './utils/event-handlers/handle-new-money-record'
+import handleSettleUpPayable from './utils/event-handlers/handle-settle-up-payable'
+import handleUpdateMoneyRecord from './utils/event-handlers/handle-update-money-record'
+import { transformError } from './utils/ws/transform-error'
 
-import './utils/polyfills/console.js'
-import './utils/polyfills/Date.js'
+import './utils/polyfills/console'
+import './utils/polyfills/Date'
 
 const TAG = '🟢'
 
@@ -73,9 +75,14 @@ async function main() {
 
       ws.isAlive = true
 
-      const { id: accountId } = await findUniqueAccountByAuthAccIdOrThrow(db, auth.userId)
+      const { id: accountId, locale: accountLocale } = await findUniqueAccountByAuthAccIdOrThrow(db, auth.userId)
 
-      ws.auth = { accountId, authAccountId: auth.userId, orgId: auth.ordId }
+      ws.auth = {
+        accountId,
+        authAccountId: auth.userId,
+        orgId: auth.ordId,
+        locale: (accountLocale?.replaceAll('_', '-') ?? null) as Locale | null
+      }
 
       console.log(`<-> WSS on.connection:`, request.method, maskedUrl, `[${accountId}-${auth.userId}-${auth.ordId}]`)
 
@@ -113,7 +120,7 @@ async function main() {
               return
             }
 
-            this.auth = { accountId, authAccountId: auth.userId, orgId: auth.ordId }
+            this.auth = { accountId, authAccountId: auth.userId, orgId: auth.ordId, locale: this.auth.locale }
 
             switch (event) {
               case 'new-text-message':
@@ -133,6 +140,9 @@ async function main() {
                 break
               case 'delete-message':
                 await handleDeleteMessage(wss, this, requestId, locale, data)
+                break
+              case 'settle-up-payable':
+                await handleSettleUpPayable(wss, this, requestId, locale, data)
                 break
               default: {
                 console.warn(`<!- Unknown event:`, event)

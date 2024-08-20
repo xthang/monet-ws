@@ -29,5 +29,11 @@ export const isDevEnv = [undefined, '', 'local', 'development', 'dev'].includes(
 export const PORT = parseInt(process.env.PORT!)
 assert(!isNaN(PORT), 'PORT')
 
+export const HOST_NAME = process.env.HOST_NAME!
+assert(HOST_NAME, 'HOST_NAME')
+
+export const NOTIFIER_SENDER_NAME = process.env.NOTIFIER_SENDER_NAME!
+assert(NOTIFIER_SENDER_NAME, 'NOTIFIER_SENDER_NAME')
+
 export const CLERK_PUBLIC_KEY = process.env.CLERK_PUBLIC_KEY!
 assert(CLERK_PUBLIC_KEY, 'CLERK_PUBLIC_KEY')
