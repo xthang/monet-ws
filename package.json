@@ -21,7 +21,6 @@
     "i18n:extract": "lingui extract",
     "i18n:compile": "lingui compile --typescript",
     "pre-build": "node ./scripts/pre-build.js",
-    "postinstall": "prisma generate",
     "prepare": "husky"
   },
   "dependencies": {
