@@ -9,6 +9,8 @@ import type { WsMessageFullPayload } from './types/ws/message'
 import { WsRequestFullPayload } from './types/ws/request'
 import type { WsResponseFullPayload } from './types/ws/response'
 import { findUniqueAccountByAuthAccIdOrThrow } from './utils/db/index'
+import handleDeleteGroup from './utils/event-handlers/group/handle-delete-group'
+import handleUpdateGroup from './utils/event-handlers/group/handle-update-group'
 import handleDeleteMessage from './utils/event-handlers/message/handle-delete-message'
 import handleNewMessage from './utils/event-handlers/message/handle-new-message'
 import handleUpsertMoneyRecordPartakers from './utils/event-handlers/message/money-record/handle-bunk-upsert-money-record-partakers'
@@ -123,6 +125,12 @@ async function main() {
             this.auth = { accountId, authAccountId: auth.userId, orgId: auth.ordId, locale: this.auth.locale }
 
             switch (event) {
+              case 'update-conversation':
+                await handleUpdateGroup(wss, this, requestId, locale, data)
+                break
+              case 'delete-conversation':
+                await handleDeleteGroup(wss, this, requestId, locale, data)
+                break
               case 'new-text-message':
                 await handleNewMessage(wss, this, requestId, locale, {
                   ...data,

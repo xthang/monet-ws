@@ -1,4 +1,4 @@
-import type { WsChatMessage } from './message'
+import type { WsChatMessage, WsConversation } from './message.d'
 
 type WsResponseFullPayload = WsResponsePayload & {}
 
@@ -12,17 +12,32 @@ type WsResponsePayload = {
 type WsErrorData = { code: string; message: string; details?: any }
 
 type WsResponseData =
+  | WsUpdateConversationReceipt
+  | WsDeleteConversationReceipt
   | WsChatMessageReceipt
   | WsUpdateChatMessageReceipt
   | WsUpdateMoneyRecordReceipt
   | WsDeleteMessageReceipt
   | WsSettleUpPayableReceipt
 
+type WsUpdateConversationReceipt = {
+  conversation_id: string
+  conversation?: WsConversation
+  sent_to?: string[]
+  error?: { code: string; message: string; details?: any }
+}
+
+type WsDeleteConversationReceipt = {
+  conversation_id: string
+  sent_to?: string[]
+  error?: { code: string; message: string; details?: any }
+}
+
 type WsChatMessageReceipt = {
   conversation_id: string
   tab_id: string
   ui_id: string
-  message?: WsChatMessage
+  message?: WsChatMessage & { uiId: string }
   sent_to?: string[]
   error?: { code: string; message: string; details?: any }
 }

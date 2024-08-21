@@ -15,6 +15,14 @@ export type WsRequestFullPayload = { requestId: string; token: string; locale: L
 
 export type WsRequestData =
   | {
+      event: 'update-conversation'
+      data: WsUpdateConversationRequestData
+    }
+  | {
+      event: 'delete-conversation'
+      data: WsDeleteConversationRequestData
+    }
+  | {
       event: 'new-text-message'
       data: WsSendMessageRequestData
     }
@@ -42,6 +50,24 @@ export type WsRequestData =
       event: 'settle-up-payable'
       data: WsSettleUpPayableRequestData
     }
+
+export const WsUpdateConversationRequestData = z.object({
+  conversationId: z.string(),
+  data: z.object({
+    name: z.string().nullable().optional(),
+    description: z.string().nullable().optional(),
+    photo: z.string().nullable().optional(),
+    emoji: z.string().optional(),
+    baseCurrency: z.nativeEnum($Enums.Currency).optional(),
+    note: z.string().nullable().optional()
+  })
+})
+
+export type WsUpdateConversationRequestData = z.infer<typeof WsUpdateConversationRequestData>
+
+export const WsDeleteConversationRequestData = z.string()
+
+export type WsDeleteConversationRequestData = z.infer<typeof WsDeleteConversationRequestData>
 
 export type WsSendMessageRequestData = {
   conversationId: string
