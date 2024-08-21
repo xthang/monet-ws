@@ -8,12 +8,12 @@ import type { WsMoneyRecord } from '@/types/ws/message'
 import { WsUpsertMoneyRecordPartakersRequestData } from '@/types/ws/request'
 import type { WsResponseFullPayload, WsUpdateMoneyRecordReceipt } from '@/types/ws/response'
 
-import calculateTabSettlement from '../db/calculate-conversation-tab-settlement'
-import { MESSAGE_SELECT, MONEY_RECORD_PARTAKER_SELECT, MONEY_RECORD_SELECT } from '../db/const'
-import { findUniqueMoneyRecordOrThrow } from '../db/index'
-import { transformAccountAlias } from '../db/transform/account-alias'
-import { broadcastToGroupMembersExceptMe } from '../ws/broadcast-to-group-members-except-me'
-import { transformError } from '../ws/transform-error'
+import calculateTabSettlement from '../../../db/calculate-conversation-tab-settlement'
+import { MESSAGE_SELECT, MONEY_RECORD_PARTAKER_SELECT, MONEY_RECORD_SELECT } from '../../../db/const'
+import { findUniqueMoneyRecordOrThrow } from '../../../db/index'
+import { transformAccountAlias } from '../../../db/transform/account-alias'
+import { broadcastToGroupMembersExceptMe } from '../../../ws/broadcast-to-group-members-except-me'
+import { transformError } from '../../../ws/transform-error'
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const { partakers, ...MONEY_RECORD_SELECT_NO_PARTAKERS } = MONEY_RECORD_SELECT

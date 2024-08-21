@@ -6,10 +6,10 @@ import { WsError, WsErrorCode } from '@/types/error'
 import type { WsSendMessageRequestData } from '@/types/ws/request'
 import type { WsChatMessageReceipt, WsResponseFullPayload } from '@/types/ws/response'
 
-import { MESSAGE_SELECT } from '../db/const'
-import { findUniqueConversationMembershipOrThrow } from '../db/index'
-import { broadcastToGroupMembersExceptMe } from '../ws/broadcast-to-group-members-except-me'
-import { transformError } from '../ws/transform-error'
+import { MESSAGE_SELECT } from '../../db/const'
+import { findUniqueConversationMembershipOrThrow } from '../../db/index'
+import { broadcastToGroupMembersExceptMe } from '../../ws/broadcast-to-group-members-except-me'
+import { transformError } from '../../ws/transform-error'
 
 export default async function handleNewMessage(
   wss: WebSocketServer,
@@ -39,10 +39,11 @@ export default async function handleNewMessage(
     const { conversation } = membership
 
     return await db.$transaction(async (tx) => {
-      const { uiId: createdUiId, ...createdMsg } = await tx.message.create({
+      const createdMsg = await tx.message.create({
         data: { uiId, conversationId, tabId, text, sentAt, sentBy: accountId, createdBy: accountId },
         select: MESSAGE_SELECT
       })
+      const { uiId: createdUiId, ...createdMsgWithoutUiId } = createdMsg
 
       const lastActiveAccountSet = new Set(conversation.lastActiveAccounts?.split(','))
       lastActiveAccountSet.add(accountId)
@@ -56,7 +57,7 @@ export default async function handleNewMessage(
       const sentTo = await broadcastToGroupMembersExceptMe(wss, ws, tx, accountId, orgId, conversationId, {
         event: 'new-message',
         orgId,
-        data: createdMsg
+        data: createdMsgWithoutUiId
       })
 
       // send receipt back to itself
@@ -67,7 +68,7 @@ export default async function handleNewMessage(
           conversation_id: conversationId,
           tab_id: tabId,
           ui_id: createdUiId!,
-          message: createdMsg,
+          message: createdMsg as RequiredNonNullableProps<typeof createdMsg, 'uiId'>,
           sent_to: Array.from(sentTo)
         } satisfies WsChatMessageReceipt
       }

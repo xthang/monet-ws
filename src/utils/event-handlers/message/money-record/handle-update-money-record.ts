@@ -5,59 +5,51 @@ import { ActivityLogType } from '@/constants/data'
 import type { Locale } from '@/constants/locales'
 import db from '@/db/index'
 import type { WsMoneyRecord } from '@/types/ws/message'
-import { WsCreateMoneyRecordRequestData } from '@/types/ws/request'
-import type { WsChatMessageReceipt, WsResponseFullPayload } from '@/types/ws/response'
+import { WsUpdateMoneyRecordRequestData } from '@/types/ws/request'
+import type { WsResponseFullPayload, WsUpdateMoneyRecordReceipt } from '@/types/ws/response'
 
-import calculateTabSettlement from '../db/calculate-conversation-tab-settlement'
-import { MESSAGE_SELECT, MONEY_RECORD_SELECT } from '../db/const'
-import { findUniqueConversationMembershipOrThrow } from '../db/index'
-import { transformAccountAlias } from '../db/transform/account-alias'
-import { broadcastToGroupMembersExceptMe } from '../ws/broadcast-to-group-members-except-me'
-import { transformError } from '../ws/transform-error'
+import calculateTabSettlement from '../../../db/calculate-conversation-tab-settlement'
+import { MESSAGE_SELECT, MONEY_RECORD_SELECT } from '../../../db/const'
+import { findUniqueMessageOrThrow } from '../../../db/index'
+import { transformAccountAlias } from '../../../db/transform/account-alias'
+import { broadcastToGroupMembersExceptMe } from '../../../ws/broadcast-to-group-members-except-me'
+import { transformError } from '../../../ws/transform-error'
 
-export default async function handleCreateMoneyRecord(
+export default async function handleUpdateMoneyRecord(
   wss: WebSocketServer,
   ws: WebSocket,
   requestId: string,
   locale: Locale,
-  rawInput: WsCreateMoneyRecordRequestData
+  rawInput: WsUpdateMoneyRecordRequestData
 ) {
   // Validate inputs
-  const input = WsCreateMoneyRecordRequestData.parse(rawInput)
+  const input = WsUpdateMoneyRecordRequestData.parse(rawInput)
 
   const { accountId, orgId } = ws.auth
-  const {
-    conversationId,
-    tabId,
-    data: { uiId, sentAt, ...data }
-  } = input
-  // const { isInTestMode } = ctx.configs
+  const { conversationId, tabId, data } = input
 
   try {
     // check permission
-    const membership = await findUniqueConversationMembershipOrThrow(db, conversationId, accountId, orgId, {
-      select: { conversation: true }
-    })
+    const [membership, message] = await findUniqueMessageOrThrow(
+      db,
+      conversationId,
+      tabId,
+      data.messageId,
+      accountId,
+      orgId,
+      {
+        membership: { select: { conversation: { select: { baseCurrency: true, lastActiveAccounts: true } } } },
+        message: { select: MESSAGE_SELECT }
+      }
+    )
     const { conversation } = membership
 
     return await db.$transaction(async (tx) => {
-      const { uiId: createdUiId, ...createdMsg } = await tx.message.create({
-        data: { conversationId, tabId, uiId, sentAt, sentBy: accountId, createdBy: accountId },
-        select: MESSAGE_SELECT
-      })
-
-      const moneyRecord = await tx.moneyRecord.create({
-        data: {
-          ...data,
-          conversationId,
-          tabId,
-          messageId: createdMsg.id,
-          createdBy: accountId
-        },
+      const updatedMoneyRecord = await tx.moneyRecord.update({
+        where: { id: data.id, conversationId, messageId: data.messageId },
+        data: { ...data, updatedBy: accountId },
         select: MONEY_RECORD_SELECT
       })
-
-      await tx.message.update({ where: { id: createdMsg.id }, data: { moneyRecordId: moneyRecord.id } })
 
       const lastActiveAccountSet = new Set(conversation.lastActiveAccounts?.split(','))
       lastActiveAccountSet.add(accountId)
@@ -65,10 +57,17 @@ export default async function handleCreateMoneyRecord(
 
       await tx.conversation.update({
         where: { id: conversationId },
-        data: { lastMessageId: createdMsg.id, lastActivityAt: new Date(), lastActiveAccounts }
+        data: { lastActivityAt: new Date(), lastActiveAccounts }
       })
 
-      await calculateTabSettlement(accountId, tx, conversationId, conversation, tabId)
+      const affectedUpdate =
+        data.payerMemberId !== undefined ||
+        data.currency !== undefined ||
+        data.amount !== undefined ||
+        data.ratePerBase !== undefined ||
+        data.rate !== undefined ||
+        data.amountPerPartaker !== undefined
+      if (affectedUpdate) await calculateTabSettlement(accountId, tx, conversationId, conversation, tabId)
 
       await tx.activityLog.create({
         data: {
@@ -83,7 +82,7 @@ export default async function handleCreateMoneyRecord(
 
       // BROADCAST ...
 
-      const { payerMember, amount, rate, partakers, amountPerPartaker, ...otherMoneyRecordData } = moneyRecord
+      const { payerMember, amount, rate, partakers, amountPerPartaker, ...otherMoneyRecordData } = updatedMoneyRecord
 
       // List all accounts that are in the org for checking
       let orgMemberAccountIds: string[] | undefined
@@ -130,10 +129,10 @@ export default async function handleCreateMoneyRecord(
         ...otherMoneyRecordData
       }
 
-      const wsMessage = { ...createdMsg, moneyRecordId: wsMoneyRecord.id, moneyRecord: wsMoneyRecord }
+      const wsMessage = { ...message, moneyRecordId: wsMoneyRecord.id, moneyRecord: wsMoneyRecord }
 
       const sentTo = await broadcastToGroupMembersExceptMe(wss, ws, tx, accountId, orgId, conversationId, {
-        event: 'new-message',
+        event: 'updated-money-record',
         orgId,
         data: wsMessage
       })
@@ -145,15 +144,16 @@ export default async function handleCreateMoneyRecord(
         data: {
           conversation_id: conversationId,
           tab_id: tabId,
-          ui_id: createdUiId!,
+          message_id: message.id,
+          money_record_id: updatedMoneyRecord.id,
           message: wsMessage,
           sent_to: Array.from(sentTo)
-        } satisfies WsChatMessageReceipt
+        } satisfies WsUpdateMoneyRecordReceipt
       }
       ws.send(JSON.stringify(payload))
     })
   } catch (e: any) {
-    console.error(`<!- WS [${accountId}] handleCreateMoneyRecord ERROR:`, e)
+    console.error(`<!- WS [${accountId}] handleUpdateMoneyRecord ERROR:`, e)
 
     const payload: WsResponseFullPayload = {
       event: 'callback',
@@ -161,9 +161,10 @@ export default async function handleCreateMoneyRecord(
       data: {
         conversation_id: conversationId,
         tab_id: tabId,
-        ui_id: uiId,
+        message_id: data.messageId,
+        money_record_id: data.id,
         error: transformError(e)
-      } satisfies WsChatMessageReceipt
+      } satisfies WsUpdateMoneyRecordReceipt
     }
     ws.send(JSON.stringify(payload))
   }
