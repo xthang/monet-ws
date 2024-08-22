@@ -23,7 +23,7 @@ export default async function notifySettleItems(
     channel: 'email' | 'sms'
     address: string
   }[],
-  payment: { payor: { name: string }; payee: { name: string }; currency: string; amount: number }
+  payment: { payor: { name: string }; payee: { name: string }; currency: string; amount: number; messageId: string }
 ) {
   const toEmailAddresses = to.filter((it) => it.channel === 'email')
   const toPhoneNumbers = to.filter((it) => it.channel === 'sms')
@@ -62,7 +62,7 @@ export default async function notifySettleItems(
               .content.replace('{{member_name}}', name ? ` <b>${name}</b>` : '')
               .replace(
                 '{{group}}',
-                `<a href="https://${HOST_NAME}/i/${group.id}?tab=${tabId}"><b>${group.name || '<i>[no name]</i>'}</b></a>`
+                `<a href="https://${HOST_NAME}/i/${group.id}?tab=${tabId}&mgsId=${payment.messageId}"><b>${group.name || '<i>[no name]</i>'}</b></a>`
               )
               .replace('{{payor_}}', i18n._(role === 'payor' ? msg`<i>You</i> have` : msg`${payment.payor.name} has`))
               .replace('{{payee}}', role === 'payee' ? `<i>${i18n._(msg`you`)}</i>` : payment.payee.name)
@@ -88,7 +88,7 @@ export default async function notifySettleItems(
               .find((it) => it.key === TextTemplateKey.SETTLED_ITEM_SMS_CONTENT && it.locale === locale_)!
               .content.replace('{{member_name}}', name ? ` ${name}` : '')
               .replace('{{group_name}}', group.name ? ` named ${group.name}` : '')
-              .replace('{{group_link}}', `https://${HOST_NAME}/i/${group.id}?tab=${tabId}`)
+              .replace('{{group_link}}', `https://${HOST_NAME}/i/${group.id}?tab=${tabId}&mgsId=${payment.messageId}`)
               .replace('{{payor_}}', i18n._(role === 'payor' ? msg`You have` : msg`${payment.payor.name} has`))
               .replace('{{payee}}', role === 'payee' ? i18n._(msg`you`) : payment.payee.name)
               .replace('{{currency}}', payment.currency)

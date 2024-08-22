@@ -139,7 +139,8 @@ export default async function handleSettleUpPayable(
           payor: { name: getMemberName(payorMemberForNotify) ?? '[no name]' },
           payee: { name: getMemberName(payeeMemberForNotify) ?? '[no name]' },
           currency: group.baseCurrency,
-          amount: amount!.toNumber()
+          amount: amount!.toNumber(),
+          messageId: message.id
         })
       }
 
