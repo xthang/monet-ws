@@ -26,6 +26,8 @@ export const isProductionEnv = ENVIRONMENT == 'production'
 export const isStagingEnv = ENVIRONMENT == 'staging'
 export const isDevEnv = [undefined, '', 'local', 'development', 'dev'].includes(ENVIRONMENT)
 
+console.log('--  NODE_ENV:', process.env.NODE_ENV, '| ENV:', ENVIRONMENT)
+
 export const PORT = parseInt(process.env.PORT!)
 assert(!isNaN(PORT), 'PORT')
 

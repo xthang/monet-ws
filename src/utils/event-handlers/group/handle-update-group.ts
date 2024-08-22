@@ -3,7 +3,7 @@ import { type WebSocketServer, WebSocket } from 'ws'
 
 import { ActivityLogType } from '@/constants/data'
 import type { Locale } from '@/constants/locales'
-import db from '@/db/index'
+import db from '@/db'
 import { WsUpdateGroupRequestData } from '@/types/ws/request'
 import { WsResponseFullPayload, WsUpdateGroupReceipt } from '@/types/ws/response'
 import { findUniqueGroupMembershipOrThrow } from '@/utils/db'

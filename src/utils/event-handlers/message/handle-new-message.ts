@@ -1,13 +1,13 @@
 import { type WebSocketServer, WebSocket } from 'ws'
 
 import type { Locale } from '@/constants/locales'
-import db from '@/db/index'
+import db from '@/db'
 import { WsError, WsErrorCode } from '@/types/error'
 import type { WsSendMessageRequestData } from '@/types/ws/request'
 import type { WsChatMessageReceipt, WsResponseFullPayload } from '@/types/ws/response'
 
-import { MESSAGE_SELECT } from '../../db/const'
-import { findUniqueGroupMembershipOrThrow } from '../../db/index'
+import { findUniqueGroupMembershipOrThrow } from '../../db'
+import { MESSAGE_SELECT } from '../../db/query-constants'
 import { broadcastToGroupMembersExceptMe } from '../../ws/broadcast-to-group-members-except-me'
 import { transformError } from '../../ws/transform-error'
 

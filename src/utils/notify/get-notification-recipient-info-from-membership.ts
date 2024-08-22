@@ -2,24 +2,32 @@ import type { $Enums } from '@prisma/client'
 
 import type { Locale } from '@/constants/locales'
 
-type AccountAlias = { id: string; type: $Enums.AccountAliasType; contactValue: string }
+type AccountAlias = {
+  id: string
+  type: $Enums.AccountAliasType
+  contactValue: string
+  deletedAt?: Date | null
+  isActive?: boolean | null
+  verificationStatus?: string | null
+}
 
 export default function getNotificationRecipientInfoFromMembership(
   member: {
-    accountId?: string | null
     account?: {
+      id: string
       username: string | null
       fullName: string | null
       nickname: string | null
       locale: Locale | null
       accountAliases: AccountAlias[]
+      deletedAt?: Date | null
+      isActive?: boolean | null
     } | null
-    accountAliasId?: string | null
     accountAlias?: AccountAlias | null
   },
   defaultLocale: Locale | null
 ) {
-  const { accountId, account, accountAliasId, accountAlias } = member
+  const { account, accountAlias } = member
 
   const toSendNoti: {
     accountId?: string
@@ -30,11 +38,16 @@ export default function getNotificationRecipientInfoFromMembership(
     address: string
   }[] = []
 
-  if (account) {
+  if (account && !account.deletedAt && (account.isActive === undefined || account.isActive)) {
     for (const accountAlias of account.accountAliases) {
-      if (accountAlias.type === 'emailAddr' || accountAlias.type === 'phoneNo')
+      if (
+        !accountAlias.deletedAt &&
+        (accountAlias.isActive === undefined || accountAlias.isActive) &&
+        (accountAlias.verificationStatus === undefined || accountAlias.verificationStatus === 'verified') &&
+        (accountAlias.type === 'emailAddr' || accountAlias.type === 'phoneNo')
+      )
         toSendNoti.push({
-          accountId: accountId ?? undefined,
+          accountId: account.id,
           accountAliasId: accountAlias.id,
           name: getMemberName({ account, accountAlias }) ?? undefined,
           locale: account.locale ?? defaultLocale,
@@ -44,10 +57,15 @@ export default function getNotificationRecipientInfoFromMembership(
     }
   }
 
-  if (accountAlias && (accountAlias.type === 'emailAddr' || accountAlias.type === 'phoneNo'))
+  if (
+    accountAlias &&
+    !accountAlias.deletedAt &&
+    (accountAlias.isActive === undefined || accountAlias.isActive) &&
+    (accountAlias.type === 'emailAddr' || accountAlias.type === 'phoneNo')
+  )
     toSendNoti.push({
-      accountId: accountId ?? undefined,
-      accountAliasId: accountAliasId ?? undefined,
+      accountId: account?.id,
+      accountAliasId: accountAlias.id,
       name: getMemberName({ account, accountAlias }) ?? undefined,
       locale: account?.locale ?? defaultLocale,
       channel: accountAlias.type === 'emailAddr' ? 'email' : 'sms',
@@ -60,7 +78,8 @@ export default function getNotificationRecipientInfoFromMembership(
 export function getMemberName({
   account,
   accountAlias,
-  accountPlaceholder
+  accountPlaceholder,
+  nickname
 }: {
   account?: {
     username: string | null
@@ -69,8 +88,10 @@ export function getMemberName({
   } | null
   accountAlias?: AccountAlias | null
   accountPlaceholder?: { name: string | null } | null
+  nickname?: string | null
 }) {
   return (
+    nickname ??
     account?.nickname ??
     account?.fullName ??
     account?.username ??

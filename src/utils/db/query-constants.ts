@@ -75,22 +75,18 @@ export const MEMBER_SELECT_NO_WHERE = {
 } as const satisfies Prisma.GroupMembershipSelect
 
 export const MEMBER_SELECT_FOR_NOTIFY = {
-  accountId: true,
-  accountAliasId: true,
   account: {
-    where: { deletedAt: null, isActive: true },
-    select: {
-      ...ACCOUNT_SELECT,
-      locale: true,
+    include: {
       accountAliases: { where: { verificationStatus: 'verified', deletedAt: null, isActive: true } }
     }
   },
-  accountAlias: { where: { deletedAt: null, isActive: true } } // verificationStatus: 'verified'
+  accountAlias: true,
+  nickname: true
 } as const satisfies Prisma.GroupMembershipSelect
 
 export const MEMBER_SELECT_FULL_FOR_NOTIFY = {
   ...MEMBER_SELECT_FOR_NOTIFY,
-  accountPlaceholder: { where: { deletedAt: null } }
+  accountPlaceholder: true
 } as const satisfies Prisma.GroupMembershipSelect
 
 export const MESSAGE_SELECT = {

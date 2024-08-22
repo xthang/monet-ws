@@ -1,4 +1,4 @@
-import db from '@/db/index'
+import db from '@/db'
 import type { PrismaClient, PrismaTransactionClient } from '@/db/types'
 
 export default async function queueSendSms(
