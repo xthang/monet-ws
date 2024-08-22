@@ -1,4 +1,4 @@
-import { $Enums, type Conversation } from '@prisma/client'
+import { $Enums, type Group } from '@prisma/client'
 
 import { TextTemplateKey } from '@/constants/data'
 import { NOTIFIER_SENDER_NAME } from '@/constants/env'
@@ -8,8 +8,8 @@ import type { PrismaTransactionClient } from '@/db/types'
 import queueSendEmails from '../queue/queue-send-email'
 import queueSendSms from '../queue/queue-send-sms'
 
-export default async function notifyDeletedConversation(
-  conversation: Pick<Conversation, 'name'>,
+export default async function notifyDeletedGroup(
+  group: Pick<Group, 'name'>,
   to: {
     accountId?: string
     accountAliasId?: string
@@ -52,7 +52,7 @@ export default async function notifyDeletedConversation(
             (it) => it.key === TextTemplateKey.DELETED_CONVO_EMAIL_CONTENT && it.locale === (locale ?? DEFAULT_LOCALE)
           )!
           .content.replace('{{member_name}}', name ? ` <b>${name}</b>` : '')
-          .replace('{{conversation_name}}', `<b>${conversation.name || '<i>[no name]</i>'}</b>`)
+          .replace('{{group_name}}', `<b>${group.name || '<i>[no name]</i>'}</b>`)
       }))
     )
   if (toPhoneNumbers.length)
@@ -66,7 +66,7 @@ export default async function notifyDeletedConversation(
             (it) => it.key === TextTemplateKey.DELETED_CONVO_SMS_CONTENT && it.locale === (locale ?? DEFAULT_LOCALE)
           )!
           .content.replace('{{member_name}}', name ? ` ${name}` : '')
-          .replace('{{conversation_name}}', conversation.name || '[no name]')
+          .replace('{{group_name}}', group.name || '[no name]')
       }))
     )
 }

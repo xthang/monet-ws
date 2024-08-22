@@ -24,12 +24,12 @@ export enum TextTemplateKey {
 }
 
 export enum ActivityLogType {
-  conversation_create = 'conversation_create',
-  conversation_update = 'conversation_update',
-  conversation_upsertMembers = 'conversation_upsertMembers',
-  conversationTab_create = 'conversationTab_create',
-  conversationTab_update = 'conversationTab_update',
-  conversationTab_delete = 'conversationTab_delete',
+  group_create = 'group_create',
+  group_update = 'group_update',
+  group_upsertMembers = 'group_upsertMembers',
+  groupTab_create = 'groupTab_create',
+  groupTab_update = 'groupTab_update',
+  groupTab_delete = 'groupTab_delete',
   message_create = 'message_create',
   message_update = 'message_update',
   message_delete = 'message_delete',
@@ -37,5 +37,5 @@ export enum ActivityLogType {
   moneyRecord_create = 'moneyRecord_create',
   moneyRecord_update = 'moneyRecord_update',
   moneyRecord_delete = 'moneyRecord_delete',
-  conversationTabSettlement_settle = 'conversationTabSettlement_settle'
+  groupTabSettlement_settle = 'groupTabSettlement_settle'
 }

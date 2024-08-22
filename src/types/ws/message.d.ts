@@ -1,4 +1,4 @@
-import type { Conversation, Message, MoneyRecord, MoneyRecordPartaker } from '@prisma/client'
+import type { Group, Message, MoneyRecord, MoneyRecordPartaker } from '@prisma/client'
 
 import type { AccountBasicInfo } from '../db/index'
 import type { ParticipantMember } from '../participant-member'
@@ -15,14 +15,14 @@ type WsMessagePayload =
       data: { code: string; message: string; details?: any }
     }
   | {
-      event: 'updated-conversation'
+      event: 'updated-group'
       orgId: string | undefined
-      data: { conversation: WsConversation }
+      data: { group: WsGroup }
     }
   | {
-      event: 'deleted-conversation'
+      event: 'deleted-group'
       orgId: string | undefined
-      data: { conversationId: string }
+      data: { groupId: string }
     }
   | {
       event: 'new-message'
@@ -52,7 +52,7 @@ type WsMessagePayload =
 
 type WsNotification = any
 
-type WsConversation = Conversation
+type WsGroup = Group
 
 type WsChatMessage = Omit<Message, 'uiId'> & {
   moneyRecord?: WsMoneyRecord | null

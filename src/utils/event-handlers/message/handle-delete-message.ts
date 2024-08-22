@@ -7,8 +7,8 @@ import db from '@/db/index'
 import type { WsDeleteMessageRequestData } from '@/types/ws/request'
 import type { WsDeleteMessageReceipt, WsResponseFullPayload } from '@/types/ws/response'
 
-import calculateTabSettlement from '../../db/calculate-conversation-tab-settlement'
-import { findUniqueConversationMembershipOrThrow } from '../../db/index'
+import calculateTabSettlement from '../../db/calculate-group-tab-settlement'
+import { findUniqueGroupMembershipOrThrow } from '../../db/index'
 import { broadcastToGroupMembersExceptMe } from '../../ws/broadcast-to-group-members-except-me'
 import { transformError } from '../../ws/transform-error'
 
@@ -20,23 +20,23 @@ export default async function handleDeleteMessage(
   message: WsDeleteMessageRequestData
 ) {
   const { accountId, orgId } = ws.auth
-  const { conversationId, tabId, id: messageId } = message
+  const { groupId, tabId, id: messageId } = message
 
   try {
     // check permission
-    const membership = await findUniqueConversationMembershipOrThrow(db, conversationId, accountId, orgId, {
-      select: { conversation: true }
+    const membership = await findUniqueGroupMembershipOrThrow(db, groupId, accountId, orgId, {
+      select: { group: true }
     })
-    const { conversation } = membership
+    const { group } = membership
 
     return db.$transaction(async (tx) => {
       const deleted = await tx.message.softDelete({
         tx,
-        where: { id: messageId, conversationId },
+        where: { id: messageId, groupId },
         deletedBy: accountId,
         select: {
           id: true,
-          conversationId: true,
+          groupId: true,
           tabId: true,
           moneyRecordId: true,
           deletedAt: true,
@@ -50,17 +50,17 @@ export default async function handleDeleteMessage(
       if (deleted.moneyRecordId) {
         const deletedMoneyRecord = await tx.moneyRecord.softDelete({
           tx,
-          where: { id: deleted.moneyRecordId, conversationId_messageId: { conversationId, messageId } },
+          where: { id: deleted.moneyRecordId, groupId_messageId: { groupId, messageId } },
           deletedBy: accountId
         })
 
         if (deletedMoneyRecord) {
-          await calculateTabSettlement(accountId, tx, conversationId, conversation, deleted.tabId)
+          await calculateTabSettlement(accountId, tx, groupId, group, deleted.tabId)
 
           await tx.activityLog.create({
             data: {
-              objectType: ActivityLogObjectType.conversation,
-              objectId: conversationId,
+              objectType: ActivityLogObjectType.group,
+              objectId: groupId,
               type: ActivityLogType.moneyRecord_delete,
               details: { messageId: deleted.id, monetRecordId: deletedMoneyRecord.id },
               detailsVersion: '1.0.0',
@@ -70,18 +70,18 @@ export default async function handleDeleteMessage(
         }
       }
 
-      const lastActiveAccountSet = new Set(conversation.lastActiveAccounts?.split(','))
+      const lastActiveAccountSet = new Set(group.lastActiveAccounts?.split(','))
       lastActiveAccountSet.add(accountId)
       const lastActiveAccounts = Array.from(lastActiveAccountSet).slice(undefined, 4).join(',')
 
-      await tx.conversation.update({
-        where: { id: conversationId },
+      await tx.group.update({
+        where: { id: groupId },
         data: { lastActivityAt: new Date(), lastActiveAccounts }
       })
 
       // BROADCAST ...
 
-      const sentTo = await broadcastToGroupMembersExceptMe(wss, ws, tx, accountId, orgId, conversationId, {
+      const sentTo = await broadcastToGroupMembersExceptMe(wss, ws, tx, accountId, orgId, groupId, {
         event: 'deleted-message',
         orgId,
         data: deleted
@@ -92,7 +92,7 @@ export default async function handleDeleteMessage(
         event: 'callback',
         requestId,
         data: {
-          conversation_id: conversationId,
+          group_id: groupId,
           tab_id: tabId,
           message_id: messageId,
           message: deleted,
@@ -108,7 +108,7 @@ export default async function handleDeleteMessage(
       event: 'callback',
       requestId,
       data: {
-        conversation_id: conversationId,
+        group_id: groupId,
         tab_id: tabId,
         message_id: messageId,
         error: transformError(e)

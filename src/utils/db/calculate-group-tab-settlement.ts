@@ -1,4 +1,4 @@
-import type { Conversation } from '@prisma/client'
+import type { Group } from '@prisma/client'
 
 import type { PrismaClient, PrismaTransactionClient } from '@/db/types'
 
@@ -9,11 +9,11 @@ import calculateSettlement from '../calculations/calculate-settlement'
 export default async function calculateTabSettlement(
   accountId: string,
   db: PrismaClient | PrismaTransactionClient,
-  conversationId: string,
-  conversation: Pick<Conversation, 'baseCurrency'>,
+  groupId: string,
+  group: Pick<Group, 'baseCurrency'>,
   tabId: string
 ) {
-  const members = await db.conversationMembership.findMany({ where: { conversationId, isActive: true } })
+  const members = await db.groupMembership.findMany({ where: { groupId, isActive: true } })
   const memberDict = Object.fromEntries(
     members.map(({ id }) => [
       id,
@@ -30,7 +30,7 @@ export default async function calculateTabSettlement(
   )
 
   const _moneyRecords = await db.moneyRecord.findMany({
-    where: { conversationId, tabId, deletedAt: null, amount: { not: null } },
+    where: { groupId, tabId, deletedAt: null, amount: { not: null } },
     select: {
       payerMemberId: true,
       currency: true,
@@ -71,8 +71,8 @@ export default async function calculateTabSettlement(
   for (const {
     moneyRecord: { currency, amount, ratePerBase, rate, partakers, calculated }
   } of moneyRecords) {
-    const invalidRequiredRate = currency !== conversation.baseCurrency && (!rate || rate <= 0)
-    const invalidDisallowdRate = currency === conversation.baseCurrency && rate
+    const invalidRequiredRate = currency !== group.baseCurrency && (!rate || rate <= 0)
+    const invalidDisallowdRate = currency === group.baseCurrency && rate
 
     calculateMoneyRecord(amount, ratePerBase, rate, invalidRequiredRate, invalidDisallowdRate, partakers, calculated)
   }
@@ -81,13 +81,13 @@ export default async function calculateTabSettlement(
 
   const [_bestAlgos, _selectedBestAlgo] = calculateSettlement(memberDict)
 
-  await db.conversationTabSuggestedSettlement.deleteMany({ where: { conversationId, tabId } })
+  await db.groupTabSuggestedSettlement.deleteMany({ where: { groupId, tabId } })
 
-  await db.conversationTabSuggestedSettlement.createMany({
+  await db.groupTabSuggestedSettlement.createMany({
     data: Object.values(memberDict).flatMap(
       (m) =>
         m.calculated.payments?.map(({ payeeMemberId, amount }) => ({
-          conversationId,
+          groupId,
           tabId,
           payorMemberId: m.id,
           payeeMemberId,

@@ -15,12 +15,12 @@ export type WsRequestFullPayload = { requestId: string; token: string; locale: L
 
 export type WsRequestData =
   | {
-      event: 'update-conversation'
-      data: WsUpdateConversationRequestData
+      event: 'update-group'
+      data: WsUpdateGroupRequestData
     }
   | {
-      event: 'delete-conversation'
-      data: WsDeleteConversationRequestData
+      event: 'delete-group'
+      data: WsDeleteGroupRequestData
     }
   | {
       event: 'new-text-message'
@@ -51,8 +51,8 @@ export type WsRequestData =
       data: WsSettleUpPayableRequestData
     }
 
-export const WsUpdateConversationRequestData = z.object({
-  conversationId: z.string(),
+export const WsUpdateGroupRequestData = z.object({
+  groupId: z.string(),
   data: z.object({
     name: z.string().nullable().optional(),
     description: z.string().nullable().optional(),
@@ -63,14 +63,14 @@ export const WsUpdateConversationRequestData = z.object({
   })
 })
 
-export type WsUpdateConversationRequestData = z.infer<typeof WsUpdateConversationRequestData>
+export type WsUpdateGroupRequestData = z.infer<typeof WsUpdateGroupRequestData>
 
-export const WsDeleteConversationRequestData = z.string()
+export const WsDeleteGroupRequestData = z.string()
 
-export type WsDeleteConversationRequestData = z.infer<typeof WsDeleteConversationRequestData>
+export type WsDeleteGroupRequestData = z.infer<typeof WsDeleteGroupRequestData>
 
 export type WsSendMessageRequestData = {
-  conversationId: string
+  groupId: string
   tabId: string
   uiId: string
   text: string
@@ -78,7 +78,7 @@ export type WsSendMessageRequestData = {
 }
 
 export const WsCreateMoneyRecordRequestData = z.object({
-  conversationId: z.string(),
+  groupId: z.string(),
   tabId: z.string(),
   data: z.object({
     uiId: z.string(),
@@ -99,7 +99,7 @@ export const WsCreateMoneyRecordRequestData = z.object({
 export type WsCreateMoneyRecordRequestData = z.infer<typeof WsCreateMoneyRecordRequestData>
 
 export const WsUpdateMoneyRecordRequestData = z.object({
-  conversationId: z.string(),
+  groupId: z.string(),
   tabId: z.string(),
   data: z.object({
     id: z.string(),
@@ -119,7 +119,7 @@ export const WsUpdateMoneyRecordRequestData = z.object({
 export type WsUpdateMoneyRecordRequestData = z.infer<typeof WsUpdateMoneyRecordRequestData>
 
 export const WsUpsertMoneyRecordPartakersRequestData = z.object({
-  conversationId: z.string(),
+  groupId: z.string(),
   tabId: z.string(),
   messageId: z.string(),
   moneyRecordId: z.string(),
@@ -141,7 +141,7 @@ export const WsUpsertMoneyRecordPartakersRequestData = z.object({
 export type WsUpsertMoneyRecordPartakersRequestData = z.infer<typeof WsUpsertMoneyRecordPartakersRequestData>
 
 export const WsDeleteMessageRequestData = z.object({
-  conversationId: z.string(),
+  groupId: z.string(),
   tabId: z.string(),
   id: z.string()
 })
@@ -149,7 +149,7 @@ export const WsDeleteMessageRequestData = z.object({
 export type WsDeleteMessageRequestData = z.infer<typeof WsDeleteMessageRequestData>
 
 export const WsSettleUpPayableRequestData = z.object({
-  conversationId: z.string(),
+  groupId: z.string(),
   tabId: z.string(),
   settlementId: z.string(),
   description: z.string().optional()

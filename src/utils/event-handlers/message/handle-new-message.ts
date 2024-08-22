@@ -7,7 +7,7 @@ import type { WsSendMessageRequestData } from '@/types/ws/request'
 import type { WsChatMessageReceipt, WsResponseFullPayload } from '@/types/ws/response'
 
 import { MESSAGE_SELECT } from '../../db/const'
-import { findUniqueConversationMembershipOrThrow } from '../../db/index'
+import { findUniqueGroupMembershipOrThrow } from '../../db/index'
 import { broadcastToGroupMembersExceptMe } from '../../ws/broadcast-to-group-members-except-me'
 import { transformError } from '../../ws/transform-error'
 
@@ -19,7 +19,7 @@ export default async function handleNewMessage(
   message: WsSendMessageRequestData
 ) {
   const { accountId, orgId } = ws.auth
-  const { conversationId, tabId, uiId, text, sentAt } = message
+  const { groupId, tabId, uiId, text, sentAt } = message
 
   try {
     // validate inputs
@@ -33,28 +33,28 @@ export default async function handleNewMessage(
     }
 
     // check permission
-    const membership = await findUniqueConversationMembershipOrThrow(db, conversationId, accountId, orgId, {
-      select: { conversation: true }
+    const membership = await findUniqueGroupMembershipOrThrow(db, groupId, accountId, orgId, {
+      select: { group: true }
     })
-    const { conversation } = membership
+    const { group } = membership
 
     return await db.$transaction(async (tx) => {
       const createdMsg = await tx.message.create({
-        data: { uiId, conversationId, tabId, text, sentAt, sentBy: accountId, createdBy: accountId },
+        data: { uiId, groupId, tabId, text, sentAt, sentBy: accountId, createdBy: accountId },
         select: MESSAGE_SELECT
       })
       const { uiId: createdUiId, ...createdMsgWithoutUiId } = createdMsg
 
-      const lastActiveAccountSet = new Set(conversation.lastActiveAccounts?.split(','))
+      const lastActiveAccountSet = new Set(group.lastActiveAccounts?.split(','))
       lastActiveAccountSet.add(accountId)
       const lastActiveAccounts = Array.from(lastActiveAccountSet).slice(undefined, 4).join(',')
 
-      const _updatedConvo = await tx.conversation.update({
-        where: { id: conversationId },
+      const _updatedConvo = await tx.group.update({
+        where: { id: groupId },
         data: { lastMessageId: createdMsg.id, lastMessageAt: new Date(), lastActiveAccounts }
       })
 
-      const sentTo = await broadcastToGroupMembersExceptMe(wss, ws, tx, accountId, orgId, conversationId, {
+      const sentTo = await broadcastToGroupMembersExceptMe(wss, ws, tx, accountId, orgId, groupId, {
         event: 'new-message',
         orgId,
         data: createdMsgWithoutUiId
@@ -65,7 +65,7 @@ export default async function handleNewMessage(
         event: 'callback',
         requestId,
         data: {
-          conversation_id: conversationId,
+          group_id: groupId,
           tab_id: tabId,
           ui_id: createdUiId!,
           message: createdMsg as RequiredNonNullableProps<typeof createdMsg, 'uiId'>,
@@ -81,7 +81,7 @@ export default async function handleNewMessage(
       event: 'callback',
       requestId,
       data: {
-        conversation_id: conversationId,
+        group_id: groupId,
         tab_id: tabId,
         ui_id: uiId,
         error: transformError(e)

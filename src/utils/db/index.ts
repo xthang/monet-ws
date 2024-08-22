@@ -37,18 +37,18 @@ export async function findUniqueAccountByAuthAccIdOrThrow<
   })
 }
 
-export async function findUniqueConversationMembershipOrThrow<
-  MembershipSelect extends Prisma.ConversationMembershipSelect | null = null,
-  MembershipInclude extends Prisma.ConversationMembershipInclude | null = null
+export async function findUniqueGroupMembershipOrThrow<
+  MembershipSelect extends Prisma.GroupMembershipSelect | null = null,
+  MembershipInclude extends Prisma.GroupMembershipInclude | null = null
 >(
   prisma: typeof db,
-  conversationId: string,
+  groupId: string,
   accountId: string,
   orgId: string | undefined,
   select?: { select?: MembershipSelect; include?: MembershipInclude }
 ) {
-  const memberships = await prisma.conversationMembership.findMany<{
-    where: Prisma.ConversationMembershipWhereUniqueInput
+  const memberships = await prisma.groupMembership.findMany<{
+    where: Prisma.GroupMembershipWhereUniqueInput
     select: MembershipSelect
     include: MembershipInclude
   }>({
@@ -57,35 +57,32 @@ export async function findUniqueConversationMembershipOrThrow<
         { accountId, accountOrPlaceholderId: accountId },
         { accountAlias: { accountId, deletedAt: null, isActive: true, verificationStatus: 'verified' } }
       ],
-      conversationId,
+      groupId,
       isActive: true,
-      conversation: { orgId: orgId ?? null, deletedAt: null }
+      group: { orgId: orgId ?? null, deletedAt: null }
     },
     ...select
   })
-  // Note: there are cases where many memberships exist in the same conversation for 1 account.
-  // For example: a user adds a not-'verified' alias of their account into the same conversation. And later on, that alias is 'verified'
+  // Note: there are cases where many memberships exist in the same group for 1 account.
+  // For example: a user adds a not-'verified' alias of their account into the same group. And later on, that alias is 'verified'
   // Example 2: many aliases are added to the same group and later on, these aliases belong to the same newly-registered account
-  const conversationIds = new Set(memberships.map((m) => m.conversationId))
+  const groupIds = new Set(memberships.map((m) => m.groupId))
   assert(
-    conversationIds.size === 1,
-    new WsError(
-      'INVALID_MEMBERSHIPS',
-      `memberships found: ${memberships.length} | conversations found: ${conversationIds.size}`
-    )
+    groupIds.size === 1,
+    new WsError('INVALID_MEMBERSHIPS', `memberships found: ${memberships.length} | groups found: ${groupIds.size}`)
   )
   // return membership that is attached with an account first. If none found, return any membership (which is attached with an alias)
   return memberships.find((m) => m.accountId) ?? memberships[0]
 }
 
 export async function findUniqueMessageOrThrow<
-  MembershipSelect extends Prisma.ConversationMembershipSelect | null = null,
-  MembershipInclude extends Prisma.ConversationMembershipInclude | null = null,
+  MembershipSelect extends Prisma.GroupMembershipSelect | null = null,
+  MembershipInclude extends Prisma.GroupMembershipInclude | null = null,
   MessageSelect extends Prisma.MessageSelect | null = null,
   MessageInclude extends Prisma.MessageInclude | null = null
 >(
   prisma: typeof db,
-  conversationId: string,
+  groupId: string,
   tabId: string,
   messageId: string,
   accountId: string,
@@ -95,9 +92,9 @@ export async function findUniqueMessageOrThrow<
     message?: { select?: MessageSelect; include?: MessageInclude }
   }
 ) {
-  const membership = await findUniqueConversationMembershipOrThrow<MembershipSelect, MembershipInclude>(
+  const membership = await findUniqueGroupMembershipOrThrow<MembershipSelect, MembershipInclude>(
     prisma,
-    conversationId,
+    groupId,
     accountId,
     orgId,
     select?.membership
@@ -107,22 +104,22 @@ export async function findUniqueMessageOrThrow<
     select: MessageSelect
     // include: MessageInclude
   }>({
-    where: { id: messageId, conversationId, tabId },
+    where: { id: messageId, groupId, tabId },
     ...select?.message
   })
   return [membership, message] as const
 }
 
 export async function findUniqueMoneyRecordOrThrow<
-  MembershipSelect extends Prisma.ConversationMembershipSelect | null = null,
-  MembershipInclude extends Prisma.ConversationMembershipInclude | null = null,
+  MembershipSelect extends Prisma.GroupMembershipSelect | null = null,
+  MembershipInclude extends Prisma.GroupMembershipInclude | null = null,
   MessageSelect extends Prisma.MessageSelect | null = null,
   MessageInclude extends Prisma.MessageInclude | null = null,
   MoneyRecordSelect extends Prisma.MoneyRecordSelect | null = null,
   MoneyRecordInclude extends Prisma.MoneyRecordInclude | null = null
 >(
   prisma: typeof db,
-  conversationId: string,
+  groupId: string,
   tabId: string,
   messageId: string,
   moneyRecordId: string,
@@ -139,13 +136,13 @@ export async function findUniqueMoneyRecordOrThrow<
     MembershipInclude,
     MessageSelect,
     MessageInclude
-  >(prisma, conversationId, tabId, messageId, accountId, orgId, select)
+  >(prisma, groupId, tabId, messageId, accountId, orgId, select)
   const moneyRecord = await prisma.moneyRecord.findUniqueOrThrow<{
     where: Prisma.MoneyRecordWhereUniqueInput
     select: MoneyRecordSelect
     // include: MoneyRecordInclude
   }>({
-    where: { id: moneyRecordId, messageId, conversationId },
+    where: { id: moneyRecordId, messageId, groupId },
     ...select?.moneyRecord
   })
   return [membership, message, moneyRecord] as const

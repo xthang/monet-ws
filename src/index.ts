@@ -125,10 +125,10 @@ async function main() {
             this.auth = { accountId, authAccountId: auth.userId, orgId: auth.ordId, locale: this.auth.locale }
 
             switch (event) {
-              case 'update-conversation':
+              case 'update-group':
                 await handleUpdateGroup(wss, this, requestId, locale, data)
                 break
-              case 'delete-conversation':
+              case 'delete-group':
                 await handleDeleteGroup(wss, this, requestId, locale, data)
                 break
               case 'new-text-message':

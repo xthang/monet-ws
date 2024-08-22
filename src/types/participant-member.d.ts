@@ -1,10 +1,10 @@
-import type { ConversationMembership } from '@prisma/client'
+import type { GroupMembership } from '@prisma/client'
 
 import type { AccountBasicInfo, AccountAlias, AccountPlaceholder } from './db/index'
 
-// values which might be members of a conversation or not (is deleted from that conversation)
+// values which might be members of a group or not (is deleted from that group)
 type ParticipantMember = Pick<
-  ConversationMembership,
+  GroupMembership,
   | 'id'
   | 'accountId'
   | 'accountAliasId'

@@ -4,9 +4,9 @@ import { type WebSocketServer, WebSocket } from 'ws'
 import { ActivityLogType } from '@/constants/data'
 import type { Locale } from '@/constants/locales'
 import db from '@/db/index'
-import { WsUpdateConversationRequestData } from '@/types/ws/request'
-import { WsResponseFullPayload, WsUpdateConversationReceipt } from '@/types/ws/response'
-import { findUniqueConversationMembershipOrThrow } from '@/utils/db'
+import { WsUpdateGroupRequestData } from '@/types/ws/request'
+import { WsResponseFullPayload, WsUpdateGroupReceipt } from '@/types/ws/response'
+import { findUniqueGroupMembershipOrThrow } from '@/utils/db'
 import { broadcastToGroupMembersExceptMe } from '@/utils/ws/broadcast-to-group-members-except-me'
 import { transformError } from '@/utils/ws/transform-error'
 
@@ -15,31 +15,31 @@ export default async function handleUpdateGroup(
   ws: WebSocket,
   requestId: string,
   locale: Locale,
-  rawInput: WsUpdateConversationRequestData
+  rawInput: WsUpdateGroupRequestData
 ) {
   // Validate inputs
-  const input = WsUpdateConversationRequestData.parse(rawInput)
+  const input = WsUpdateGroupRequestData.parse(rawInput)
 
   const { accountId, orgId } = ws.auth
-  const { conversationId, data } = input
+  const { groupId, data } = input
   const { name, description, photo, baseCurrency, note } = data
 
   try {
     // check permission
-    const membership = await findUniqueConversationMembershipOrThrow(db, conversationId, accountId, orgId, {
-      select: { conversation: true }
+    const membership = await findUniqueGroupMembershipOrThrow(db, groupId, accountId, orgId, {
+      select: { group: true }
     })
-    const existedConversation = membership.conversation
+    const existedGroup = membership.group
 
     return db.$transaction(async (tx) => {
-      let updatedConversation
+      let updatedGroup
       if (Object.entries(data).filter(([_, v]) => v !== undefined).length) {
-        const lastActiveAccountSet = new Set(existedConversation.lastActiveAccounts?.split(','))
+        const lastActiveAccountSet = new Set(existedGroup.lastActiveAccounts?.split(','))
         lastActiveAccountSet.add(accountId)
         const lastActiveAccounts = Array.from(lastActiveAccountSet).slice(undefined, 4).join(',')
 
-        updatedConversation = await tx.conversation.update({
-          where: { id: conversationId, orgId: orgId ?? null },
+        updatedGroup = await tx.group.update({
+          where: { id: groupId, orgId: orgId ?? null },
           data: {
             name,
             description,
@@ -55,9 +55,9 @@ export default async function handleUpdateGroup(
 
       await tx.activityLog.create({
         data: {
-          objectType: $Enums.ActivityLogObjectType.conversation,
-          objectId: conversationId,
-          type: ActivityLogType.conversation_update,
+          objectType: $Enums.ActivityLogObjectType.group,
+          objectId: groupId,
+          type: ActivityLogType.group_update,
           details: input.data,
           detailsVersion: '1.0.0',
           createdBy: accountId
@@ -66,12 +66,12 @@ export default async function handleUpdateGroup(
 
       // BROADCAST ...
 
-      if (!updatedConversation) return
+      if (!updatedGroup) return
 
-      const sentTo = await broadcastToGroupMembersExceptMe(wss, ws, tx, accountId, orgId, conversationId, {
-        event: 'updated-conversation',
+      const sentTo = await broadcastToGroupMembersExceptMe(wss, ws, tx, accountId, orgId, groupId, {
+        event: 'updated-group',
         orgId,
-        data: { conversation: updatedConversation }
+        data: { group: updatedGroup }
       })
 
       // send receipt back to itself
@@ -79,10 +79,10 @@ export default async function handleUpdateGroup(
         event: 'callback',
         requestId,
         data: {
-          conversation_id: conversationId,
-          conversation: updatedConversation,
+          group_id: groupId,
+          group: updatedGroup,
           sent_to: Array.from(sentTo)
-        } satisfies WsUpdateConversationReceipt
+        } satisfies WsUpdateGroupReceipt
       }
       ws.send(JSON.stringify(payload))
     })
@@ -93,9 +93,9 @@ export default async function handleUpdateGroup(
       event: 'callback',
       requestId,
       data: {
-        conversation_id: conversationId,
+        group_id: groupId,
         error: transformError(e)
-      } satisfies WsUpdateConversationReceipt
+      } satisfies WsUpdateGroupReceipt
     }
     ws.send(JSON.stringify(payload))
   }

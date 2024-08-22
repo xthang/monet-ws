@@ -38,10 +38,10 @@ export default async function sendTelegramMessage(
   const CHAT_ID = process.env.TELEGRAM_CHAT_ID
   if (!CHAT_ID) return
 
-  await sendTelegramMessageToConversation(tag, CHAT_ID, level, messages)
+  await sendTelegramMessageToGroup(tag, CHAT_ID, level, messages)
 }
 
-export async function sendTelegramMessageToConversation(
+export async function sendTelegramMessageToGroup(
   tag: string,
   chatId: string,
   level: 'error' | 'warn' | 'info' | 'log',

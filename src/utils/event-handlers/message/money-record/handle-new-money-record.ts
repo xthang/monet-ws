@@ -8,9 +8,9 @@ import type { WsMoneyRecord } from '@/types/ws/message'
 import { WsCreateMoneyRecordRequestData } from '@/types/ws/request'
 import type { WsChatMessageReceipt, WsResponseFullPayload } from '@/types/ws/response'
 
-import calculateTabSettlement from '../../../db/calculate-conversation-tab-settlement'
+import calculateTabSettlement from '../../../db/calculate-group-tab-settlement'
 import { MESSAGE_SELECT, MONEY_RECORD_SELECT } from '../../../db/const'
-import { findUniqueConversationMembershipOrThrow } from '../../../db/index'
+import { findUniqueGroupMembershipOrThrow } from '../../../db/index'
 import { transformAccountAlias } from '../../../db/transform/account-alias'
 import { broadcastToGroupMembersExceptMe } from '../../../ws/broadcast-to-group-members-except-me'
 import { transformError } from '../../../ws/transform-error'
@@ -27,7 +27,7 @@ export default async function handleCreateMoneyRecord(
 
   const { accountId, orgId } = ws.auth
   const {
-    conversationId,
+    groupId,
     tabId,
     data: { uiId, sentAt, ...data }
   } = input
@@ -35,21 +35,21 @@ export default async function handleCreateMoneyRecord(
 
   try {
     // check permission
-    const membership = await findUniqueConversationMembershipOrThrow(db, conversationId, accountId, orgId, {
-      select: { conversation: true }
+    const membership = await findUniqueGroupMembershipOrThrow(db, groupId, accountId, orgId, {
+      select: { group: true }
     })
-    const { conversation } = membership
+    const { group } = membership
 
     return await db.$transaction(async (tx) => {
       const createdMsg_ = await tx.message.create({
-        data: { conversationId, tabId, uiId, sentAt, sentBy: accountId, createdBy: accountId },
+        data: { groupId, tabId, uiId, sentAt, sentBy: accountId, createdBy: accountId },
         select: MESSAGE_SELECT
       })
 
       const moneyRecord = await tx.moneyRecord.create({
         data: {
           ...data,
-          conversationId,
+          groupId,
           tabId,
           messageId: createdMsg_.id,
           createdBy: accountId
@@ -62,21 +62,21 @@ export default async function handleCreateMoneyRecord(
         data: { moneyRecordId: moneyRecord.id }
       })
 
-      const lastActiveAccountSet = new Set(conversation.lastActiveAccounts?.split(','))
+      const lastActiveAccountSet = new Set(group.lastActiveAccounts?.split(','))
       lastActiveAccountSet.add(accountId)
       const lastActiveAccounts = Array.from(lastActiveAccountSet).slice(undefined, 4).join(',')
 
-      await tx.conversation.update({
-        where: { id: conversationId },
+      await tx.group.update({
+        where: { id: groupId },
         data: { lastMessageId: createdMsg.id, lastActivityAt: new Date(), lastActiveAccounts }
       })
 
-      await calculateTabSettlement(accountId, tx, conversationId, conversation, tabId)
+      await calculateTabSettlement(accountId, tx, groupId, group, tabId)
 
       await tx.activityLog.create({
         data: {
-          objectType: $Enums.ActivityLogObjectType.conversation,
-          objectId: conversationId,
+          objectType: $Enums.ActivityLogObjectType.group,
+          objectId: groupId,
           type: ActivityLogType.moneyRecord_upsert,
           details: data,
           detailsVersion: '1.0.0',
@@ -139,7 +139,7 @@ export default async function handleCreateMoneyRecord(
         moneyRecord: wsMoneyRecord
       }
 
-      const sentTo = await broadcastToGroupMembersExceptMe(wss, ws, tx, accountId, orgId, conversationId, {
+      const sentTo = await broadcastToGroupMembersExceptMe(wss, ws, tx, accountId, orgId, groupId, {
         event: 'new-message',
         orgId,
         data: wsMessageWithoutUiId
@@ -150,7 +150,7 @@ export default async function handleCreateMoneyRecord(
         event: 'callback',
         requestId,
         data: {
-          conversation_id: conversationId,
+          group_id: groupId,
           tab_id: tabId,
           ui_id: createdUiId!,
           message: { ...wsMessageWithoutUiId, uiId: createdUiId! },
@@ -166,7 +166,7 @@ export default async function handleCreateMoneyRecord(
       event: 'callback',
       requestId,
       data: {
-        conversation_id: conversationId,
+        group_id: groupId,
         tab_id: tabId,
         ui_id: uiId,
         error: transformError(e)

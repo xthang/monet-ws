@@ -4,13 +4,13 @@ import { type WebSocketServer, WebSocket } from 'ws'
 import type { Locale } from '@/constants/locales'
 import db from '@/db/index'
 import { WsError, WsErrorCode } from '@/types/error'
-import { WsDeleteConversationRequestData } from '@/types/ws/request'
-import { WsResponseFullPayload, WsDeleteConversationReceipt } from '@/types/ws/response'
-import { findUniqueConversationMembershipOrThrow } from '@/utils/db'
+import { WsDeleteGroupRequestData } from '@/types/ws/request'
+import { WsResponseFullPayload, WsDeleteGroupReceipt } from '@/types/ws/response'
+import { findUniqueGroupMembershipOrThrow } from '@/utils/db'
 import { ACCOUNT_SELECT } from '@/utils/db/const'
 import { fromDbLocale } from '@/utils/db/transform/locale'
 import getNotificationRecipientInfoFromMembership from '@/utils/notify/get-notification-recipient-info-from-membership'
-import notifyDeletedConversation from '@/utils/notify/notify-deleted-conversation'
+import notifyDeletedGroup from '@/utils/notify/notify-deleted-group'
 import { broadcastToGroupMembersExceptMe } from '@/utils/ws/broadcast-to-group-members-except-me'
 import { transformError } from '@/utils/ws/transform-error'
 
@@ -19,21 +19,21 @@ export default async function handleDeleteGroup(
   ws: WebSocket,
   requestId: string,
   locale: Locale,
-  rawInput: WsDeleteConversationRequestData
+  rawInput: WsDeleteGroupRequestData
 ) {
   // Validate inputs
-  const conversationId = WsDeleteConversationRequestData.parse(rawInput)
+  const groupId = WsDeleteGroupRequestData.parse(rawInput)
 
   const { accountId, orgId } = ws.auth
 
   try {
     // Check member permission
-    const membership = await findUniqueConversationMembershipOrThrow(db, conversationId, accountId, orgId)
-    if (membership.role !== $Enums.ConversationMemberRole.admin) throw new WsError(WsErrorCode.FORBIDDEN, 'Forbidden')
+    const membership = await findUniqueGroupMembershipOrThrow(db, groupId, accountId, orgId)
+    if (membership.role !== $Enums.GroupMemberRole.admin) throw new WsError(WsErrorCode.FORBIDDEN, 'Forbidden')
 
     return db.$transaction(async (tx) => {
-      const memberships = await tx.conversationMembership.findMany({
-        where: { conversationId, accountId: { not: accountId }, isActive: true },
+      const memberships = await tx.groupMembership.findMany({
+        where: { groupId, accountId: { not: accountId }, isActive: true },
         select: {
           accountId: true,
           accountAliasId: true,
@@ -49,9 +49,9 @@ export default async function handleDeleteGroup(
         }
       })
 
-      const deletedConversation = await tx.conversation.softDelete({
+      const deletedGroup = await tx.group.softDelete({
         tx,
-        where: { id: conversationId },
+        where: { id: groupId },
         deletedBy: accountId
       })
 
@@ -75,21 +75,21 @@ export default async function handleDeleteGroup(
 
         toSendNoti.push(...getNotificationRecipientInfoFromMembership(membershipForNotify, locale))
       }
-      await notifyDeletedConversation(deletedConversation, toSendNoti, tx)
+      await notifyDeletedGroup(deletedGroup, toSendNoti, tx)
 
       // BROADCAST ...
 
-      const sentTo = await broadcastToGroupMembersExceptMe(wss, ws, tx, accountId, orgId, conversationId, {
-        event: 'deleted-conversation',
+      const sentTo = await broadcastToGroupMembersExceptMe(wss, ws, tx, accountId, orgId, groupId, {
+        event: 'deleted-group',
         orgId,
-        data: { conversationId: deletedConversation.id }
+        data: { groupId: deletedGroup.id }
       })
 
       // send receipt back to itself
       const payload: WsResponseFullPayload = {
         event: 'callback',
         requestId,
-        data: { conversation_id: conversationId, sent_to: Array.from(sentTo) } satisfies WsDeleteConversationReceipt
+        data: { group_id: groupId, sent_to: Array.from(sentTo) } satisfies WsDeleteGroupReceipt
       }
       ws.send(JSON.stringify(payload))
     })
@@ -100,9 +100,9 @@ export default async function handleDeleteGroup(
       event: 'callback',
       requestId,
       data: {
-        conversation_id: conversationId,
+        group_id: groupId,
         error: transformError(e)
-      } satisfies WsDeleteConversationReceipt
+      } satisfies WsDeleteGroupReceipt
     }
     ws.send(JSON.stringify(payload))
   }

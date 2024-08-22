@@ -57,7 +57,7 @@ export const MEMBER_SELECT_WHERE = {
     select: ACCOUNT_ALIAS_SELECT
   },
   accountPlaceholder: { where: { deletedAt: null }, select: ACCOUNT_PLACEHOLDER_SELECT }
-} as const satisfies Prisma.ConversationMembershipSelect
+} as const satisfies Prisma.GroupMembershipSelect
 
 export const MEMBER_SELECT_NO_WHERE = {
   id: true,
@@ -72,7 +72,7 @@ export const MEMBER_SELECT_NO_WHERE = {
   account: { select: ACCOUNT_SELECT },
   accountAlias: { select: ACCOUNT_ALIAS_SELECT },
   accountPlaceholder: { select: ACCOUNT_PLACEHOLDER_SELECT }
-} as const satisfies Prisma.ConversationMembershipSelect
+} as const satisfies Prisma.GroupMembershipSelect
 
 export const MEMBER_SELECT_FOR_NOTIFY = {
   accountId: true,
@@ -86,17 +86,17 @@ export const MEMBER_SELECT_FOR_NOTIFY = {
     }
   },
   accountAlias: { where: { deletedAt: null, isActive: true } } // verificationStatus: 'verified'
-} as const satisfies Prisma.ConversationMembershipSelect
+} as const satisfies Prisma.GroupMembershipSelect
 
 export const MEMBER_SELECT_FULL_FOR_NOTIFY = {
   ...MEMBER_SELECT_FOR_NOTIFY,
   accountPlaceholder: { where: { deletedAt: null } }
-} as const satisfies Prisma.ConversationMembershipSelect
+} as const satisfies Prisma.GroupMembershipSelect
 
 export const MESSAGE_SELECT = {
   id: true,
   uiId: true,
-  conversationId: true,
+  groupId: true,
   tabId: true,
   text: true,
   moneyRecordId: true,
@@ -121,7 +121,7 @@ export const MONEY_RECORD_PARTAKER_SELECT = {
 
 export const MONEY_RECORD_SELECT = {
   id: true,
-  conversationId: true,
+  groupId: true,
   tabId: true,
   messageId: true,
   time: true,

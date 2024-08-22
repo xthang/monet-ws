@@ -1,4 +1,4 @@
-import type { WsChatMessage, WsConversation } from './message.d'
+import type { WsChatMessage, WsGroup } from './message.d'
 
 type WsResponseFullPayload = WsResponsePayload & {}
 
@@ -12,29 +12,29 @@ type WsResponsePayload = {
 type WsErrorData = { code: string; message: string; details?: any }
 
 type WsResponseData =
-  | WsUpdateConversationReceipt
-  | WsDeleteConversationReceipt
+  | WsUpdateGroupReceipt
+  | WsDeleteGroupReceipt
   | WsChatMessageReceipt
   | WsUpdateChatMessageReceipt
   | WsUpdateMoneyRecordReceipt
   | WsDeleteMessageReceipt
   | WsSettleUpPayableReceipt
 
-type WsUpdateConversationReceipt = {
-  conversation_id: string
-  conversation?: WsConversation
+type WsUpdateGroupReceipt = {
+  group_id: string
+  group?: WsGroup
   sent_to?: string[]
   error?: { code: string; message: string; details?: any }
 }
 
-type WsDeleteConversationReceipt = {
-  conversation_id: string
+type WsDeleteGroupReceipt = {
+  group_id: string
   sent_to?: string[]
   error?: { code: string; message: string; details?: any }
 }
 
 type WsChatMessageReceipt = {
-  conversation_id: string
+  group_id: string
   tab_id: string
   ui_id: string
   message?: WsChatMessage & { uiId: string }
@@ -43,7 +43,7 @@ type WsChatMessageReceipt = {
 }
 
 type WsUpdateChatMessageReceipt = {
-  conversation_id: string
+  group_id: string
   tab_id: string
   message_id: string
   message?: WsChatMessage
@@ -52,7 +52,7 @@ type WsUpdateChatMessageReceipt = {
 }
 
 type WsUpdateMoneyRecordReceipt = {
-  conversation_id: string
+  group_id: string
   tab_id: string
   message_id: string
   money_record_id: string
@@ -62,7 +62,7 @@ type WsUpdateMoneyRecordReceipt = {
 }
 
 type WsDeleteMessageReceipt = {
-  conversation_id: string
+  group_id: string
   tab_id: string
   message_id: string
   message?: WsChatMessage
@@ -71,7 +71,7 @@ type WsDeleteMessageReceipt = {
 }
 
 type WsSettleUpPayableReceipt = {
-  conversation_id: string
+  group_id: string
   tab_id: string
   settlement_id: string
   message?: RequiredProps<WsChatMessage, 'moneyRecord'>

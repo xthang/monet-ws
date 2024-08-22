@@ -9,7 +9,7 @@ import { WsSettleUpPayableRequestData } from '@/types/ws/request'
 import type { WsResponseFullPayload, WsSettleUpPayableReceipt } from '@/types/ws/response'
 
 import { MEMBER_SELECT_FULL_FOR_NOTIFY, MONEY_RECORD_SELECT } from '../../../db/const'
-import { findUniqueConversationMembershipOrThrow } from '../../../db/index'
+import { findUniqueGroupMembershipOrThrow } from '../../../db/index'
 import { transformAccountAlias } from '../../../db/transform/account-alias'
 import { fromDbLocale } from '../../../db/transform/locale'
 import getNotificationRecipientInfoFromMembership, {
@@ -30,14 +30,14 @@ export default async function handleSettleUpPayable(
   const input = WsSettleUpPayableRequestData.parse(rawInput)
 
   const { accountId, orgId } = ws.auth
-  const { conversationId, tabId, settlementId, description } = input
+  const { groupId, tabId, settlementId, description } = input
 
   try {
     // check permission
-    const membership = await findUniqueConversationMembershipOrThrow(db, conversationId, accountId, orgId, {
-      select: { conversation: true }
+    const membership = await findUniqueGroupMembershipOrThrow(db, groupId, accountId, orgId, {
+      select: { group: true }
     })
-    const { conversation } = membership
+    const { group } = membership
 
     const {
       payorMemberId,
@@ -45,8 +45,8 @@ export default async function handleSettleUpPayable(
       payeeMemberId,
       payeeMember: payeeMemberForNotify_,
       amount: payableAmount
-    } = await db.conversationTabSuggestedSettlement.findUniqueOrThrow({
-      where: { id: settlementId, conversationId, tabId, settlementRecordId: null, isActive: true },
+    } = await db.groupTabSuggestedSettlement.findUniqueOrThrow({
+      where: { id: settlementId, groupId, tabId, settlementRecordId: null, isActive: true },
       select: {
         payorMemberId: true,
         payorMember: { select: MEMBER_SELECT_FULL_FOR_NOTIFY },
@@ -59,7 +59,7 @@ export default async function handleSettleUpPayable(
     return db.$transaction(async (tx) => {
       const message = await tx.message.create({
         data: {
-          conversationId,
+          groupId,
           tabId,
           sentAt: new Date(),
           sentBy: accountId,
@@ -69,7 +69,7 @@ export default async function handleSettleUpPayable(
 
       const { amount, rate, amountPerPartaker, payerMember, partakers, ...moneyRecord } = await tx.moneyRecord.create({
         data: {
-          conversationId,
+          groupId,
           tabId,
           messageId: message.id,
 
@@ -77,7 +77,7 @@ export default async function handleSettleUpPayable(
           settlementId,
           description: description ?? 'Reimbursement',
           payerMemberId: payorMemberId,
-          currency: conversation.baseCurrency,
+          currency: group.baseCurrency,
           amount: payableAmount,
 
           partakers: { create: { memberId: payeeMemberId, proportion: 1, createdBy: accountId } },
@@ -89,16 +89,16 @@ export default async function handleSettleUpPayable(
 
       await tx.message.update({ where: { id: message.id }, data: { moneyRecordId: moneyRecord.id } })
 
-      const lastActiveAccountSet = new Set(conversation.lastActiveAccounts?.split(','))
+      const lastActiveAccountSet = new Set(group.lastActiveAccounts?.split(','))
       lastActiveAccountSet.add(accountId)
       const lastActiveAccounts = Array.from(lastActiveAccountSet).slice(undefined, 4).join(',')
 
-      await tx.conversation.update({
-        where: { id: conversationId },
+      await tx.group.update({
+        where: { id: groupId },
         data: { lastMessageId: moneyRecord.messageId, lastActivityAt: new Date(), lastActiveAccounts }
       })
 
-      await tx.conversationTabSuggestedSettlement.update({
+      await tx.groupTabSuggestedSettlement.update({
         where: { id: settlementId },
         data: { settlementRecordId: moneyRecord.id, settledAt: new Date() }
       })
@@ -135,19 +135,19 @@ export default async function handleSettleUpPayable(
         toSendNoti.push(...recipientInfo)
       }
       if (toSendNoti.length) {
-        await notifySettleItems(tx, conversation, tabId, toSendNoti, {
+        await notifySettleItems(tx, group, tabId, toSendNoti, {
           payor: { name: getMemberName(payorMemberForNotify) ?? '[no name]' },
           payee: { name: getMemberName(payeeMemberForNotify) ?? '[no name]' },
-          currency: conversation.baseCurrency,
+          currency: group.baseCurrency,
           amount: amount!.toNumber()
         })
       }
 
       await tx.activityLog.create({
         data: {
-          objectType: $Enums.ActivityLogObjectType.conversation,
-          objectId: conversationId,
-          type: ActivityLogType.conversationTabSettlement_settle,
+          objectType: $Enums.ActivityLogObjectType.group,
+          objectId: groupId,
+          type: ActivityLogType.groupTabSettlement_settle,
           details: input,
           detailsVersion: '1.0.0',
           createdBy: accountId
@@ -203,7 +203,7 @@ export default async function handleSettleUpPayable(
 
       const wsMessage = { ...message, moneyRecordId: wsMoneyRecord.id, moneyRecord: wsMoneyRecord }
 
-      const sentTo = await broadcastToGroupMembersExceptMe(wss, ws, tx, accountId, orgId, conversationId, {
+      const sentTo = await broadcastToGroupMembersExceptMe(wss, ws, tx, accountId, orgId, groupId, {
         event: 'new-payable-settlement',
         orgId,
         data: wsMessage
@@ -214,7 +214,7 @@ export default async function handleSettleUpPayable(
         event: 'callback',
         requestId,
         data: {
-          conversation_id: conversationId,
+          group_id: groupId,
           tab_id: tabId,
           settlement_id: settlementId,
           message: wsMessage,
@@ -230,7 +230,7 @@ export default async function handleSettleUpPayable(
       event: 'callback',
       requestId,
       data: {
-        conversation_id: conversationId,
+        group_id: groupId,
         tab_id: tabId,
         settlement_id: settlementId,
         error: transformError(e)

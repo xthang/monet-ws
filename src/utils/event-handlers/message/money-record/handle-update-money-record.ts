@@ -8,7 +8,7 @@ import type { WsMoneyRecord } from '@/types/ws/message'
 import { WsUpdateMoneyRecordRequestData } from '@/types/ws/request'
 import type { WsResponseFullPayload, WsUpdateMoneyRecordReceipt } from '@/types/ws/response'
 
-import calculateTabSettlement from '../../../db/calculate-conversation-tab-settlement'
+import calculateTabSettlement from '../../../db/calculate-group-tab-settlement'
 import { MESSAGE_SELECT, MONEY_RECORD_SELECT } from '../../../db/const'
 import { findUniqueMessageOrThrow } from '../../../db/index'
 import { transformAccountAlias } from '../../../db/transform/account-alias'
@@ -26,37 +26,29 @@ export default async function handleUpdateMoneyRecord(
   const input = WsUpdateMoneyRecordRequestData.parse(rawInput)
 
   const { accountId, orgId } = ws.auth
-  const { conversationId, tabId, data } = input
+  const { groupId, tabId, data } = input
 
   try {
     // check permission
-    const [membership, message] = await findUniqueMessageOrThrow(
-      db,
-      conversationId,
-      tabId,
-      data.messageId,
-      accountId,
-      orgId,
-      {
-        membership: { select: { conversation: { select: { baseCurrency: true, lastActiveAccounts: true } } } },
-        message: { select: MESSAGE_SELECT }
-      }
-    )
-    const { conversation } = membership
+    const [membership, message] = await findUniqueMessageOrThrow(db, groupId, tabId, data.messageId, accountId, orgId, {
+      membership: { select: { group: { select: { baseCurrency: true, lastActiveAccounts: true } } } },
+      message: { select: MESSAGE_SELECT }
+    })
+    const { group } = membership
 
     return await db.$transaction(async (tx) => {
       const updatedMoneyRecord = await tx.moneyRecord.update({
-        where: { id: data.id, conversationId, messageId: data.messageId },
+        where: { id: data.id, groupId, messageId: data.messageId },
         data: { ...data, updatedBy: accountId },
         select: MONEY_RECORD_SELECT
       })
 
-      const lastActiveAccountSet = new Set(conversation.lastActiveAccounts?.split(','))
+      const lastActiveAccountSet = new Set(group.lastActiveAccounts?.split(','))
       lastActiveAccountSet.add(accountId)
       const lastActiveAccounts = Array.from(lastActiveAccountSet).slice(undefined, 4).join(',')
 
-      await tx.conversation.update({
-        where: { id: conversationId },
+      await tx.group.update({
+        where: { id: groupId },
         data: { lastActivityAt: new Date(), lastActiveAccounts }
       })
 
@@ -67,12 +59,12 @@ export default async function handleUpdateMoneyRecord(
         data.ratePerBase !== undefined ||
         data.rate !== undefined ||
         data.amountPerPartaker !== undefined
-      if (affectedUpdate) await calculateTabSettlement(accountId, tx, conversationId, conversation, tabId)
+      if (affectedUpdate) await calculateTabSettlement(accountId, tx, groupId, group, tabId)
 
       await tx.activityLog.create({
         data: {
-          objectType: $Enums.ActivityLogObjectType.conversation,
-          objectId: conversationId,
+          objectType: $Enums.ActivityLogObjectType.group,
+          objectId: groupId,
           type: ActivityLogType.moneyRecord_upsert,
           details: data,
           detailsVersion: '1.0.0',
@@ -131,7 +123,7 @@ export default async function handleUpdateMoneyRecord(
 
       const wsMessage = { ...message, moneyRecordId: wsMoneyRecord.id, moneyRecord: wsMoneyRecord }
 
-      const sentTo = await broadcastToGroupMembersExceptMe(wss, ws, tx, accountId, orgId, conversationId, {
+      const sentTo = await broadcastToGroupMembersExceptMe(wss, ws, tx, accountId, orgId, groupId, {
         event: 'updated-money-record',
         orgId,
         data: wsMessage
@@ -142,7 +134,7 @@ export default async function handleUpdateMoneyRecord(
         event: 'callback',
         requestId,
         data: {
-          conversation_id: conversationId,
+          group_id: groupId,
           tab_id: tabId,
           message_id: message.id,
           money_record_id: updatedMoneyRecord.id,
@@ -159,7 +151,7 @@ export default async function handleUpdateMoneyRecord(
       event: 'callback',
       requestId,
       data: {
-        conversation_id: conversationId,
+        group_id: groupId,
         tab_id: tabId,
         message_id: data.messageId,
         money_record_id: data.id,

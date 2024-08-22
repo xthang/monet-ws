@@ -1,5 +1,5 @@
 import { msg } from '@lingui/macro'
-import type { Conversation } from '@prisma/client'
+import type { Group } from '@prisma/client'
 import { $Enums } from '@prisma/client'
 
 import { TextTemplateKey } from '@/constants/data'
@@ -12,7 +12,7 @@ import queueSendSms from '../queue/queue-send-sms'
 
 export default async function notifySettleItems(
   db: PrismaClient | PrismaTransactionClient,
-  conversation: Pick<Conversation, 'id' | 'name'>,
+  group: Pick<Group, 'id' | 'name'>,
   tabId: string,
   to: {
     accountId?: string
@@ -61,8 +61,8 @@ export default async function notifySettleItems(
               .find((it) => it.key === TextTemplateKey.SETTLED_ITEM_EMAIL_CONTENT && it.locale === locale_)!
               .content.replace('{{member_name}}', name ? ` <b>${name}</b>` : '')
               .replace(
-                '{{conversation}}',
-                `<a href="https://${HOST_NAME}/i/${conversation.id}?tab=${tabId}"><b>${conversation.name || '<i>[no name]</i>'}</b></a>`
+                '{{group}}',
+                `<a href="https://${HOST_NAME}/i/${group.id}?tab=${tabId}"><b>${group.name || '<i>[no name]</i>'}</b></a>`
               )
               .replace('{{payor_}}', i18n._(role === 'payor' ? msg`<i>You</i> have` : msg`${payment.payor.name} has`))
               .replace('{{payee}}', role === 'payee' ? `<i>${i18n._(msg`you`)}</i>` : payment.payee.name)
@@ -87,8 +87,8 @@ export default async function notifySettleItems(
             text: contentTemplates
               .find((it) => it.key === TextTemplateKey.SETTLED_ITEM_SMS_CONTENT && it.locale === locale_)!
               .content.replace('{{member_name}}', name ? ` ${name}` : '')
-              .replace('{{conversation_name}}', conversation.name ? ` named ${conversation.name}` : '')
-              .replace('{{conversation_link}}', `https://${HOST_NAME}/i/${conversation.id}?tab=${tabId}`)
+              .replace('{{group_name}}', group.name ? ` named ${group.name}` : '')
+              .replace('{{group_link}}', `https://${HOST_NAME}/i/${group.id}?tab=${tabId}`)
               .replace('{{payor_}}', i18n._(role === 'payor' ? msg`You have` : msg`${payment.payor.name} has`))
               .replace('{{payee}}', role === 'payee' ? i18n._(msg`you`) : payment.payee.name)
               .replace('{{currency}}', payment.currency)

@@ -433,13 +433,13 @@ model CurrencyExchangeRate {
   id String @id @default(cuid()) @db.VarChar(25)
 
   // Functional Fields
-  isDefault      Boolean?
-  conversationId String?  @db.VarChar(50)
-  base           Currency
-  to             Currency
-  quote          Decimal
-  source         String?  @db.VarChar(100)
-  order          Int
+  isDefault Boolean?
+  groupId   String?  @db.VarChar(50)
+  base      Currency
+  to        Currency
+  quote     Decimal
+  source    String?  @db.VarChar(100)
+  order     Int
 
   // Technical Fields
   createdAt DateTime  @default(now()) @db.Timestamptz(3)
@@ -450,12 +450,12 @@ model CurrencyExchangeRate {
   deletedBy String?   @db.VarChar(50)
   isActive  Boolean?  @default(true)
 
-  conversation Conversation? @relation(fields: [conversationId], references: [id], onDelete: Restrict)
+  group Group? @relation(fields: [groupId], references: [id], onDelete: Restrict)
 
   @@unique([isDefault, base, to, isActive])
-  @@unique([conversationId, base, to, isActive])
+  @@unique([groupId, base, to, isActive])
   @@index([isDefault, isActive])
-  @@index([conversationId, isActive])
+  @@index([groupId, isActive])
 }
 
 // Monet's specific features
@@ -536,15 +536,15 @@ model Account {
   notifiedAt DateTime? @db.Timestamptz(3)
 
   // Foreign Key Relations
-  accountAliases               AccountAlias[]
-  conversationMemberships      ConversationMembership[]
-  conversationAddedMemberships ConversationMembership[] @relation(name: "addedByAccount")
-  organizationMemberships      OrganizationMembership[]
-  messages                     Message[]                @relation(name: "Message_sentByAccount")
-  deletedMessages              Message[]                @relation(name: "Message_deletedByAccount")
-  deletedMoneyRecords          MoneyRecord[]            @relation(name: "MoneyRecord_deletedByAccount")
-  orders                       Order[]
-  subscriptionPaymentTrans     PaymentTransaction?      @relation(fields: [subscriptionPaymentTransId], references: [id])
+  accountAliases           AccountAlias[]
+  groupMemberships         GroupMembership[]
+  groupAddedMemberships    GroupMembership[]        @relation(name: "addedByAccount")
+  organizationMemberships  OrganizationMembership[]
+  messages                 Message[]                @relation(name: "Message_sentByAccount")
+  deletedMessages          Message[]                @relation(name: "Message_deletedByAccount")
+  deletedMoneyRecords      MoneyRecord[]            @relation(name: "MoneyRecord_deletedByAccount")
+  orders                   Order[]
+  subscriptionPaymentTrans PaymentTransaction?      @relation(fields: [subscriptionPaymentTransId], references: [id])
 
   @@unique([authAccountId])
   @@unique([username, isActive])
@@ -603,9 +603,9 @@ model AccountAlias {
   lastLogInAt DateTime? @db.Timestamptz(3)
 
   // Foreign Key Relations
-  account                 Account?                 @relation(fields: [accountId], references: [id], onDelete: Restrict)
-  accountPartnerAliases   AccountPartnerAlias[]
-  conversationMemberships ConversationMembership[]
+  account               Account?              @relation(fields: [accountId], references: [id], onDelete: Restrict)
+  accountPartnerAliases AccountPartnerAlias[]
+  groupMemberships      GroupMembership[]
 
   // @@unique([type, contactValue, (CASE WHEN "deletedAt" IS NULL THEN true ELSE NULL END)])
   @@unique([type, contactValue, isActive])
@@ -674,7 +674,7 @@ model AccountPlaceholder {
   deletedBy String?   @db.VarChar(50)
 
   // Foreign Key Relations
-  conversationMemberships ConversationMembership[]
+  groupMemberships GroupMembership[]
 }
 
 model Organization {
@@ -753,21 +753,21 @@ enum OrganizationMembershipRole {
   guest_member
 }
 
-model Conversation {
+model Group {
   // Functional Fields
-  id           String           @id @default(cuid()) @db.VarChar(25)
-  type         ConversationType
-  orgId        String?          @db.VarChar(50)
-  name         String?          @db.Text /// @encrypted
-  description  String?          @db.Text /// @encrypted
-  photo        String?          @db.Text
-  theme        String?          @db.VarChar(20)
-  darkMode     String?          @db.VarChar(10)
-  emoji        String?          @db.VarChar(20)
-  // status    ConversationStatus?
+  id           String    @id @default(cuid()) @db.VarChar(25)
+  type         GroupType
+  orgId        String?   @db.VarChar(50)
+  name         String?   @db.Text /// @encrypted
+  description  String?   @db.Text /// @encrypted
+  photo        String?   @db.Text
+  theme        String?   @db.VarChar(20)
+  darkMode     String?   @db.VarChar(10)
+  emoji        String?   @db.VarChar(20)
+  // status    GroupStatus?
   baseCurrency Currency
-  baseRates    String?          @db.Text
-  note         String?          @db.Text /// @encrypted
+  baseRates    String?   @db.Text
+  note         String?   @db.Text /// @encrypted
 
   lastActivityAt     DateTime? @db.Timestamptz(3)
   lastTabId          String?   @db.VarChar(50)
@@ -785,32 +785,32 @@ model Conversation {
   // isTestData Boolean
 
   // Foreign Key Relations
-  memberships           ConversationMembership[]
+  memberships           GroupMembership[]
   messages              Message[]
   moneyRecords          MoneyRecord[]
   currencyExchangeRates CurrencyExchangeRate[]
-  lastMessage           Message?                 @relation("lastMessage", fields: [lastMessageId], references: [id])
-  tabs                  ConversationTab[]
+  lastMessage           Message?               @relation("lastMessage", fields: [lastMessageId], references: [id])
+  tabs                  GroupTab[]
 
   @@unique([lastMessageId])
 }
 
-enum ConversationType {
+enum GroupType {
   direct
   group
 }
 
-model ConversationMembership {
+model GroupMembership {
   // Functional Fields
-  id                     String                  @id @default(cuid()) @db.VarChar(25)
-  conversationId         String                  @db.VarChar(50)
-  accountId              String?                 @db.VarChar(50)
-  accountAliasId         String?                 @db.VarChar(50)
-  accountPlaceholderId   String?                 @db.VarChar(50)
-  accountOrPlaceholderId String                  @db.VarChar(50)
-  role                   ConversationMemberRole?
-  nickname               String?                 @db.Text
-  addedByAccountId       String                  @db.VarChar(50)
+  id                     String           @id @default(cuid()) @db.VarChar(25)
+  groupId                String           @db.VarChar(50)
+  accountId              String?          @db.VarChar(50)
+  accountAliasId         String?          @db.VarChar(50)
+  accountPlaceholderId   String?          @db.VarChar(50)
+  accountOrPlaceholderId String           @db.VarChar(50)
+  role                   GroupMemberRole?
+  nickname               String?          @db.Text
+  addedByAccountId       String           @db.VarChar(50)
   order                  Int
 
   // Technical Fields
@@ -826,26 +826,26 @@ model ConversationMembership {
   openTabId String? @db.VarChar(50)
 
   // Foreign Key Relations
-  conversation                     Conversation                         @relation(fields: [conversationId], references: [id])
-  account                          Account?                             @relation(fields: [accountId], references: [id], onDelete: Restrict, map: "ConversationMembership_accountOrPlaceholderId_Account_fkey")
-  accountAlias                     AccountAlias?                        @relation(fields: [accountAliasId], references: [id], onDelete: Restrict, map: "ConversationMembership_accountOrPlaceholderId_AccAlias_fkey")
-  accountPlaceholder               AccountPlaceholder?                  @relation(fields: [accountPlaceholderId], references: [id], onDelete: Restrict, map: "ConversationMembership_accountOrPlaceholderId_AccPlhdr_fkey")
-  addedByAccount                   Account                              @relation(fields: [addedByAccountId], references: [id], name: "addedByAccount")
-  moneyRecordPartakers             MoneyRecordPartaker[]
-  moneyRecordPayers                MoneyRecord[]
-  conversationTabSettlements_Payor ConversationTabSuggestedSettlement[] @relation(name: "ConversationTabSuggestedSettlement_payorMember")
-  conversationTabSettlements_Payee ConversationTabSuggestedSettlement[] @relation(name: "ConversationTabSuggestedSettlement_payeeMember")
+  group                     Group                         @relation(fields: [groupId], references: [id])
+  account                   Account?                      @relation(fields: [accountId], references: [id], onDelete: Restrict, map: "GroupMembership_accountOrPlaceholderId_Account_fkey")
+  accountAlias              AccountAlias?                 @relation(fields: [accountAliasId], references: [id], onDelete: Restrict, map: "GroupMembership_accountOrPlaceholderId_AccAlias_fkey")
+  accountPlaceholder        AccountPlaceholder?           @relation(fields: [accountPlaceholderId], references: [id], onDelete: Restrict, map: "GroupMembership_accountOrPlaceholderId_AccPlhdr_fkey")
+  addedByAccount            Account                       @relation(fields: [addedByAccountId], references: [id], name: "addedByAccount")
+  moneyRecordPartakers      MoneyRecordPartaker[]
+  moneyRecordPayers         MoneyRecord[]
+  groupTabSettlements_Payor GroupTabSuggestedSettlement[] @relation(name: "GroupTabSuggestedSettlement_payorMember")
+  groupTabSettlements_Payee GroupTabSuggestedSettlement[] @relation(name: "GroupTabSuggestedSettlement_payeeMember")
 
-  @@unique([conversationId, accountId, isActive])
-  @@unique([conversationId, accountAliasId, isActive])
-  @@unique([conversationId, accountPlaceholderId, isActive])
-  @@unique([conversationId, accountOrPlaceholderId, isActive])
-  // @@unique([conversationId, order, isActive])
-  @@index([conversationId, isActive])
+  @@unique([groupId, accountId, isActive])
+  @@unique([groupId, accountAliasId, isActive])
+  @@unique([groupId, accountPlaceholderId, isActive])
+  @@unique([groupId, accountOrPlaceholderId, isActive])
+  // @@unique([groupId, order, isActive])
+  @@index([groupId, isActive])
   @@index([accountOrPlaceholderId, isActive])
 }
 
-enum ConversationMemberRole {
+enum GroupMemberRole {
   admin
   mod
 }
@@ -871,16 +871,16 @@ model ActivityLog {
 }
 
 enum ActivityLogObjectType {
-  conversation
+  group
 }
 
-model ConversationTab {
+model GroupTab {
   // Functional Fields
-  id             String  @id @default(cuid()) @db.VarChar(25)
-  conversationId String  @db.VarChar(50)
-  title          String  @db.Text
-  color          String? @db.VarChar(20)
-  note           String? @db.Text
+  id      String  @id @default(cuid()) @db.VarChar(25)
+  groupId String  @db.VarChar(50)
+  title   String  @db.Text
+  color   String? @db.VarChar(20)
+  note    String? @db.Text
 
   // Technical Fields
   createdAt DateTime  @default(now()) @db.Timestamptz(3)
@@ -890,19 +890,19 @@ model ConversationTab {
   deletedAt DateTime? @db.Timestamptz(3)
   deletedBy String?   @db.VarChar(50)
 
-  conversation Conversation                         @relation(fields: [conversationId], references: [id])
-  messages     Message[]
-  settlements  ConversationTabSuggestedSettlement[]
+  group       Group                         @relation(fields: [groupId], references: [id])
+  messages    Message[]
+  settlements GroupTabSuggestedSettlement[]
 
-  @@index([conversationId])
+  @@index([groupId])
 }
 
 model Message {
   // Functional Fields
-  id             String  @id @default(cuid()) @db.VarChar(25)
-  uiId           String? @db.VarChar(50)
-  conversationId String  @db.VarChar(50)
-  tabId          String  @db.VarChar(50)
+  id      String  @id @default(cuid()) @db.VarChar(25)
+  uiId    String? @db.VarChar(50)
+  groupId String  @db.VarChar(50)
+  tabId   String  @db.VarChar(50)
 
   text          String? @db.Text /// @encrypted // LongText
   moneyRecordId String? @db.VarChar(50)
@@ -920,18 +920,18 @@ model Message {
   sentBy String   @db.VarChar(50)
 
   // Foreign Key Relations
-  conversation             Conversation    @relation(fields: [conversationId], references: [id])
-  conversationTab          ConversationTab @relation(fields: [tabId], references: [id])
-  moneyRecord              MoneyRecord?
-  sentByAccount            Account         @relation("Message_sentByAccount", fields: [sentBy], references: [id])
-  deletedByAccount         Account?        @relation("Message_deletedByAccount", fields: [deletedBy], references: [id])
-  conversation_lastMessage Conversation?   @relation("lastMessage")
+  group             Group        @relation(fields: [groupId], references: [id])
+  groupTab          GroupTab     @relation(fields: [tabId], references: [id])
+  moneyRecord       MoneyRecord?
+  sentByAccount     Account      @relation("Message_sentByAccount", fields: [sentBy], references: [id])
+  deletedByAccount  Account?     @relation("Message_deletedByAccount", fields: [deletedBy], references: [id])
+  group_lastMessage Group?       @relation("lastMessage")
 }
 
 model MoneyRecord {
   // Functional Fields
   id                String             @id @default(cuid()) @db.VarChar(25)
-  conversationId    String             @db.VarChar(50)
+  groupId           String             @db.VarChar(50)
   tabId             String             @db.VarChar(50)
   messageId         String             @db.VarChar(50)
   time              DateTime?          @default(now()) @db.Timestamptz(3)
@@ -959,14 +959,14 @@ model MoneyRecord {
   // isTestData Boolean
 
   // Foreign Key Relations
-  conversation     Conversation           @relation(fields: [conversationId], references: [id])
-  message          Message                @relation(fields: [messageId], references: [id])
-  payerMember      ConversationMembership @relation(fields: [payerMemberId], references: [id])
+  group            Group                 @relation(fields: [groupId], references: [id])
+  message          Message               @relation(fields: [messageId], references: [id])
+  payerMember      GroupMembership       @relation(fields: [payerMemberId], references: [id])
   partakers        MoneyRecordPartaker[]
-  deletedByAccount Account?               @relation("MoneyRecord_deletedByAccount", fields: [deletedBy], references: [id])
+  deletedByAccount Account?              @relation("MoneyRecord_deletedByAccount", fields: [deletedBy], references: [id])
 
   @@unique([messageId])
-  @@unique([conversationId, messageId])
+  @@unique([groupId, messageId])
 }
 
 enum MoneyRecordType {
@@ -996,22 +996,22 @@ model MoneyRecordPartaker {
   // isTestData Boolean
 
   // Foreign Key Relations
-  moneyRecord MoneyRecord            @relation(fields: [moneyRecordId], references: [id])
-  member      ConversationMembership @relation(fields: [memberId], references: [id])
+  moneyRecord MoneyRecord     @relation(fields: [moneyRecordId], references: [id])
+  member      GroupMembership @relation(fields: [memberId], references: [id])
 
   @@unique([moneyRecordId, memberId, isActive])
   @@index([moneyRecordId, isActive])
   @@index([memberId, isActive])
 }
 
-model ConversationTabSuggestedSettlement {
+model GroupTabSuggestedSettlement {
   // Functional Fields
-  id             String  @id @default(cuid()) @db.VarChar(25)
-  conversationId String  @db.VarChar(50)
-  tabId          String  @db.VarChar(50)
-  payorMemberId  String  @db.VarChar(50)
-  payeeMemberId  String  @db.VarChar(50)
-  amount         Decimal
+  id            String  @id @default(cuid()) @db.VarChar(25)
+  groupId       String  @db.VarChar(50)
+  tabId         String  @db.VarChar(50)
+  payorMemberId String  @db.VarChar(50)
+  payeeMemberId String  @db.VarChar(50)
+  amount        Decimal
 
   settlementRecordId String?   @db.VarChar(50)
   settledAt          DateTime? @db.Timestamptz(3)
@@ -1025,9 +1025,9 @@ model ConversationTabSuggestedSettlement {
   deletedBy String?   @db.VarChar(50)
   isActive  Boolean?  @default(true)
 
-  conversationTab ConversationTab        @relation(fields: [tabId], references: [id])
-  payorMember     ConversationMembership @relation(fields: [payorMemberId], references: [id], name: "ConversationTabSuggestedSettlement_payorMember")
-  payeeMember     ConversationMembership @relation(fields: [payeeMemberId], references: [id], name: "ConversationTabSuggestedSettlement_payeeMember")
+  groupTab    GroupTab        @relation(fields: [tabId], references: [id])
+  payorMember GroupMembership @relation(fields: [payorMemberId], references: [id], name: "GroupTabSuggestedSettlement_payorMember")
+  payeeMember GroupMembership @relation(fields: [payeeMemberId], references: [id], name: "GroupTabSuggestedSettlement_payeeMember")
 }
 
 model Order {

@@ -6,21 +6,27 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "X-Generator: @lingui/cli\n"
 "Language: pseudo\n"
-
-#: src/utils/notify/notify-settled-item.ts:66
-#: src/utils/notify/notify-settled-item.ts:91
-msgid "{0} has"
-msgstr ""
+"Project-Id-Version: \n"
+"Report-Msgid-Bugs-To: \n"
+"PO-Revision-Date: \n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"Plural-Forms: \n"
 
 #: src/utils/notify/notify-settled-item.ts:67
 #: src/utils/notify/notify-settled-item.ts:92
+msgid "{0} has"
+msgstr ""
+
+#: src/utils/notify/notify-settled-item.ts:68
+#: src/utils/notify/notify-settled-item.ts:93
 msgid "you"
 msgstr ""
 
-#: src/utils/notify/notify-settled-item.ts:66
+#: src/utils/notify/notify-settled-item.ts:67
 msgid "<i>You</i> have"
 msgstr ""
 
-#: src/utils/notify/notify-settled-item.ts:91
+#: src/utils/notify/notify-settled-item.ts:92
 msgid "You have"
 msgstr ""

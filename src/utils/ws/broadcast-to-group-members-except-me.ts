@@ -10,11 +10,11 @@ export async function broadcastToGroupMembersExceptMe(
   db: PrismaClient | PrismaTransactionClient,
   accountId: string,
   orgId: string | undefined,
-  conversationId: string,
+  groupId: string,
   payload: WsMessageFullPayload
 ) {
-  const memberships = await db.conversationMembership.findMany({
-    where: { conversationId, AND: [{ accountId: { not: null } }, { accountId: { not: accountId } }], isActive: true },
+  const memberships = await db.groupMembership.findMany({
+    where: { groupId, AND: [{ accountId: { not: null } }, { accountId: { not: accountId } }], isActive: true },
     select: { accountId: true }
   })
 

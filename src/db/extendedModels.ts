@@ -3,10 +3,10 @@ import type {
   PrismaPromise,
   Account,
   AccountAlias,
-  Conversation,
-  ConversationMembership,
-  ConversationTab,
-  ConversationTabSuggestedSettlement,
+  Group,
+  GroupMembership,
+  GroupTab,
+  GroupTabSuggestedSettlement,
   CurrencyExchangeRate,
   Job,
   Message,
@@ -34,13 +34,13 @@ type model =
   | 'accountAlias'
   | 'organization'
   | 'organizationMembership'
-  | 'conversation'
-  | 'conversationMembership'
-  | 'conversationTab'
+  | 'group'
+  | 'groupMembership'
+  | 'groupTab'
   | 'message'
   | 'moneyRecord'
   | 'moneyRecordPartaker'
-  | 'conversationTabSuggestedSettlement'
+  | 'groupTabSuggestedSettlement'
   | 'order'
   | 'paymentTransaction'
 
@@ -133,24 +133,21 @@ export const extendedModels = {
     Prisma.OrganizationMembershipWhereInput,
     Prisma.OrganizationMembershipSelect
   >('organizationMembership'),
-  conversation: createSoftDeleteFunctions<
-    Conversation,
-    Prisma.ConversationWhereUniqueInput,
-    Prisma.ConversationWhereInput,
-    Prisma.ConversationSelect
-  >('conversation'),
-  conversationMembership: createSoftDeleteFunctions<
-    ConversationMembership,
-    Prisma.ConversationMembershipWhereUniqueInput,
-    Prisma.ConversationMembershipWhereInput,
-    Prisma.ConversationMembershipSelect
-  >('conversationMembership'),
-  conversationTab: createSoftDeleteFunctions<
-    ConversationTab,
-    Prisma.ConversationTabWhereUniqueInput,
-    Prisma.ConversationTabWhereInput,
-    Prisma.ConversationTabSelect
-  >('conversationTab'),
+  group: createSoftDeleteFunctions<Group, Prisma.GroupWhereUniqueInput, Prisma.GroupWhereInput, Prisma.GroupSelect>(
+    'group'
+  ),
+  groupMembership: createSoftDeleteFunctions<
+    GroupMembership,
+    Prisma.GroupMembershipWhereUniqueInput,
+    Prisma.GroupMembershipWhereInput,
+    Prisma.GroupMembershipSelect
+  >('groupMembership'),
+  groupTab: createSoftDeleteFunctions<
+    GroupTab,
+    Prisma.GroupTabWhereUniqueInput,
+    Prisma.GroupTabWhereInput,
+    Prisma.GroupTabSelect
+  >('groupTab'),
   message: createSoftDeleteFunctions<
     Message,
     Prisma.MessageWhereUniqueInput,
@@ -169,12 +166,12 @@ export const extendedModels = {
     Prisma.MoneyRecordPartakerWhereInput,
     Prisma.MoneyRecordPartakerSelect
   >('moneyRecordPartaker'),
-  conversationTabSuggestedSettlement: createSoftDeleteFunctions<
-    ConversationTabSuggestedSettlement,
-    Prisma.ConversationTabSuggestedSettlementWhereUniqueInput,
-    Prisma.ConversationTabSuggestedSettlementWhereInput,
-    Prisma.ConversationTabSuggestedSettlementSelect
-  >('conversationTabSuggestedSettlement'),
+  groupTabSuggestedSettlement: createSoftDeleteFunctions<
+    GroupTabSuggestedSettlement,
+    Prisma.GroupTabSuggestedSettlementWhereUniqueInput,
+    Prisma.GroupTabSuggestedSettlementWhereInput,
+    Prisma.GroupTabSuggestedSettlementSelect
+  >('groupTabSuggestedSettlement'),
   order: createSoftDeleteFunctions<Order, Prisma.OrderWhereUniqueInput, Prisma.OrderWhereInput, Prisma.OrderSelect>(
     'order'
   ),

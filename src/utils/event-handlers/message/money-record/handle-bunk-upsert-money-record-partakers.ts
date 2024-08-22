@@ -8,7 +8,7 @@ import type { WsMoneyRecord } from '@/types/ws/message'
 import { WsUpsertMoneyRecordPartakersRequestData } from '@/types/ws/request'
 import type { WsResponseFullPayload, WsUpdateMoneyRecordReceipt } from '@/types/ws/response'
 
-import calculateTabSettlement from '../../../db/calculate-conversation-tab-settlement'
+import calculateTabSettlement from '../../../db/calculate-group-tab-settlement'
 import { MESSAGE_SELECT, MONEY_RECORD_PARTAKER_SELECT, MONEY_RECORD_SELECT } from '../../../db/const'
 import { findUniqueMoneyRecordOrThrow } from '../../../db/index'
 import { transformAccountAlias } from '../../../db/transform/account-alias'
@@ -29,25 +29,25 @@ export default async function handleUpsertMoneyRecordPartakers(
   const input = WsUpsertMoneyRecordPartakersRequestData.parse(rawInput)
 
   const { accountId, orgId } = ws.auth
-  const { conversationId, tabId, messageId, moneyRecordId, data } = input
+  const { groupId, tabId, messageId, moneyRecordId, data } = input
 
   try {
     // check permission
     const [membership, message, moneyRecord] = await findUniqueMoneyRecordOrThrow(
       db,
-      conversationId,
+      groupId,
       tabId,
       messageId,
       moneyRecordId,
       accountId,
       orgId,
       {
-        membership: { select: { conversation: { select: { baseCurrency: true, lastActiveAccounts: true } } } },
+        membership: { select: { group: { select: { baseCurrency: true, lastActiveAccounts: true } } } },
         message: { select: MESSAGE_SELECT },
         moneyRecord: { select: MONEY_RECORD_SELECT_NO_PARTAKERS }
       }
     )
-    const { conversation } = membership
+    const { group } = membership
 
     const calls = []
 
@@ -76,20 +76,20 @@ export default async function handleUpsertMoneyRecordPartakers(
       )
     calls.push(...updates)
 
-    const lastActiveAccountSet = new Set(conversation.lastActiveAccounts?.split(','))
+    const lastActiveAccountSet = new Set(group.lastActiveAccounts?.split(','))
     lastActiveAccountSet.add(accountId)
     const lastActiveAccounts = Array.from(lastActiveAccountSet).slice(undefined, 4).join(',')
 
-    const convoUpdate = db.conversation.update({
-      where: { id: conversationId },
+    const convoUpdate = db.group.update({
+      where: { id: groupId },
       data: { lastActivityAt: new Date(), lastActiveAccounts }
     })
     calls.push(convoUpdate)
 
     const logInsert = db.activityLog.create({
       data: {
-        objectType: $Enums.ActivityLogObjectType.conversation,
-        objectId: conversationId,
+        objectType: $Enums.ActivityLogObjectType.group,
+        objectId: groupId,
         type: ActivityLogType.moneyRecord_update,
         details: data,
         detailsVersion: '1.0.0',
@@ -100,7 +100,7 @@ export default async function handleUpsertMoneyRecordPartakers(
 
     const res = await db.$transaction(calls)
 
-    await calculateTabSettlement(accountId, db, conversationId, conversation, tabId)
+    await calculateTabSettlement(accountId, db, groupId, group, tabId)
 
     // BROADCAST ...
 
@@ -157,7 +157,7 @@ export default async function handleUpsertMoneyRecordPartakers(
 
     const wsMessage = { ...message, moneyRecordId: wsMoneyRecord.id, moneyRecord: wsMoneyRecord }
 
-    const sentTo = await broadcastToGroupMembersExceptMe(wss, ws, db, accountId, orgId, conversationId, {
+    const sentTo = await broadcastToGroupMembersExceptMe(wss, ws, db, accountId, orgId, groupId, {
       event: 'updated-money-record',
       orgId,
       data: wsMessage
@@ -168,7 +168,7 @@ export default async function handleUpsertMoneyRecordPartakers(
       event: 'callback',
       requestId,
       data: {
-        conversation_id: conversationId,
+        group_id: groupId,
         tab_id: tabId,
         message_id: message.id,
         money_record_id: moneyRecord.id,
@@ -184,7 +184,7 @@ export default async function handleUpsertMoneyRecordPartakers(
       event: 'callback',
       requestId,
       data: {
-        conversation_id: conversationId,
+        group_id: groupId,
         tab_id: tabId,
         message_id: messageId,
         money_record_id: moneyRecordId,
