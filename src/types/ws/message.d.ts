@@ -20,6 +20,11 @@ type WsMessagePayload =
       data: { group: WsGroup }
     }
   | {
+      event: 'upserted-group-members'
+      orgId: string | undefined
+      data: { groupId: string }
+    }
+  | {
       event: 'deleted-group'
       orgId: string | undefined
       data: { groupId: string }

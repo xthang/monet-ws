@@ -3,8 +3,10 @@ name: Build, Publish and Deploy - production
 on:
   push:
     branches:
-      - staging
+      - main
+      - master
       - production
+      - staging
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 

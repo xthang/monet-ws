@@ -1,7 +1,17 @@
-import type { AccountAlias as DbAccountAlias } from '@prisma/client'
+import type { Prisma, AccountAlias as DbAccountAlias } from '@prisma/client'
+import { AccountAliasType } from '@prisma/client'
+import type {
+  CarrierCode,
+  CountryCallingCode,
+  CountryCode,
+  E164Number,
+  Extension,
+  NationalNumber,
+  NumberType
+} from 'libphonenumber-js'
 
 import type { AccountAlias, AccountBasicInfo } from '@/types/db/index'
-import type { NumberType, PhoneNumber } from '@/types/phone-number'
+import type { PhoneNumber } from '@/types/phone-number.d'
 
 export function transformAccountAlias<
   A extends AccountBasicInfo,
@@ -36,6 +46,52 @@ export function transformAccountAlias<
   }
 }
 
+export function transformPhoneNoToDbAlias(
+  raw: string,
+  {
+    type,
+    number,
+    countryCallingCode,
+    country,
+    carrierCode,
+    nationalNumber,
+    ext,
+    formatInternational
+  }: Pick<PhoneNumber, 'type' | 'formatInternational'> & {
+    number: string
+    countryCallingCode: string
+    country?: string | undefined
+    carrierCode?: string | undefined
+    nationalNumber: string
+    ext?: string | undefined
+  }
+): Pick<
+  Prisma.AccountAliasCreateInput,
+  | 'type'
+  | 'rawValue'
+  | 'contactValue'
+  | 'valueType'
+  | 'contactGroup'
+  | 'contactGroupName'
+  | 'contactGroup1'
+  | 'contactBody'
+  | 'contactExt'
+  | 'formatted'
+> {
+  return {
+    type: AccountAliasType.phoneNo,
+    rawValue: raw,
+    contactValue: number,
+    valueType: type,
+    contactGroup: countryCallingCode,
+    contactGroupName: country,
+    contactGroup1: carrierCode,
+    contactExt: ext,
+    contactBody: nationalNumber,
+    formatted: formatInternational
+  } as const
+}
+
 function transformDbAliasToPhoneNo({
   contactValue,
   valueType,
@@ -57,13 +113,13 @@ function transformDbAliasToPhoneNo({
   | 'formatted'
 >): PhoneNumber {
   return {
-    number: contactValue,
+    number: contactValue as E164Number,
     type: valueType as NumberType,
-    countryCallingCode: contactGroup!,
-    country: contactGroupName ?? undefined,
-    nationalNumber: contactBody!,
-    carrierCode: contactGroup1 ?? undefined,
-    ext: contactExt ?? undefined,
+    countryCallingCode: contactGroup! as CountryCallingCode,
+    country: contactGroupName as CountryCode | undefined,
+    nationalNumber: contactBody! as NationalNumber,
+    carrierCode: (contactGroup1 as CarrierCode | null) ?? undefined,
+    ext: (contactExt as Extension | null) ?? undefined,
     formatInternational: formatted ?? undefined
   }
 }

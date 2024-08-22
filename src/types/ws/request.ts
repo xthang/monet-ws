@@ -2,6 +2,7 @@ import { $Enums } from '@prisma/client'
 import { z } from 'zod'
 
 import type { Locale } from '@/constants/locales.ts'
+import { NUMBER_TYPES } from '@/constants/phone-number'
 
 export type Auth = {
   accountId: string
@@ -21,6 +22,10 @@ export type WsRequestData =
   | {
       event: 'delete-group'
       data: WsDeleteGroupRequestData
+    }
+  | {
+      event: 'upsert-group-members'
+      data: WsUpsertGroupMembersRequestData
     }
   | {
       event: 'new-text-message'
@@ -68,6 +73,70 @@ export type WsUpdateGroupRequestData = z.infer<typeof WsUpdateGroupRequestData>
 export const WsDeleteGroupRequestData = z.string()
 
 export type WsDeleteGroupRequestData = z.infer<typeof WsDeleteGroupRequestData>
+
+export const AccountOrPlaceholderCreate = z.union([
+  z.object({ accountId: z.string() }),
+  z.object({
+    accountAlias: z.union([
+      z.object({
+        type: z.literal('email-addr'),
+        rawValue: z.string(),
+        value: z.string()
+      }),
+      z.object({
+        type: z.literal('phone-no'),
+        rawValue: z.string(),
+        value: z.object({
+          number: z.string(), // contactValue
+          type: z.enum(NUMBER_TYPES).optional(),
+          countryCallingCode: z.string(),
+          country: z.string().optional(),
+          carrierCode: z.string().optional(),
+          nationalNumber: z.string(),
+          ext: z.string().optional(),
+          formatInternational: z.string().optional(),
+          __countryCallingCodeSource: z.string().optional()
+        })
+      })
+    ])
+  }),
+  z.object({ accountPlaceholder: z.object({ name: z.string() }) })
+])
+
+export const WsUpsertGroupMembersRequestData = z.object({
+  groupId: z.string(),
+  type: z.enum(['replace-member']).optional(),
+  data: z.object({
+    members: z.object({
+      creates: z
+        .array(
+          z.intersection(
+            z.object({ order: z.number(), role: z.nativeEnum($Enums.GroupMemberRole).optional() }),
+            AccountOrPlaceholderCreate
+          )
+        )
+        .optional(),
+      updates: z
+        .array(
+          z.intersection(
+            z.object({
+              id: z.string(),
+              role: z.nativeEnum($Enums.GroupMemberRole).nullish(),
+              nickname: z.string().nullish(),
+              order: z.number().optional()
+            }),
+            z.union([AccountOrPlaceholderCreate, z.object({})])
+          )
+        )
+        .optional(),
+      deletes: z.array(z.object({ id: z.string() })).optional()
+    })
+  }),
+  isMeLeavingGroup: z.boolean().optional(),
+  isUpdateOrder: z.boolean().optional()
+})
+
+export type WsUpsertGroupMembersRequestData = z.infer<typeof WsUpsertGroupMembersRequestData>
 
 export type WsSendMessageRequestData = {
   groupId: string

@@ -5,12 +5,13 @@ import { Locale } from './constants/locales'
 import db from './db/index'
 import { verifyToken } from './security/token-verification'
 import { WsError, WsErrorCode } from './types/error'
-import type { WsMessageFullPayload } from './types/ws/message'
-import { WsRequestFullPayload } from './types/ws/request'
-import type { WsResponseFullPayload } from './types/ws/response'
+import type { WsMessageFullPayload } from './types/ws/message.d'
+import type { WsRequestFullPayload } from './types/ws/request'
+import type { WsResponseFullPayload } from './types/ws/response.d'
 import { findUniqueAccountByAuthAccIdOrThrow } from './utils/db/index'
 import handleDeleteGroup from './utils/event-handlers/group/handle-delete-group'
 import handleUpdateGroup from './utils/event-handlers/group/handle-update-group'
+import handleUpsertGroupMember from './utils/event-handlers/group-members/handle-upsert-group-members'
 import handleDeleteMessage from './utils/event-handlers/message/handle-delete-message'
 import handleNewMessage from './utils/event-handlers/message/handle-new-message'
 import handleUpsertMoneyRecordPartakers from './utils/event-handlers/message/money-record/handle-bunk-upsert-money-record-partakers'
@@ -130,6 +131,9 @@ async function main() {
                 break
               case 'delete-group':
                 await handleDeleteGroup(wss, this, requestId, locale, data)
+                break
+              case 'upsert-group-members':
+                await handleUpsertGroupMember(wss, this, requestId, locale, data)
                 break
               case 'new-text-message':
                 await handleNewMessage(wss, this, requestId, locale, {

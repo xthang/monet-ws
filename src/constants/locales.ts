@@ -1,5 +1,4 @@
 import { I18n } from '@lingui/core'
-import { $Enums } from '@prisma/client'
 
 export const LOCALES = [
   'en-US',
@@ -45,7 +44,6 @@ export const SUPPORTED_LOCALES = [
 export type SupportedLocale = (typeof SUPPORTED_LOCALES)[number]
 
 export const DEFAULT_LOCALE = 'en-US'
-export const DEFAULT_DB_LOCALE = $Enums.Locale.en_US
 
 const i18ns: Map<SupportedLocale, I18n> = new Map()
 

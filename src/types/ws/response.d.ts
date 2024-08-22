@@ -1,3 +1,5 @@
+import type { GetBatchResult } from '@prisma/client/runtime/library'
+
 import type { WsChatMessage, WsGroup } from './message.d'
 
 type WsResponseFullPayload = WsResponsePayload & {}
@@ -14,6 +16,7 @@ type WsErrorData = { code: string; message: string; details?: any }
 type WsResponseData =
   | WsUpdateGroupReceipt
   | WsDeleteGroupReceipt
+  | WsUpsertGroupMembersReceipt
   | WsChatMessageReceipt
   | WsUpdateChatMessageReceipt
   | WsUpdateMoneyRecordReceipt
@@ -24,13 +27,24 @@ type WsUpdateGroupReceipt = {
   group_id: string
   group?: WsGroup
   sent_to?: string[]
-  error?: { code: string; message: string; details?: any }
+  error?: WsErrorData
 }
 
 type WsDeleteGroupReceipt = {
   group_id: string
   sent_to?: string[]
-  error?: { code: string; message: string; details?: any }
+  error?: WsErrorData
+}
+
+type WsUpsertGroupMembersReceipt = {
+  group_id: string
+  members?: {
+    createds?: GetBatchResult
+    updateds?: GroupMembership[] | undefined
+    deleteds?: GetBatchResult
+  }
+  sent_to?: string[]
+  error?: WsErrorData
 }
 
 type WsChatMessageReceipt = {
@@ -39,7 +53,7 @@ type WsChatMessageReceipt = {
   ui_id: string
   message?: WsChatMessage & { uiId: string }
   sent_to?: string[]
-  error?: { code: string; message: string; details?: any }
+  error?: WsErrorData
 }
 
 type WsUpdateChatMessageReceipt = {
@@ -48,7 +62,7 @@ type WsUpdateChatMessageReceipt = {
   message_id: string
   message?: WsChatMessage
   sent_to?: string[]
-  error?: { code: string; message: string; details?: any }
+  error?: WsErrorData
 }
 
 type WsUpdateMoneyRecordReceipt = {
@@ -58,7 +72,7 @@ type WsUpdateMoneyRecordReceipt = {
   money_record_id: string
   message?: RequiredProps<WsChatMessage, 'moneyRecord'>
   sent_to?: string[]
-  error?: { code: string; message: string; details?: any }
+  error?: WsErrorData
 }
 
 type WsDeleteMessageReceipt = {
@@ -67,7 +81,7 @@ type WsDeleteMessageReceipt = {
   message_id: string
   message?: WsChatMessage
   sent_to?: string[]
-  error?: { code: string; message: string; details?: any }
+  error?: WsErrorData
 }
 
 type WsSettleUpPayableReceipt = {
@@ -76,5 +90,5 @@ type WsSettleUpPayableReceipt = {
   settlement_id: string
   message?: RequiredProps<WsChatMessage, 'moneyRecord'>
   sent_to?: string[]
-  error?: { code: string; message: string; details?: any }
+  error?: WsErrorData
 }
