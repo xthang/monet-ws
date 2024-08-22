@@ -1,0 +1,62 @@
+{
+  "name": "monet-ws",
+  "version": "1.0.0",
+  "description": "",
+  "author": "XT",
+  "contributors": [
+    "Thang.X"
+  ],
+  "private": true,
+  "type": "module",
+  "main": "src/index.js",
+  "packageManager": "pnpm@9.7.1+sha512.faf344af2d6ca65c4c5c8c2224ea77a81a5e8859cbc4e06b1511ddce2f0151512431dd19e6aff31f2c6a8f5f2aced9bd2273e1fed7dd4de1868984059d2c4247",
+  "scripts": {
+    "dev": "pnpm pre-build && nodemon",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "pnpm pre-build && pnpm lint && pnpm i18n:compile && tsc --noEmit && swc src --config-file .swcrc.build -d build",
+    "start": "node build/src/index.js",
+    "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 999",
+    "lint:fix": "eslint . --fix --ext ts,tsx",
+    "format": "prettier --write \"src/**/*.{ts,tsx}\"",
+    "i18n:extract": "lingui extract",
+    "i18n:compile": "lingui compile --typescript",
+    "pre-build": "node ./scripts/pre-build.js",
+    "prepare": "husky"
+  },
+  "dependencies": {
+    "@lingui/core": "^4",
+    "@prisma/client": "^5",
+    "dotenv": "^16",
+    "jsonwebtoken": "^9",
+    "lodash": "^4",
+    "p-queue": "^8",
+    "prisma-field-encryption": "^1",
+    "ws": "^8",
+    "zod": "^3"
+  },
+  "devDependencies": {
+    "@lingui/cli": "^4",
+    "@lingui/macro": "^4.11",
+    "@lingui/swc-plugin": "^4.0",
+    "@swc-node/register": "^1.10",
+    "@swc/cli": "^0.4",
+    "@swc/core": "~1.5",
+    "@types/jsonwebtoken": "^9",
+    "@types/lodash": "^4",
+    "@types/ws": "^8",
+    "@typescript-eslint/eslint-plugin": "^8",
+    "@typescript-eslint/parser": "^8",
+    "eslint": "^8",
+    "eslint-config-prettier": "^9",
+    "eslint-plugin-import": "^2",
+    "eslint-plugin-prettier": "^5",
+    "husky": "^9",
+    "lint-staged": "^15",
+    "nodemon": "^3",
+    "prettier": "^3",
+    "prisma": "^5",
+    "ts-node": "^10",
+    "tsconfig-paths": "^4",
+    "typescript": "^5"
+  }
+}

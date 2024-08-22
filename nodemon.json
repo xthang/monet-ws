@@ -1,0 +1,20 @@
+{
+  "watch": [
+    "package.json",
+    "tsconfig.json",
+    "babel.config.json",
+    ".swcrc",
+    "src",
+    ".env",
+    ".env.local",
+    ".env.development",
+    ".env.development.local"
+  ],
+  "ext": ".ts,.js",
+  "ignore": ["**/*.test.ts", "**/*.spec.ts", ".git", "node_modules"],
+  "exec-1": "ts-node-esm --project tsconfig.json --files --experimentalSpecifierResolution=node --transpileOnly -r tsconfig-paths/register src/index.ts",
+  "exec-2-ok": "node --loader ts-node/esm src/index.ts",
+  "exec-3": "babel-node -x .ts -- src/index.ts",
+  "exec-4": "SWCRC=true swc-node --loader @swc-node/register/esm --enable-source-maps src/index.ts",
+  "exec": "SWCRC=true node --loader @swc-node/register/esm --enable-source-maps src/index.ts"
+}
