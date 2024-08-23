@@ -39,7 +39,11 @@ export default async function handleUpsertGroupMember(
   try {
     // check permission
     const membership = await findUniqueGroupMembershipOrThrow(db, groupId, accountId, orgId, {
-      select: { group: { select: { id: true, name: true, memberships: true } } }
+      select: {
+        group: {
+          select: { id: true, name: true, memberships: { where: { deletedAt: null, deletedBy: null, isActive: true } } }
+        }
+      }
     })
 
     const { memberships, ...group } = membership.group
