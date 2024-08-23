@@ -325,6 +325,15 @@ export default async function handleUpsertGroupMember(
         }
       }
 
+      // check the group memberships after updated
+      const updatedMembers = await tx.groupMembership.findMany({
+        where: { groupId, isActive: true },
+        select: { role: true, account: { where: { deletedAt: null, isActive: true } } }
+      })
+      if (!updatedMembers.find((m) => m.account && m.role === $Enums.GroupMemberRole.admin)) {
+        throw new WsError(WsErrorCode.BAD_REQUEST, 'No admin member found after updating')
+      }
+
       const membersResult = { createds, updateds, deleteds }
 
       // queue Email/SMS
