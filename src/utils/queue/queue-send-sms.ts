@@ -4,7 +4,13 @@ import type { PrismaClient, PrismaTransactionClient } from '@/db/types'
 export default async function queueSendSms(
   db_: PrismaClient | PrismaTransactionClient | undefined,
   smses: {
-    category: 'conv-new' | 'conv-deleted' | 'conv-added-member' | 'conv-removed-member' | 'settled-item'
+    category:
+      | 'conv-new'
+      | 'conv-deleted'
+      | 'conv-added-member'
+      | 'conv-removed-member'
+      | 'remind-payor'
+      | 'settled-item'
     to: { accountId?: string; accountAliasId?: string; phoneNumber: string }[]
     text: string
   }[]

@@ -87,7 +87,7 @@ export default async function notifySettleItems(
             text: contentTemplates
               .find((it) => it.key === TextTemplateKey.SETTLED_ITEM_SMS_CONTENT && it.locale === locale_)!
               .content.replace('{{member_name}}', name ? ` ${name}` : '')
-              .replace('{{group_name}}', group.name ? ` named ${group.name}` : '')
+              .replace('{{group_name}}', group.name || '[no name]')
               .replace('{{group_link}}', `https://${HOST_NAME}/i/${group.id}?tab=${tabId}&mgsId=${payment.messageId}`)
               .replace('{{payor_}}', i18n._(role === 'payor' ? msg`You have` : msg`${payment.payor.name} has`))
               .replace('{{payee}}', role === 'payee' ? i18n._(msg`you`) : payment.payee.name)

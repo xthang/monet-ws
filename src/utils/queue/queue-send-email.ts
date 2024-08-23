@@ -4,7 +4,13 @@ import type { PrismaClient, PrismaTransactionClient } from '@/db/types'
 export default async function queueSendEmails(
   db_: PrismaClient | PrismaTransactionClient | undefined,
   emails: {
-    category: 'conv-new' | 'conv-deleted' | 'conv-added-member' | 'conv-removed-member' | 'payor' | 'settled-item'
+    category:
+      | 'conv-new'
+      | 'conv-deleted'
+      | 'conv-added-member'
+      | 'conv-removed-member'
+      | 'remind-payor'
+      | 'settled-item'
     from: string
     to: { accountId?: string; accountAliasId?: string; emailAddress: string }[]
     cc?: { accountId?: string; accountAliasId?: string; emailAddress: string }[]

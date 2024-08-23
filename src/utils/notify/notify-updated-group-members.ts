@@ -86,7 +86,7 @@ export default async function notifyUpdatedGroupMembers(
                   : TextTemplateKey.CONVO_REMOVED_MEMBER_SMS_CONTENT) && it.locale === (locale ?? DEFAULT_LOCALE)
           )!
           .content.replace('{{member_name}}', name ? ` ${name}` : '')
-          .replace('{{group_name}}', group.name ? ` named ${group.name}` : '')
+          .replace('{{group_name}}', group.name ? `: ${group.name}` : '')
           .replace('{{group_link}}', `https://${HOST_NAME}/i/${group.id}`)
       }))
     )
