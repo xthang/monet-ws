@@ -62,6 +62,7 @@ export const WsUpdateGroupRequestData = z.object({
     name: z.string().nullable().optional(),
     description: z.string().nullable().optional(),
     photo: z.string().nullable().optional(),
+    visibility: z.nativeEnum($Enums.GroupVisibility).optional(),
     emoji: z.string().optional(),
     baseCurrency: z.nativeEnum($Enums.Currency).optional(),
     note: z.string().nullable().optional()

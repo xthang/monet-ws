@@ -26,7 +26,7 @@ type WsResponseData =
 type WsUpdateGroupReceipt = {
   group_id: string
   group?: WsGroup
-  sent_to?: string[]
+  sent_to?: string[] | null
   error?: WsErrorData
 }
 

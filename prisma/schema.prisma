@@ -755,19 +755,20 @@ enum OrganizationMembershipRole {
 
 model Group {
   // Functional Fields
-  id           String    @id @default(cuid()) @db.VarChar(25)
+  id           String           @id @default(cuid()) @db.VarChar(25)
   type         GroupType
-  orgId        String?   @db.VarChar(50)
-  name         String?   @db.Text /// @encrypted
-  description  String?   @db.Text /// @encrypted
-  photo        String?   @db.Text
-  theme        String?   @db.VarChar(20)
-  darkMode     String?   @db.VarChar(10)
-  emoji        String?   @db.VarChar(20)
+  orgId        String?          @db.VarChar(50)
+  name         String?          @db.Text /// @encrypted
+  description  String?          @db.Text /// @encrypted
+  photo        String?          @db.Text
+  visibility   GroupVisibility?
+  theme        String?          @db.VarChar(20)
+  darkMode     String?          @db.VarChar(10)
+  emoji        String?          @db.VarChar(20)
   // status    GroupStatus?
   baseCurrency Currency
-  baseRates    String?   @db.Text
-  note         String?   @db.Text /// @encrypted
+  baseRates    String?          @db.Text
+  note         String?          @db.Text /// @encrypted
 
   lastActivityAt     DateTime? @db.Timestamptz(3)
   lastTabId          String?   @db.VarChar(50)
@@ -798,6 +799,12 @@ model Group {
 enum GroupType {
   direct
   group
+}
+
+enum GroupVisibility {
+  public
+  private
+  secret
 }
 
 model GroupMembership {
@@ -889,6 +896,8 @@ model GroupTab {
   updatedBy String?   @db.VarChar(50)
   deletedAt DateTime? @db.Timestamptz(3)
   deletedBy String?   @db.VarChar(50)
+
+  lastActivityAt DateTime? @db.Timestamptz(3)
 
   group       Group                         @relation(fields: [groupId], references: [id])
   messages    Message[]

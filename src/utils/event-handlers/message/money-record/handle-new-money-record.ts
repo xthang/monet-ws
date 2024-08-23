@@ -62,6 +62,8 @@ export default async function handleCreateMoneyRecord(
         data: { moneyRecordId: moneyRecord.id }
       })
 
+      await tx.groupTab.update({ where: { id: tabId }, data: { lastActivityAt: new Date() } })
+
       const lastActiveAccountSet = new Set(group.lastActiveAccounts?.split(','))
       lastActiveAccountSet.add(accountId)
       const lastActiveAccounts = Array.from(lastActiveAccountSet).slice(undefined, 4).join(',')

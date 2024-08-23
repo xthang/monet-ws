@@ -22,7 +22,7 @@ export default async function handleUpdateGroup(
 
   const { accountId, orgId } = ws.auth
   const { groupId, data } = input
-  const { name, description, photo, baseCurrency, note } = data
+  const { name, description, photo, visibility, baseCurrency, note } = data
 
   try {
     // check permission
@@ -44,6 +44,7 @@ export default async function handleUpdateGroup(
             name,
             description,
             photo,
+            visibility,
             baseCurrency,
             note,
             updatedBy: accountId,
@@ -66,13 +67,14 @@ export default async function handleUpdateGroup(
 
       // BROADCAST ...
 
-      if (!updatedGroup) return
-
-      const sentTo = await broadcastToGroupMembersExceptMe(wss, ws, tx, accountId, orgId, groupId, {
-        event: 'updated-group',
-        orgId,
-        data: { group: updatedGroup }
-      })
+      let sentTo = null
+      if (updatedGroup) {
+        sentTo = await broadcastToGroupMembersExceptMe(wss, ws, tx, accountId, orgId, groupId, {
+          event: 'updated-group',
+          orgId,
+          data: { group: updatedGroup }
+        })
+      }
 
       // send receipt back to itself
       const payload: WsResponseFullPayload = {
@@ -81,7 +83,7 @@ export default async function handleUpdateGroup(
         data: {
           group_id: groupId,
           group: updatedGroup,
-          sent_to: Array.from(sentTo)
+          sent_to: sentTo && Array.from(sentTo)
         } satisfies WsUpdateGroupReceipt
       }
       ws.send(JSON.stringify(payload))

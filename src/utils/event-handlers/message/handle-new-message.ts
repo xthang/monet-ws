@@ -45,6 +45,8 @@ export default async function handleNewMessage(
       })
       const { uiId: createdUiId, ...createdMsgWithoutUiId } = createdMsg
 
+      await tx.groupTab.update({ where: { id: tabId }, data: { lastActivityAt: new Date() } })
+
       const lastActiveAccountSet = new Set(group.lastActiveAccounts?.split(','))
       lastActiveAccountSet.add(accountId)
       const lastActiveAccounts = Array.from(lastActiveAccountSet).slice(undefined, 4).join(',')

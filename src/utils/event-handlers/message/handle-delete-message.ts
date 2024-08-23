@@ -32,7 +32,7 @@ export default async function handleDeleteMessage(
     return db.$transaction(async (tx) => {
       const deleted = await tx.message.softDelete({
         tx,
-        where: { id: messageId, groupId },
+        where: { id: messageId, groupId, tabId },
         deletedBy: accountId,
         select: {
           id: true,
@@ -69,6 +69,8 @@ export default async function handleDeleteMessage(
           })
         }
       }
+
+      await tx.groupTab.update({ where: { id: tabId }, data: { lastActivityAt: new Date() } })
 
       const lastActiveAccountSet = new Set(group.lastActiveAccounts?.split(','))
       lastActiveAccountSet.add(accountId)

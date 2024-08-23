@@ -38,19 +38,18 @@ export default async function handleUpdateMoneyRecord(
 
     return await db.$transaction(async (tx) => {
       const updatedMoneyRecord = await tx.moneyRecord.update({
-        where: { id: data.id, groupId, messageId: data.messageId },
+        where: { id: data.id, groupId, tabId, messageId: data.messageId },
         data: { ...data, updatedBy: accountId },
         select: MONEY_RECORD_SELECT
       })
+
+      await tx.groupTab.update({ where: { id: tabId }, data: { lastActivityAt: new Date() } })
 
       const lastActiveAccountSet = new Set(group.lastActiveAccounts?.split(','))
       lastActiveAccountSet.add(accountId)
       const lastActiveAccounts = Array.from(lastActiveAccountSet).slice(undefined, 4).join(',')
 
-      await tx.group.update({
-        where: { id: groupId },
-        data: { lastActivityAt: new Date(), lastActiveAccounts }
-      })
+      await tx.group.update({ where: { id: groupId }, data: { lastActivityAt: new Date(), lastActiveAccounts } })
 
       const affectedUpdate =
         data.payerMemberId !== undefined ||

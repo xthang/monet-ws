@@ -76,6 +76,9 @@ export default async function handleUpsertMoneyRecordPartakers(
       )
     calls.push(...updates)
 
+    const tabUpdate = db.groupTab.update({ where: { id: tabId }, data: { lastActivityAt: new Date() } })
+    calls.push(tabUpdate)
+
     const lastActiveAccountSet = new Set(group.lastActiveAccounts?.split(','))
     lastActiveAccountSet.add(accountId)
     const lastActiveAccounts = Array.from(lastActiveAccountSet).slice(undefined, 4).join(',')
