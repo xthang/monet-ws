@@ -35,7 +35,7 @@ export default async function handleSettleUpPayable(
   try {
     // check permission
     const membership = await findUniqueGroupMembershipOrThrow(db, groupId, accountId, orgId, {
-      select: { group: true }
+      select: { id: true, group: true }
     })
     const { group } = membership
 

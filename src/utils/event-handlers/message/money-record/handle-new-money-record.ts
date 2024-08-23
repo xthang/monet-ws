@@ -35,10 +35,9 @@ export default async function handleCreateMoneyRecord(
 
   try {
     // check permission
-    const membership = await findUniqueGroupMembershipOrThrow(db, groupId, accountId, orgId, {
+    const { group } = await findUniqueGroupMembershipOrThrow(db, groupId, accountId, orgId, {
       select: { group: true }
     })
-    const { group } = membership
 
     return await db.$transaction(async (tx) => {
       const createdMsg_ = await tx.message.create({

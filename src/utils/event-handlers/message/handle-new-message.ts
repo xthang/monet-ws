@@ -33,10 +33,9 @@ export default async function handleNewMessage(
     }
 
     // check permission
-    const membership = await findUniqueGroupMembershipOrThrow(db, groupId, accountId, orgId, {
+    const { group } = await findUniqueGroupMembershipOrThrow(db, groupId, accountId, orgId, {
       select: { group: true }
     })
-    const { group } = membership
 
     return await db.$transaction(async (tx) => {
       const createdMsg = await tx.message.create({

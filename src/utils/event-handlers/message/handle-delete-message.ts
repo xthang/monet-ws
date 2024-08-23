@@ -24,10 +24,9 @@ export default async function handleDeleteMessage(
 
   try {
     // check permission
-    const membership = await findUniqueGroupMembershipOrThrow(db, groupId, accountId, orgId, {
+    const { group } = await findUniqueGroupMembershipOrThrow(db, groupId, accountId, orgId, {
       select: { group: true }
     })
-    const { group } = membership
 
     return db.$transaction(async (tx) => {
       const deleted = await tx.message.softDelete({

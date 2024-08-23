@@ -9,7 +9,7 @@ import type { WsMessageFullPayload } from '@/types/ws/message'
 import { WsUpsertGroupMembersRequestData } from '@/types/ws/request'
 import type { WsResponseFullPayload, WsUpsertGroupMembersReceipt } from '@/types/ws/response'
 import { findUniqueAccountOrThrow, findUniqueGroupMembershipOrThrow } from '@/utils/db'
-import { ACCOUNT_SELECT } from '@/utils/db/query-constants'
+import { ACCOUNT_SELECT, MEMBER_SELECT_WHERE } from '@/utils/db/query-constants'
 import { transformPhoneNoToDbAlias } from '@/utils/db/transform/account-alias'
 import { fromDbLocale } from '@/utils/db/transform/locale'
 import { validateEmailAddr } from '@/utils/email-address'
@@ -39,14 +39,22 @@ export default async function handleUpsertGroupMember(
   try {
     // check permission
     const membership = await findUniqueGroupMembershipOrThrow(db, groupId, accountId, orgId, {
-      select: {
+      include: {
         group: {
-          select: { id: true, name: true, memberships: { where: { deletedAt: null, deletedBy: null, isActive: true } } }
+          select: {
+            id: true,
+            name: true,
+            memberships: {
+              where: { deletedAt: null, deletedBy: null, isActive: true },
+              select: MEMBER_SELECT_WHERE
+            }
+          }
         }
       }
     })
 
-    const { memberships, ...group } = membership.group
+    const { memberships: memberships_, ...group } = membership.group
+    const memberships = memberships_.filter((m) => m.account ?? m.accountAlias ?? m.accountPlaceholder)
     const memberDict = Object.fromEntries(memberships.map(({ id, ...m }) => [id, m]))
 
     // Check member permission
