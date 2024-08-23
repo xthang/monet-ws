@@ -8,7 +8,7 @@ import type { WsDeleteMessageRequestData } from '@/types/ws/request'
 import type { WsDeleteMessageReceipt, WsResponseFullPayload } from '@/types/ws/response'
 
 import calculateTabSettlement from '../../db/calculate-group-tab-settlement'
-import { findUniqueGroupMembershipOrThrow } from '../../db/index'
+import { findUniqueGroupMembershipOrThrow } from '../../db/queries'
 import { broadcastToGroupMembersExceptMe } from '../../ws/broadcast-to-group-members-except-me'
 import { transformError } from '../../ws/transform-error'
 
@@ -24,10 +24,9 @@ export default async function handleDeleteMessage(
 
   try {
     // check permission
-    const membership = await findUniqueGroupMembershipOrThrow(db, groupId, accountId, orgId, {
+    const { group } = await findUniqueGroupMembershipOrThrow(db, groupId, accountId, orgId, {
       select: { group: true }
     })
-    const { group } = membership
 
     return db.$transaction(async (tx) => {
       const deleted = await tx.message.softDelete({

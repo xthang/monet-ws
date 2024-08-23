@@ -9,7 +9,7 @@ import { WsCreateMoneyRecordRequestData } from '@/types/ws/request'
 import type { WsChatMessageReceipt, WsResponseFullPayload } from '@/types/ws/response'
 
 import calculateTabSettlement from '../../../db/calculate-group-tab-settlement'
-import { findUniqueGroupMembershipOrThrow } from '../../../db/index'
+import { findUniqueGroupMembershipOrThrow } from '../../../db/queries'
 import { MESSAGE_SELECT, MONEY_RECORD_SELECT } from '../../../db/query-constants'
 import { transformAccountAlias } from '../../../db/transform/account-alias'
 import { broadcastToGroupMembersExceptMe } from '../../../ws/broadcast-to-group-members-except-me'
@@ -35,10 +35,9 @@ export default async function handleCreateMoneyRecord(
 
   try {
     // check permission
-    const membership = await findUniqueGroupMembershipOrThrow(db, groupId, accountId, orgId, {
+    const { group } = await findUniqueGroupMembershipOrThrow(db, groupId, accountId, orgId, {
       select: { group: true }
     })
-    const { group } = membership
 
     return await db.$transaction(async (tx) => {
       const createdMsg_ = await tx.message.create({

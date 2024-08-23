@@ -767,7 +767,6 @@ model Group {
   emoji        String?          @db.VarChar(20)
   // status    GroupStatus?
   baseCurrency Currency
-  baseRates    String?          @db.Text
   note         String?          @db.Text /// @encrypted
 
   lastActivityAt     DateTime? @db.Timestamptz(3)

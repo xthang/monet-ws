@@ -8,7 +8,7 @@ import type { WsMoneyRecord } from '@/types/ws/message'
 import { WsSettleUpPayableRequestData } from '@/types/ws/request'
 import type { WsResponseFullPayload, WsSettleUpPayableReceipt } from '@/types/ws/response'
 
-import { findUniqueGroupMembershipOrThrow } from '../../../db/index'
+import { findUniqueGroupMembershipOrThrow } from '../../../db/queries'
 import { MEMBER_SELECT_FULL_FOR_NOTIFY, MONEY_RECORD_SELECT } from '../../../db/query-constants'
 import { transformAccountAlias } from '../../../db/transform/account-alias'
 import { fromDbLocale } from '../../../db/transform/locale'
@@ -35,7 +35,7 @@ export default async function handleSettleUpPayable(
   try {
     // check permission
     const membership = await findUniqueGroupMembershipOrThrow(db, groupId, accountId, orgId, {
-      select: { group: true }
+      select: { id: true, group: true }
     })
     const { group } = membership
 

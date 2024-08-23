@@ -9,7 +9,7 @@ import { WsUpsertMoneyRecordPartakersRequestData } from '@/types/ws/request'
 import type { WsResponseFullPayload, WsUpdateMoneyRecordReceipt } from '@/types/ws/response'
 
 import calculateTabSettlement from '../../../db/calculate-group-tab-settlement'
-import { findUniqueMoneyRecordOrThrow } from '../../../db/index'
+import { findUniqueMoneyRecordOrThrow } from '../../../db/queries'
 import { MESSAGE_SELECT, MONEY_RECORD_PARTAKER_SELECT, MONEY_RECORD_SELECT } from '../../../db/query-constants'
 import { transformAccountAlias } from '../../../db/transform/account-alias'
 import { broadcastToGroupMembersExceptMe } from '../../../ws/broadcast-to-group-members-except-me'

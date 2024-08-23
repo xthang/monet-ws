@@ -57,7 +57,7 @@ type WsMessagePayload =
 
 type WsNotification = any
 
-type WsGroup = Group
+type WsGroup = RequiredNonNullableProps<Group, 'visibility'>
 
 type WsChatMessage = Omit<Message, 'uiId'> & {
   moneyRecord?: WsMoneyRecord | null

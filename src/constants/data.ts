@@ -1,3 +1,5 @@
+import { $Enums } from '@prisma/client'
+
 export const PERSONAL_ACCOUNT_ORG_ID = '_'
 
 export enum TextTemplateKey {
@@ -39,3 +41,5 @@ export enum ActivityLogType {
   moneyRecord_delete = 'moneyRecord_delete',
   groupTabSettlement_settle = 'groupTabSettlement_settle'
 }
+
+export const DEFAULT_GROUP_VISIBILITY = $Enums.GroupVisibility.secret

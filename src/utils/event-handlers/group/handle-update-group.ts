@@ -1,12 +1,12 @@
 import { $Enums } from '@prisma/client'
 import { type WebSocketServer, WebSocket } from 'ws'
 
-import { ActivityLogType } from '@/constants/data'
+import { ActivityLogType, DEFAULT_GROUP_VISIBILITY } from '@/constants/data'
 import type { Locale } from '@/constants/locales'
 import db from '@/db'
 import { WsUpdateGroupRequestData } from '@/types/ws/request'
 import { WsResponseFullPayload, WsUpdateGroupReceipt } from '@/types/ws/response'
-import { findUniqueGroupMembershipOrThrow } from '@/utils/db'
+import { findUniqueGroupMembershipOrThrow } from '@/utils/db/queries'
 import { broadcastToGroupMembersExceptMe } from '@/utils/ws/broadcast-to-group-members-except-me'
 import { transformError } from '@/utils/ws/transform-error'
 
@@ -26,10 +26,9 @@ export default async function handleUpdateGroup(
 
   try {
     // check permission
-    const membership = await findUniqueGroupMembershipOrThrow(db, groupId, accountId, orgId, {
+    const { group: existedGroup } = await findUniqueGroupMembershipOrThrow(db, groupId, accountId, orgId, {
       select: { group: true }
     })
-    const existedGroup = membership.group
 
     return db.$transaction(async (tx) => {
       let updatedGroup
@@ -52,6 +51,8 @@ export default async function handleUpdateGroup(
             lastActiveAccounts
           }
         })
+
+        updatedGroup = { ...updatedGroup, visibility: updatedGroup.visibility ?? DEFAULT_GROUP_VISIBILITY }
       }
 
       await tx.activityLog.create({

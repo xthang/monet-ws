@@ -38,20 +38,17 @@ export async function findUniqueAccountByAuthAccIdOrThrow<
 }
 
 export async function findUniqueGroupMembershipOrThrow<
-  MembershipSelect extends Prisma.GroupMembershipSelect | null = null,
-  MembershipInclude extends Prisma.GroupMembershipInclude | null = null
+  MembershipSelectOrInclude extends { select?: Prisma.GroupMembershipSelect; include?: Prisma.GroupMembershipInclude }
 >(
   prisma: typeof db,
   groupId: string,
   accountId: string,
   orgId: string | undefined,
-  select?: { select?: MembershipSelect; include?: MembershipInclude }
+  selectOrInclude?: MembershipSelectOrInclude
 ) {
-  const memberships = await prisma.groupMembership.findMany<{
-    where: Prisma.GroupMembershipWhereUniqueInput
-    select: MembershipSelect
-    include: MembershipInclude
-  }>({
+  const memberships = await prisma.groupMembership.findMany<
+    { where: Prisma.GroupMembershipWhereUniqueInput } & MembershipSelectOrInclude
+  >({
     where: {
       OR: [
         { accountId, accountOrPlaceholderId: accountId },
@@ -61,8 +58,8 @@ export async function findUniqueGroupMembershipOrThrow<
       isActive: true,
       group: { orgId: orgId ?? null, deletedAt: null }
     },
-    ...select
-  })
+    ...selectOrInclude
+  } satisfies Prisma.GroupMembershipFindManyArgs as any)
   // Note: there are cases where many memberships exist in the same group for 1 account.
   // For example: a user adds a not-'verified' alias of their account into the same group. And later on, that alias is 'verified'
   // Example 2: many aliases are added to the same group and later on, these aliases belong to the same newly-registered account
@@ -76,10 +73,8 @@ export async function findUniqueGroupMembershipOrThrow<
 }
 
 export async function findUniqueMessageOrThrow<
-  MembershipSelect extends Prisma.GroupMembershipSelect | null = null,
-  MembershipInclude extends Prisma.GroupMembershipInclude | null = null,
-  MessageSelect extends Prisma.MessageSelect | null = null,
-  MessageInclude extends Prisma.MessageInclude | null = null
+  MembershipSelectOrInclude extends { select?: Prisma.GroupMembershipSelect; include?: Prisma.GroupMembershipInclude },
+  MessageSelectOrInclude extends { select?: Prisma.MessageSelect; include?: Prisma.MessageInclude }
 >(
   prisma: typeof db,
   groupId: string,
@@ -87,36 +82,31 @@ export async function findUniqueMessageOrThrow<
   messageId: string,
   accountId: string,
   orgId: string | undefined,
-  select?: {
-    membership?: { select?: MembershipSelect; include?: MembershipInclude }
-    message?: { select?: MessageSelect; include?: MessageInclude }
+  selectOrInclude?: {
+    membership?: MembershipSelectOrInclude
+    message?: MessageSelectOrInclude
   }
 ) {
-  const membership = await findUniqueGroupMembershipOrThrow<MembershipSelect, MembershipInclude>(
+  const membership = await findUniqueGroupMembershipOrThrow(
     prisma,
     groupId,
     accountId,
     orgId,
-    select?.membership
+    selectOrInclude?.membership
   )
-  const message = await prisma.message.findUniqueOrThrow<{
-    where: Prisma.MessageWhereUniqueInput
-    select: MessageSelect
-    // include: MessageInclude
-  }>({
+  const message = await prisma.message.findUniqueOrThrow<
+    { where: Prisma.MessageWhereUniqueInput } & MessageSelectOrInclude
+  >({
     where: { id: messageId, groupId, tabId },
-    ...select?.message
-  })
+    ...selectOrInclude?.message
+  } satisfies Prisma.MessageFindManyArgs as any)
   return [membership, message] as const
 }
 
 export async function findUniqueMoneyRecordOrThrow<
-  MembershipSelect extends Prisma.GroupMembershipSelect | null = null,
-  MembershipInclude extends Prisma.GroupMembershipInclude | null = null,
-  MessageSelect extends Prisma.MessageSelect | null = null,
-  MessageInclude extends Prisma.MessageInclude | null = null,
-  MoneyRecordSelect extends Prisma.MoneyRecordSelect | null = null,
-  MoneyRecordInclude extends Prisma.MoneyRecordInclude | null = null
+  MembershipSelectOrInclude extends { select?: Prisma.GroupMembershipSelect; include?: Prisma.GroupMembershipInclude },
+  MessageSelectOrInclude extends { select?: Prisma.MessageSelect; include?: Prisma.MessageInclude },
+  MoneyRecordSelectOrInclude extends { select?: Prisma.MoneyRecordSelect; include?: Prisma.MoneyRecordInclude }
 >(
   prisma: typeof db,
   groupId: string,
@@ -125,25 +115,26 @@ export async function findUniqueMoneyRecordOrThrow<
   moneyRecordId: string,
   accountId: string,
   orgId: string | undefined,
-  select?: {
-    membership?: { select?: MembershipSelect; include?: MembershipInclude }
-    message?: { select?: MessageSelect; include?: MessageInclude }
-    moneyRecord?: { select?: MoneyRecordSelect; include?: MoneyRecordInclude }
+  selectOrInclude?: {
+    membership?: MembershipSelectOrInclude
+    message?: MessageSelectOrInclude
+    moneyRecord?: MoneyRecordSelectOrInclude
   }
 ) {
-  const [membership, message] = await findUniqueMessageOrThrow<
-    MembershipSelect,
-    MembershipInclude,
-    MessageSelect,
-    MessageInclude
-  >(prisma, groupId, tabId, messageId, accountId, orgId, select)
-  const moneyRecord = await prisma.moneyRecord.findUniqueOrThrow<{
-    where: Prisma.MoneyRecordWhereUniqueInput
-    select: MoneyRecordSelect
-    // include: MoneyRecordInclude
-  }>({
+  const [membership, message] = await findUniqueMessageOrThrow(
+    prisma,
+    groupId,
+    tabId,
+    messageId,
+    accountId,
+    orgId,
+    selectOrInclude
+  )
+  const moneyRecord = await prisma.moneyRecord.findUniqueOrThrow<
+    { where: Prisma.MoneyRecordWhereUniqueInput } & MoneyRecordSelectOrInclude
+  >({
     where: { id: moneyRecordId, messageId, groupId },
-    ...select?.moneyRecord
-  })
+    ...selectOrInclude?.moneyRecord
+  } satisfies Prisma.MoneyRecordFindManyArgs as any)
   return [membership, message, moneyRecord] as const
 }

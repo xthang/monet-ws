@@ -6,7 +6,7 @@ import { WsError, WsErrorCode } from '@/types/error'
 import type { WsSendMessageRequestData } from '@/types/ws/request'
 import type { WsChatMessageReceipt, WsResponseFullPayload } from '@/types/ws/response'
 
-import { findUniqueGroupMembershipOrThrow } from '../../db'
+import { findUniqueGroupMembershipOrThrow } from '../../db/queries'
 import { MESSAGE_SELECT } from '../../db/query-constants'
 import { broadcastToGroupMembersExceptMe } from '../../ws/broadcast-to-group-members-except-me'
 import { transformError } from '../../ws/transform-error'
@@ -33,10 +33,9 @@ export default async function handleNewMessage(
     }
 
     // check permission
-    const membership = await findUniqueGroupMembershipOrThrow(db, groupId, accountId, orgId, {
+    const { group } = await findUniqueGroupMembershipOrThrow(db, groupId, accountId, orgId, {
       select: { group: true }
     })
-    const { group } = membership
 
     return await db.$transaction(async (tx) => {
       const createdMsg = await tx.message.create({
