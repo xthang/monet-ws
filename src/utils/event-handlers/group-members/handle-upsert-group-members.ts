@@ -46,12 +46,13 @@ export default async function handleUpsertGroupMember(
     const memberDict = Object.fromEntries(memberships.map(({ id, ...m }) => [id, m]))
 
     // Check member permission
+    const hasAdmin = !!memberships.find((m) => m.role === $Enums.GroupMemberRole.admin)
     const iAmTheOnlyAdmin =
       membership.role === $Enums.GroupMemberRole.admin &&
       memberships.filter((m) => m.role === $Enums.GroupMemberRole.admin).length <= 1
 
     if (members.updates?.some((it) => it.role !== undefined)) {
-      if (membership.role !== $Enums.GroupMemberRole.admin) {
+      if (hasAdmin && membership.role !== $Enums.GroupMemberRole.admin) {
         throw new WsError(WsErrorCode.FORBIDDEN, 'Forbidden')
       }
 
