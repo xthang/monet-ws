@@ -6,7 +6,7 @@ import type { Locale } from '@/constants/locales'
 import db from '@/db'
 import { WsUpdateGroupRequestData } from '@/types/ws/request'
 import { WsResponseFullPayload, WsUpdateGroupReceipt } from '@/types/ws/response'
-import { findUniqueGroupMembershipOrThrow } from '@/utils/db'
+import { findUniqueGroupMembershipOrThrow } from '@/utils/db/queries'
 import { broadcastToGroupMembersExceptMe } from '@/utils/ws/broadcast-to-group-members-except-me'
 import { transformError } from '@/utils/ws/transform-error'
 

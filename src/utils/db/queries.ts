@@ -95,7 +95,7 @@ export async function findUniqueMessageOrThrow<
     selectOrInclude?.membership
   )
   const message = await prisma.message.findUniqueOrThrow<
-    { where: Prisma.MessageWhereUniqueInput } & NonNullable<typeof selectOrInclude>['message']
+    { where: Prisma.MessageWhereUniqueInput } & MessageSelectOrInclude
   >({
     where: { id: messageId, groupId, tabId },
     ...selectOrInclude?.message
@@ -131,7 +131,7 @@ export async function findUniqueMoneyRecordOrThrow<
     selectOrInclude
   )
   const moneyRecord = await prisma.moneyRecord.findUniqueOrThrow<
-    { where: Prisma.MoneyRecordWhereUniqueInput } & NonNullable<typeof selectOrInclude>['moneyRecord']
+    { where: Prisma.MoneyRecordWhereUniqueInput } & MoneyRecordSelectOrInclude
   >({
     where: { id: moneyRecordId, messageId, groupId },
     ...selectOrInclude?.moneyRecord
