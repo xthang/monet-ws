@@ -8,15 +8,17 @@ import { WsError } from '@/types/error'
 import { ACCOUNT_SELECT } from './query-constants'
 
 export async function findUniqueAccountOrThrow<
-  AccountSelectOrInclude extends { select?: Prisma.AccountSelect; include?: Prisma.AccountInclude }
+  AccountSelectOrInclude extends
+    | { select?: Prisma.AccountSelect; include?: Prisma.AccountInclude }
+    | undefined = undefined
 >(prisma: typeof db, accountId: string, selectOrInclude?: AccountSelectOrInclude) {
-  return prisma.account.findUniqueOrThrow<
-    { where: Prisma.AccountWhereUniqueInput } & (AccountSelectOrInclude extends undefined
-      ? object
-      : NonNullable<AccountSelectOrInclude>['select'] extends object
-        ? { select: typeof ACCOUNT_SELECT & { locale: true } & NonNullable<AccountSelectOrInclude>['select'] }
-        : { include: NonNullable<AccountSelectOrInclude>['include'] })
-  >({
+  return prisma.account.findUniqueOrThrow<{
+    where: Prisma.AccountWhereUniqueInput
+    select: typeof ACCOUNT_SELECT & { locale: true } & (AccountSelectOrInclude extends undefined
+        ? object
+        : NonNullable<AccountSelectOrInclude>['select'])
+    include?: AccountSelectOrInclude extends undefined ? object : NonNullable<AccountSelectOrInclude>['include']
+  }>({
     where: { id: accountId, OR: [{ status: null }, { status: { not: $Enums.AccountStatus.banned } }] },
     select: { ...ACCOUNT_SELECT, locale: true, ...selectOrInclude?.select },
     include: selectOrInclude?.include
@@ -24,15 +26,17 @@ export async function findUniqueAccountOrThrow<
 }
 
 export async function findUniqueAccountByAuthAccIdOrThrow<
-  AccountSelectOrInclude extends { select?: Prisma.AccountSelect; include?: Prisma.AccountInclude }
+  AccountSelectOrInclude extends
+    | { select?: Prisma.AccountSelect; include?: Prisma.AccountInclude }
+    | undefined = undefined
 >(prisma: typeof db, authAccountId: string, selectOrInclude?: AccountSelectOrInclude) {
-  return prisma.account.findUniqueOrThrow<
-    { where: Prisma.AccountWhereUniqueInput } & (AccountSelectOrInclude extends undefined
-      ? object
-      : NonNullable<AccountSelectOrInclude>['select'] extends object
-        ? { select: typeof ACCOUNT_SELECT & { locale: true } & NonNullable<AccountSelectOrInclude>['select'] }
-        : { include: NonNullable<AccountSelectOrInclude>['include'] })
-  >({
+  return prisma.account.findUniqueOrThrow<{
+    where: Prisma.AccountWhereUniqueInput
+    select: typeof ACCOUNT_SELECT & { locale: true } & (AccountSelectOrInclude extends undefined
+        ? object
+        : NonNullable<AccountSelectOrInclude>['select'])
+    include?: AccountSelectOrInclude extends undefined ? object : NonNullable<AccountSelectOrInclude>['include']
+  }>({
     where: { authAccountId, OR: [{ status: null }, { status: { not: $Enums.AccountStatus.banned } }] },
     select: { ...ACCOUNT_SELECT, locale: true, ...selectOrInclude?.select },
     include: selectOrInclude?.include

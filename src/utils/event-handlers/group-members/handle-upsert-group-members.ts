@@ -141,7 +141,6 @@ export default async function handleUpsertGroupMember(
 
             const acc = await findUniqueAccountOrThrow(db, accountId, {
               select: {
-                locale: true,
                 accountAliases: { where: { verificationStatus: 'verified', deletedAt: null, isActive: true } }
               }
             })
