@@ -106,30 +106,31 @@ export default async function handleSettleUpPayable(
       })
 
       // queue Email/SMS
-      const payorMemberForNotify = {
-        ...payorMemberForNotify_,
-        account: payorMemberForNotify_.account && {
-          ...payorMemberForNotify_.account,
-          locale: payorMemberForNotify_.account.locale && fromDbLocale(payorMemberForNotify_.account.locale)
-        }
-      }
-      const payeeMemberForNotify = {
-        ...payeeMemberForNotify_,
-        account: payeeMemberForNotify_.account && {
-          ...payeeMemberForNotify_.account,
-          locale: payeeMemberForNotify_.account.locale && fromDbLocale(payeeMemberForNotify_.account.locale)
-        }
-      }
-
       const toSendNoti = []
-      if (membership.id !== payorMemberId) {
+      if (membership.id !== payorMemberId && !payorMemberForNotify_.deletedAt && payorMemberForNotify_.isActive) {
+        const payorMemberForNotify = {
+          ...payorMemberForNotify_,
+          account: payorMemberForNotify_.account && {
+            ...payorMemberForNotify_.account,
+            locale: payorMemberForNotify_.account.locale && fromDbLocale(payorMemberForNotify_.account.locale)
+          }
+        }
+
         const recipientInfo = getNotificationRecipientInfoFromMembership(payorMemberForNotify, locale).map((it) => ({
           ...it,
           role: 'payor' as const
         }))
         toSendNoti.push(...recipientInfo)
       }
-      if (membership.id !== payeeMemberId) {
+      if (membership.id !== payeeMemberId && !payeeMemberForNotify_.deletedAt && payeeMemberForNotify_.isActive) {
+        const payeeMemberForNotify = {
+          ...payeeMemberForNotify_,
+          account: payeeMemberForNotify_.account && {
+            ...payeeMemberForNotify_.account,
+            locale: payeeMemberForNotify_.account.locale && fromDbLocale(payeeMemberForNotify_.account.locale)
+          }
+        }
+
         const recipientInfo = getNotificationRecipientInfoFromMembership(payeeMemberForNotify, locale).map((it) => ({
           ...it,
           role: 'payee' as const
@@ -138,8 +139,8 @@ export default async function handleSettleUpPayable(
       }
       if (toSendNoti.length) {
         await notifySettleItems(tx, group, tabId, toSendNoti, {
-          payor: { name: getMemberName(payorMemberForNotify) ?? '[no name]' },
-          payee: { name: getMemberName(payeeMemberForNotify) ?? '[no name]' },
+          payor: { name: getMemberName(payorMemberForNotify_) ?? '[no name]' },
+          payee: { name: getMemberName(payeeMemberForNotify_) ?? '[no name]' },
           currency: group.baseCurrency,
           amount: amount!.toNumber(),
           messageId: message.id

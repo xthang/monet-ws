@@ -85,7 +85,11 @@ export const MEMBER_SELECT_FOR_NOTIFY = {
     }
   },
   accountAlias: true,
-  nickname: true
+  nickname: true,
+
+  deletedAt: true,
+  deletedBy: true,
+  isActive: true
 } as const satisfies Prisma.GroupMembershipSelect
 
 export const MEMBER_SELECT_FULL_FOR_NOTIFY = {
