@@ -140,8 +140,10 @@ export default async function handleUpsertGroupMember(
             membershipIds.push({ ...data, accountId })
 
             const acc = await findUniqueAccountOrThrow(db, accountId, {
-              locale: true,
-              accountAliases: { where: { verificationStatus: 'verified', deletedAt: null, isActive: true } }
+              select: {
+                locale: true,
+                accountAliases: { where: { verificationStatus: 'verified', deletedAt: null, isActive: true } }
+              }
             })
             toSendNoti.push(
               ...getNotificationRecipientInfoFromMembership(

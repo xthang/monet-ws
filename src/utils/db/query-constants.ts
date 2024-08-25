@@ -41,7 +41,7 @@ const ACCOUNT_PLACEHOLDER_SELECT = {
   name: true
 } as const satisfies Prisma.AccountPlaceholderSelect
 
-export const MEMBER_SELECT_WHERE = {
+export const MEMBER_SELECT = {
   id: true,
   accountId: true,
   accountAliasId: true,
@@ -49,7 +49,11 @@ export const MEMBER_SELECT_WHERE = {
   accountOrPlaceholderId: true,
   nickname: true,
   role: true,
-  order: true,
+  order: true
+} as const satisfies Prisma.GroupMembershipSelect
+
+export const MEMBER_SELECT_WHERE = {
+  ...MEMBER_SELECT,
 
   account: ACCOUNT_SELECT_WHERE,
   accountAlias: {
