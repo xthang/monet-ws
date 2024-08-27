@@ -2,6 +2,7 @@ import { type WebSocketServer, WebSocket } from 'ws'
 
 import type { Locale } from '@/constants/locales'
 import db from '@/db'
+import type { WsMessageFullPayload } from '@/types/ws/message.d'
 import { Ws_Group_MembershipRequest_Action_RequestData } from '@/types/ws/request'
 import type { Ws_Group_MembershipRequest_Action_Receipt, WsResponseFullPayload } from '@/types/ws/response'
 import { findUniqueAccountOrThrow, findUniqueGroupMembershipOrThrow } from '@/utils/db/queries'
@@ -106,11 +107,24 @@ export default async function handleGroupMembershipRequestAction(
 
       // BROADCAST ...
 
-      const sentTo = await broadcastToGroupMembersExceptMe(wss, ws, tx, accountId, orgId, groupId, {
+      const broadcastPayload = {
         event: 'group--membership-request--action',
         orgId,
         data: { groupId: group.id, action }
-      })
+      } satisfies WsMessageFullPayload
+
+      const sentTo = await broadcastToGroupMembersExceptMe(wss, ws, tx, accountId, orgId, groupId, broadcastPayload)
+
+      // broadcast to newly rejected account
+      if (action === 'reject' && !sentTo.has(requestAccount.id)) {
+        console.log(`--> sending group--membership-request--action to:`, requestAccount.id)
+        wss.socketsByAccount[requestAccount.id]?.clients.forEach(function each(client) {
+          if (client !== ws && client.readyState === WebSocket.OPEN && client.auth.orgId == orgId) {
+            client.send(JSON.stringify(broadcastPayload))
+            sentTo.add(requestAccount.id)
+          }
+        })
+      }
 
       // send receipt back to itself
       const payload: WsResponseFullPayload = {
