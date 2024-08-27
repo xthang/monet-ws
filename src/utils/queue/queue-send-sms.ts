@@ -11,6 +11,8 @@ export default async function queueSendSms(
       | 'group-removed-member'
       | 'group-new-membership-request'
       | 'group-canceled-membership-request'
+      | 'group-membership-request-approved'
+      | 'group-membership-request-rejected'
       | 'remind-payor'
       | 'settled-item'
     to: { accountId?: string; accountAliasId?: string; phoneNumber: string }[]

@@ -161,7 +161,7 @@ export default async function handleCreateMoneyRecord(
       ws.send(JSON.stringify(payload))
     })
   } catch (e: any) {
-    console.error(`<!- WS [${accountId}] handleCreateMoneyRecord ERROR:`, e)
+    console.error(`<!- WS [${accountId}] handleCreateMoneyRecord | input:`, input, `| ERROR:`, e)
 
     const payload: WsResponseFullPayload = {
       event: 'callback',

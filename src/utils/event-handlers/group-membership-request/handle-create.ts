@@ -6,12 +6,12 @@ import db from '@/db'
 import { WsError, WsErrorCode, WsHttpCode } from '@/types/error'
 import { WsCreateGroupMembershipRequestRequestData } from '@/types/ws/request'
 import type { WsResponseFullPayload, WsCreateGroupMembershipRequestReceipt } from '@/types/ws/response'
-import { findGroupOrThrowAndGroupMembership } from '@/utils/db/queries'
+import { findGroupOrThrowAndGroupMembership, findUniqueAccountOrThrow } from '@/utils/db/queries'
 import { MEMBER_SELECT_FOR_NOTIFY } from '@/utils/db/query-constants'
 import { fromDbLocale } from '@/utils/db/transform/locale'
 import { getMemberName } from '@/utils/get-name-display'
 import getNotificationRecipientInfoFromMembership from '@/utils/notify/get-notification-recipient-info-from-membership'
-import notifyNewGroupMembershipRequest from '@/utils/notify/notify-new-group-membership-request'
+import notifyNewGroupMembershipRequest from '@/utils/notify/group-membership-request/notify-new-group-membership-request'
 import { broadcastToGroupMembersExceptMe } from '@/utils/ws/broadcast-to-group-members-except-me'
 import { transformError } from '@/utils/ws/transform-error'
 
@@ -28,9 +28,9 @@ export default async function handleCreateGroupMembershipRequest(
   const { accountId, orgId } = ws.auth
   const { groupId } = input
 
-  const account = await db.account.findUniqueOrThrow({ where: { id: accountId } })
-
   try {
+    const account = await findUniqueAccountOrThrow(db, accountId)
+
     // validate
     const [{ memberships: adminMemberships, ...group }, membership] = await findGroupOrThrowAndGroupMembership(
       db,
@@ -61,7 +61,7 @@ export default async function handleCreateGroupMembershipRequest(
     if (group.visibility === $Enums.GroupVisibility.secret)
       throw new WsError(WsHttpCode.BAD_REQUEST, WsErrorCode.GROUP_NOT_FOUND, 'Group not found')
 
-    return db.$transaction(async (tx) => {
+    return await db.$transaction(async (tx) => {
       await tx.groupMembershipRequest.create({ data: { groupId, accountId, createdBy: accountId } })
 
       const toSendNoti: {
@@ -82,7 +82,7 @@ export default async function handleCreateGroupMembershipRequest(
       await notifyNewGroupMembershipRequest(
         group,
         toSendNoti,
-        { account: { name: getMemberName({ account }) ?? '[no name]' } },
+        { account: { name: getMemberName({ account: account }) ?? '[no name]' } },
         tx
       )
 
@@ -106,7 +106,7 @@ export default async function handleCreateGroupMembershipRequest(
       ws.send(JSON.stringify(payload))
     })
   } catch (e: any) {
-    console.error(`<!- WS [${accountId}] handleCreateGroupMembershipRequest ERROR:`, e)
+    console.error(`<!- WS [${accountId}] handleCreateGroupMembershipRequest | input:`, input, `| ERROR:`, e)
 
     const payload: WsResponseFullPayload = {
       event: 'callback',

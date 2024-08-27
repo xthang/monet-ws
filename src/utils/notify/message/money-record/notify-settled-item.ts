@@ -6,9 +6,8 @@ import { TextTemplateKey } from '@/constants/data'
 import { HOST_NAME, NOTIFIER_SENDER_NAME } from '@/constants/env'
 import { DEFAULT_LOCALE, loadI18n, SupportedLocale, type Locale } from '@/constants/locales'
 import type { PrismaClient, PrismaTransactionClient } from '@/db/types'
-
-import queueSendEmails from '../queue/queue-send-email'
-import queueSendSms from '../queue/queue-send-sms'
+import queueSendEmails from '@/utils/queue/queue-send-email'
+import queueSendSms from '@/utils/queue/queue-send-sms'
 
 export default async function notifySettleItems(
   db: PrismaClient | PrismaTransactionClient,

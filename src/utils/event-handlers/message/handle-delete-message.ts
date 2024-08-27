@@ -28,7 +28,7 @@ export default async function handleDeleteMessage(
       select: { group: true }
     })
 
-    return db.$transaction(async (tx) => {
+    return await db.$transaction(async (tx) => {
       const deleted = await tx.message.softDelete({
         tx,
         where: { id: messageId, groupId, tabId },
@@ -103,7 +103,7 @@ export default async function handleDeleteMessage(
       ws.send(JSON.stringify(payload))
     })
   } catch (e: any) {
-    console.error(`<!- WS [${accountId}] handleDeleteMessage ERROR:`, e)
+    console.error(`<!- WS [${accountId}] handleDeleteMessage | input:`, message, `| ERROR:`, e)
 
     const payload: WsResponseFullPayload = {
       event: 'callback',

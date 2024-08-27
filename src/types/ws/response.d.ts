@@ -19,6 +19,7 @@ type WsResponseData =
   | WsUpsertGroupMembersReceipt
   | WsCreateGroupMembershipRequestReceipt
   | WsDeleteGroupMembershipRequestReceipt
+  | Ws_Group_MembershipRequest_Action_Receipt
   | WsChatMessageReceipt
   | WsUpdateChatMessageReceipt
   | WsUpdateMoneyRecordReceipt
@@ -57,6 +58,14 @@ type WsCreateGroupMembershipRequestReceipt = {
 
 type WsDeleteGroupMembershipRequestReceipt = {
   group_id: string
+  sent_to?: string[]
+  error?: WsErrorData
+}
+
+type Ws_Group_MembershipRequest_Action_Receipt = {
+  group_id: string
+  request_id: string
+  account_id: string
   sent_to?: string[]
   error?: WsErrorData
 }

@@ -14,15 +14,14 @@ export const ACCOUNT_SELECT = {
   role: true
 } as const satisfies Prisma.AccountSelect
 
-const ACCOUNT_SELECT_WHERE = {
+export const ACCOUNT_SELECT_WHERE = {
   where: { deletedAt: null, isActive: true },
   select: ACCOUNT_SELECT
 } as const satisfies { where: Prisma.AccountWhereInput; select: Prisma.AccountSelect }
 
-const ACCOUNT_ALIAS_SELECT = {
+export const ACCOUNT_ALIAS_SELECT = {
   id: true,
   accountId: true,
-  account: ACCOUNT_SELECT_WHERE, // TODO: only select the connected account if the alias is 'verified' and the account is in the current org. We are fixing this in code
   type: true,
   rawValue: true,
   contactValue: true,
@@ -57,8 +56,11 @@ export const MEMBER_SELECT_WHERE = {
 
   account: ACCOUNT_SELECT_WHERE,
   accountAlias: {
-    where: { deletedAt: null, isActive: true },
-    select: ACCOUNT_ALIAS_SELECT
+    where: { verificationStatus: 'verified', deletedAt: null, isActive: true },
+    select: {
+      ...ACCOUNT_ALIAS_SELECT,
+      account: ACCOUNT_SELECT_WHERE // TODO: only select the connected account if the alias is 'verified' and the account is in the current org. We are fixing this in code
+    }
   },
   accountPlaceholder: { where: { deletedAt: null }, select: ACCOUNT_PLACEHOLDER_SELECT }
 } as const satisfies Prisma.GroupMembershipSelect
@@ -74,7 +76,12 @@ export const MEMBER_SELECT_NO_WHERE = {
   order: true,
 
   account: { select: ACCOUNT_SELECT },
-  accountAlias: { select: ACCOUNT_ALIAS_SELECT },
+  accountAlias: {
+    select: {
+      ...ACCOUNT_ALIAS_SELECT,
+      account: ACCOUNT_SELECT_WHERE // TODO: only select the connected account if the alias is 'verified' and the account is in the current org. We are fixing this in code
+    }
+  },
   accountPlaceholder: { select: ACCOUNT_PLACEHOLDER_SELECT }
 } as const satisfies Prisma.GroupMembershipSelect
 
@@ -84,7 +91,10 @@ export const MEMBER_SELECT_FOR_NOTIFY = {
       accountAliases: { where: { verificationStatus: 'verified', deletedAt: null, isActive: true } }
     }
   },
-  accountAlias: true,
+  accountAlias: {
+    where: { deletedAt: null, isActive: true }, // verificationStatus: 'verified'
+    select: ACCOUNT_ALIAS_SELECT
+  },
   nickname: true,
 
   deletedAt: true,

@@ -863,18 +863,23 @@ enum GroupMemberRole {
 
 model GroupMembershipRequest {
   // Functional Fields
-  id        Int    @id @default(autoincrement())
+  id        String @id @default(cuid()) @db.VarChar(25)
   groupId   String @db.VarChar(50)
   accountId String @db.VarChar(50)
 
   // Technical Fields
-  createdAt DateTime  @default(now()) @db.Timestamptz(3)
   createdBy String    @db.VarChar(50)
-  updatedAt DateTime? @updatedAt @db.Timestamptz(3)
+  createdAt DateTime  @default(now()) @db.Timestamptz(3)
   updatedBy String?   @db.VarChar(50)
-  deletedAt DateTime? @db.Timestamptz(3)
+  updatedAt DateTime? @updatedAt @db.Timestamptz(3)
   deletedBy String?   @db.VarChar(50)
+  deletedAt DateTime? @db.Timestamptz(3)
   isActive  Boolean?  @default(true)
+
+  approvedBy String?   @db.VarChar(50)
+  approvedAt DateTime? @db.Timestamptz(3)
+  rejectedBy String?   @db.VarChar(50)
+  rejectedAt DateTime? @db.Timestamptz(3)
 
   group   Group   @relation(fields: [groupId], references: [id])
   account Account @relation(fields: [accountId], references: [id])

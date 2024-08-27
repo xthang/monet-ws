@@ -77,7 +77,7 @@ export default async function handleNewMessage(
       ws.send(JSON.stringify(payload))
     })
   } catch (e: any) {
-    console.error(`<!- WS [${accountId}] handleNewMessage ERROR:`, e)
+    console.error(`<!- WS [${accountId}] handleNewMessage | input:`, message, `| ERROR:`, e)
 
     const payload: WsResponseFullPayload = {
       event: 'callback',

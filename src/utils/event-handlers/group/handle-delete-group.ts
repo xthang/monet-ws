@@ -10,7 +10,7 @@ import { findUniqueGroupMembershipOrThrow } from '@/utils/db/queries'
 import { ACCOUNT_SELECT } from '@/utils/db/query-constants'
 import { fromDbLocale } from '@/utils/db/transform/locale'
 import getNotificationRecipientInfoFromMembership from '@/utils/notify/get-notification-recipient-info-from-membership'
-import notifyDeletedGroup from '@/utils/notify/notify-deleted-group'
+import notifyDeletedGroup from '@/utils/notify/group/notify-deleted-group'
 import { broadcastToGroupMembersExceptMe } from '@/utils/ws/broadcast-to-group-members-except-me'
 import { transformError } from '@/utils/ws/transform-error'
 
@@ -32,7 +32,7 @@ export default async function handleDeleteGroup(
     if (membership.role !== $Enums.GroupMemberRole.admin)
       throw new WsError(WsHttpCode.FORBIDDEN, WsErrorCode.NOT_ALLOWED, 'Forbidden')
 
-    return db.$transaction(async (tx) => {
+    return await db.$transaction(async (tx) => {
       const memberships = await tx.groupMembership.findMany({
         where: { groupId, accountId: { not: accountId }, isActive: true },
         select: {
@@ -95,7 +95,7 @@ export default async function handleDeleteGroup(
       ws.send(JSON.stringify(payload))
     })
   } catch (e: any) {
-    console.error(`<!- WS [${accountId}] handleUpdateGroup ERROR:`, e)
+    console.error(`<!- WS [${accountId}] handleUpdateGroup | input:`, rawInput, `| ERROR:`, e)
 
     const payload: WsResponseFullPayload = {
       event: 'callback',

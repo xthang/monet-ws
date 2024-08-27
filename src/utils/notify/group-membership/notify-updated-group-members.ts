@@ -4,11 +4,10 @@ import { TextTemplateKey } from '@/constants/data'
 import { HOST_NAME, NOTIFIER_SENDER_NAME } from '@/constants/env'
 import { DEFAULT_LOCALE, type Locale } from '@/constants/locales'
 import type { PrismaTransactionClient } from '@/db/types'
+import queueSendEmails from '@/utils/queue/queue-send-email'
+import queueSendSms from '@/utils/queue/queue-send-sms'
 
-import queueSendEmails from '../queue/queue-send-email'
-import queueSendSms from '../queue/queue-send-sms'
-
-export default async function notifyNewGroupMembershipRequest(
+export default async function notifyUpdatedGroupMembers(
   group: Pick<Group, 'id' | 'name'>,
   to: {
     accountId?: string
@@ -17,8 +16,8 @@ export default async function notifyNewGroupMembershipRequest(
     locale?: Locale | null
     channel: 'email' | 'sms'
     address: string
+    type: 'added' | 'removed'
   }[],
-  request: { account: { name: string } },
   tx: PrismaTransactionClient
 ) {
   const toEmailAddresses = to.filter((it) => it.channel === 'email')
@@ -29,9 +28,12 @@ export default async function notifyNewGroupMembershipRequest(
       type: $Enums.TextTemplateType.textContent,
       key: {
         in: [
-          TextTemplateKey.GROUP_NEW_MEMBERSHIP_REQUEST__EMAIL_TITLE,
-          TextTemplateKey.GROUP_NEW_MEMBERSHIP_REQUEST__EMAIL_CONTENT,
-          TextTemplateKey.GROUP_NEW_MEMBERSHIP_REQUEST__SMS_CONTENT
+          TextTemplateKey.GROUP_ADDED_MEMBER__EMAIL_TITLE,
+          TextTemplateKey.GROUP_ADDED_MEMBER__EMAIL_CONTENT,
+          TextTemplateKey.GROUP_ADDED_MEMBER__SMS_CONTENT,
+          TextTemplateKey.GROUP_REMOVED_MEMBER__EMAIL_TITLE,
+          TextTemplateKey.GROUP_REMOVED_MEMBER__EMAIL_CONTENT,
+          TextTemplateKey.GROUP_REMOVED_MEMBER__SMS_CONTENT
         ]
       }
     }
@@ -40,47 +42,51 @@ export default async function notifyNewGroupMembershipRequest(
   if (toEmailAddresses.length)
     await queueSendEmails(
       tx,
-      toEmailAddresses.map(({ channel, name, locale, address, ...it }) => ({
-        category: 'group-new-membership-request',
+      toEmailAddresses.map(({ channel, name, locale, address, type, ...it }) => ({
+        category: `group-${type}-member`,
         from: NOTIFIER_SENDER_NAME,
         to: [{ ...it, emailAddress: address }],
         subject: contentTemplates.find(
           (it) =>
-            it.key === TextTemplateKey.GROUP_NEW_MEMBERSHIP_REQUEST__EMAIL_TITLE &&
-            it.locale === (locale ?? DEFAULT_LOCALE)
+            it.key ===
+              (type === 'added'
+                ? TextTemplateKey.GROUP_ADDED_MEMBER__EMAIL_TITLE
+                : TextTemplateKey.GROUP_REMOVED_MEMBER__EMAIL_TITLE) && it.locale === (locale ?? DEFAULT_LOCALE)
         )!.content,
         text: '',
         html: contentTemplates
           .find(
             (it) =>
-              it.key === TextTemplateKey.GROUP_NEW_MEMBERSHIP_REQUEST__EMAIL_CONTENT &&
-              it.locale === (locale ?? DEFAULT_LOCALE)
+              it.key ===
+                (type === 'added'
+                  ? TextTemplateKey.GROUP_ADDED_MEMBER__EMAIL_CONTENT
+                  : TextTemplateKey.GROUP_REMOVED_MEMBER__EMAIL_CONTENT) && it.locale === (locale ?? DEFAULT_LOCALE)
           )!
-          .content.replace('{{member_name}}', name ?? '[-]')
+          .content.replace('{{member_name}}', name ? ` <b>${name}</b>` : '')
           .replace(
             '{{group}}',
             `<a href="https://${HOST_NAME}/i/${group.id}"><b>${group.name || '<i>[no name]</i>'}</b></a>`
           )
           .replace('{{group_name}}', `<b>${group.name || '<i>[no name]</i>'}</b>`)
-          .replace('{{request_account_name}}', request.account.name)
       }))
     )
   if (toPhoneNumbers.length)
     await queueSendSms(
       tx,
-      toPhoneNumbers.map(({ channel, name, locale, address, ...it }) => ({
-        category: 'group-new-membership-request',
+      toPhoneNumbers.map(({ channel, name, locale, address, type, ...it }) => ({
+        category: `group-${type}-member`,
         to: [{ ...it, phoneNumber: address }],
         text: contentTemplates
           .find(
             (it) =>
-              it.key === TextTemplateKey.GROUP_NEW_MEMBERSHIP_REQUEST__SMS_CONTENT &&
-              it.locale === (locale ?? DEFAULT_LOCALE)
+              it.key ===
+                (type === 'added'
+                  ? TextTemplateKey.GROUP_ADDED_MEMBER__SMS_CONTENT
+                  : TextTemplateKey.GROUP_REMOVED_MEMBER__SMS_CONTENT) && it.locale === (locale ?? DEFAULT_LOCALE)
           )!
-          .content.replace('{{member_name}}', name ?? '[-]')
+          .content.replace('{{member_name}}', name ? ` ${name}` : '')
           .replace('{{group_name}}', group.name ? `: ${group.name}` : '')
           .replace('{{group_link}}', `https://${HOST_NAME}/i/${group.id}`)
-          .replace('{{request_account_name}}', request.account.name)
       }))
     )
 }

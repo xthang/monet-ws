@@ -14,7 +14,7 @@ import { transformPhoneNoToDbAlias } from '@/utils/db/transform/account-alias'
 import { fromDbLocale } from '@/utils/db/transform/locale'
 import { validateEmailAddr } from '@/utils/email-address'
 import getNotificationRecipientInfoFromMembership from '@/utils/notify/get-notification-recipient-info-from-membership'
-import notifyUpdatedGroupMembers from '@/utils/notify/notify-updated-group-members'
+import notifyUpdatedGroupMembers from '@/utils/notify/group-membership/notify-updated-group-members'
 import { parsePhoneNo } from '@/utils/phone-number'
 import { broadcastToGroupMembersExceptMe } from '@/utils/ws/broadcast-to-group-members-except-me'
 import { transformError } from '@/utils/ws/transform-error'
@@ -110,7 +110,7 @@ export default async function handleUpsertGroupMembers(
       }
     })
 
-    return db.$transaction(async (tx) => {
+    return await db.$transaction(async (tx) => {
       const { creates, updates, deletes } = members
       let createds, updateds, deleteds
 
@@ -396,7 +396,7 @@ export default async function handleUpsertGroupMembers(
       ws.send(JSON.stringify(payload))
     })
   } catch (e: any) {
-    console.error(`<!- WS [${accountId}] handleUpsertGroupMembers ERROR:`, e)
+    console.error(`<!- WS [${accountId}] handleUpsertGroupMembers | input:`, input, `| ERROR:`, e)
 
     const payload: WsResponseFullPayload = {
       event: 'callback',

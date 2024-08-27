@@ -36,6 +36,10 @@ export type WsRequestData =
       data: WsDeleteGroupMembershipRequestRequestData
     }
   | {
+      event: 'group--membership-request--action'
+      data: Ws_Group_MembershipRequest_Action_RequestData
+    }
+  | {
       event: 'new-text-message'
       data: WsSendMessageRequestData
     }
@@ -158,6 +162,17 @@ export const WsDeleteGroupMembershipRequestRequestData = z.object({
 })
 
 export type WsDeleteGroupMembershipRequestRequestData = z.infer<typeof WsDeleteGroupMembershipRequestRequestData>
+
+export const Ws_Group_MembershipRequest_Action_RequestData = z.object({
+  groupId: z.string(),
+  accountId: z.string(),
+  requestId: z.string(),
+  action: z.enum(['approve', 'reject'])
+})
+
+export type Ws_Group_MembershipRequest_Action_RequestData = z.infer<
+  typeof Ws_Group_MembershipRequest_Action_RequestData
+>
 
 export type WsSendMessageRequestData = {
   groupId: string

@@ -12,6 +12,7 @@ import { findUniqueAccountByAuthAccIdOrThrow } from './utils/db/queries'
 import handleDeleteGroup from './utils/event-handlers/group/handle-delete-group'
 import handleUpdateGroup from './utils/event-handlers/group/handle-update-group'
 import handleUpsertGroupMembers from './utils/event-handlers/group-members/handle-upsert-group-members'
+import handleGroupMembershipRequestAction from './utils/event-handlers/group-membership-request/handle-action'
 import handleCreateGroupMembershipRequest from './utils/event-handlers/group-membership-request/handle-create'
 import handleDeleteGroupMembershipRequest from './utils/event-handlers/group-membership-request/handle-delete'
 import handleDeleteMessage from './utils/event-handlers/message/handle-delete-message'
@@ -134,14 +135,17 @@ async function main() {
               case 'delete-group':
                 await handleDeleteGroup(wss, this, requestId, locale, data)
                 break
+              case 'upsert-group-members':
+                await handleUpsertGroupMembers(wss, this, requestId, locale, data)
+                break
               case 'create-group-membership-request':
                 await handleCreateGroupMembershipRequest(wss, this, requestId, locale, data)
                 break
               case 'delete-group-membership-request':
                 await handleDeleteGroupMembershipRequest(wss, this, requestId, locale, data)
                 break
-              case 'upsert-group-members':
-                await handleUpsertGroupMembers(wss, this, requestId, locale, data)
+              case 'group--membership-request--action':
+                await handleGroupMembershipRequestAction(wss, this, requestId, locale, data)
                 break
               case 'new-text-message':
                 await handleNewMessage(wss, this, requestId, locale, {
@@ -178,7 +182,10 @@ async function main() {
               }
             }
           } catch (e: any) {
-            console.error(`<-- WS [${this.auth.accountId}] on.message ERROR:`, e)
+            console.error(
+              `<-- WS [${this.auth.accountId}] on.message [${requestId}] | event: ${event} | data: ${data} | ERROR:`,
+              e
+            )
 
             const payload: WsResponseFullPayload = { event: 'callback', requestId, error: transformError(e) }
             ws.send(JSON.stringify(payload))

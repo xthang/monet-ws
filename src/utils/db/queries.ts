@@ -58,7 +58,7 @@ export async function findUniqueGroupMembershipOrThrow<
     where: {
       OR: [
         { accountId, accountOrPlaceholderId: accountId },
-        { accountAlias: { accountId, deletedAt: null, isActive: true, verificationStatus: 'verified' } }
+        { accountAlias: { accountId, verificationStatus: 'verified', deletedAt: null, isActive: true } }
       ],
       groupId,
       isActive: true,
@@ -105,7 +105,7 @@ export async function findGroupAndGroupMembership<
     where: {
       OR: [
         { accountId, accountOrPlaceholderId: accountId },
-        { accountAlias: { accountId, deletedAt: null, isActive: true, verificationStatus: 'verified' } }
+        { accountAlias: { accountId, verificationStatus: 'verified', deletedAt: null, isActive: true } }
       ],
       groupId,
       isActive: true

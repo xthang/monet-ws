@@ -82,7 +82,7 @@ const extendedQueryFunction: ExtendedQueryFunction<Model> = {
 }
 
 function updateArgs(args: { where?: any }) {
-  args.where = { deletedAt: null, deletedBy: null, ...args.where }
+  args.where = { deletedBy: null, deletedAt: null, ...args.where }
 }
 
 const extendedQueryFunction2: ExtendedQueryFunction<Model> = {
@@ -110,7 +110,7 @@ const extendedQueryFunction2: ExtendedQueryFunction<Model> = {
 }
 
 function updateArgs2(args: { where?: any }) {
-  args.where = { deletedAt: null, isActive: true, ...args.where }
+  args.where = { deletedBy: null, deletedAt: null, isActive: true, ...args.where }
 }
 
 export const extendedQueries: DynamicQueryExtensionArgs<

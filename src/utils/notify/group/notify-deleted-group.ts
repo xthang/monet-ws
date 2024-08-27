@@ -4,9 +4,8 @@ import { TextTemplateKey } from '@/constants/data'
 import { NOTIFIER_SENDER_NAME } from '@/constants/env'
 import { DEFAULT_LOCALE, Locale } from '@/constants/locales'
 import type { PrismaTransactionClient } from '@/db/types'
-
-import queueSendEmails from '../queue/queue-send-email'
-import queueSendSms from '../queue/queue-send-sms'
+import queueSendEmails from '@/utils/queue/queue-send-email'
+import queueSendSms from '@/utils/queue/queue-send-sms'
 
 export default async function notifyDeletedGroup(
   group: Pick<Group, 'name'>,

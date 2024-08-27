@@ -8,13 +8,13 @@ import type { WsMoneyRecord } from '@/types/ws/message'
 import { WsSettleUpPayableRequestData } from '@/types/ws/request'
 import type { WsResponseFullPayload, WsSettleUpPayableReceipt } from '@/types/ws/response'
 import { getMemberName } from '@/utils/get-name-display'
+import notifySettleItems from '@/utils/notify/message/money-record/notify-settled-item'
 
 import { findUniqueGroupMembershipOrThrow } from '../../../db/queries'
 import { MEMBER_SELECT_FULL_FOR_NOTIFY, MONEY_RECORD_SELECT } from '../../../db/query-constants'
 import { transformAccountAlias } from '../../../db/transform/account-alias'
 import { fromDbLocale } from '../../../db/transform/locale'
 import getNotificationRecipientInfoFromMembership from '../../../notify/get-notification-recipient-info-from-membership'
-import notifySettleItems from '../../../notify/notify-settled-item'
 import { broadcastToGroupMembersExceptMe } from '../../../ws/broadcast-to-group-members-except-me'
 import { transformError } from '../../../ws/transform-error'
 
@@ -55,7 +55,7 @@ export default async function handleSettleUpPayable(
       }
     })
 
-    return db.$transaction(async (tx) => {
+    return await db.$transaction(async (tx) => {
       const message = await tx.message.create({
         data: {
           groupId,
@@ -227,7 +227,7 @@ export default async function handleSettleUpPayable(
       ws.send(JSON.stringify(payload))
     })
   } catch (e: any) {
-    console.error(`<!- WS [${accountId}] handleUpdateMoneyRecord ERROR:`, e)
+    console.error(`<!- WS [${accountId}] handleUpdateMoneyRecord | input:`, input, `| ERROR:`, e)
 
     const payload: WsResponseFullPayload = {
       event: 'callback',

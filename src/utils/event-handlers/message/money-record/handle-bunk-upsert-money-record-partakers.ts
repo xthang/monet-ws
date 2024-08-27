@@ -181,7 +181,7 @@ export default async function handleUpsertMoneyRecordPartakers(
     }
     ws.send(JSON.stringify(payload))
   } catch (e: any) {
-    console.error(`<!- WS [${accountId}] handleUpsertMoneyRecordPartakers ERROR:`, e)
+    console.error(`<!- WS [${accountId}] handleUpsertMoneyRecordPartakers | input:`, input, `| ERROR:`, e)
 
     const payload: WsResponseFullPayload = {
       event: 'callback',

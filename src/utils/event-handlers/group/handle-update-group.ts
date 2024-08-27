@@ -30,7 +30,7 @@ export default async function handleUpdateGroup(
       select: { group: true }
     })
 
-    return db.$transaction(async (tx) => {
+    return await db.$transaction(async (tx) => {
       let updatedGroup
       if (Object.entries(data).filter(([_, v]) => v !== undefined).length) {
         const lastActiveAccountSet = new Set(existedGroup.lastActiveAccounts?.split(','))
@@ -90,7 +90,7 @@ export default async function handleUpdateGroup(
       ws.send(JSON.stringify(payload))
     })
   } catch (e: any) {
-    console.error(`<!- WS [${accountId}] handleUpdateGroup ERROR:`, e)
+    console.error(`<!- WS [${accountId}] handleUpdateGroup | input:`, input, `| ERROR:`, e)
 
     const payload: WsResponseFullPayload = {
       event: 'callback',

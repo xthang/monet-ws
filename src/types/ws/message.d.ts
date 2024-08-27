@@ -30,6 +30,11 @@ type WsMessagePayload =
       data: { groupId: string }
     }
   | {
+      event: 'group--membership-request--action'
+      orgId: string | undefined
+      data: { groupId: string; action: 'approve' | 'reject' }
+    }
+  | {
       event: 'deleted-group'
       orgId: string | undefined
       data: { groupId: string }
