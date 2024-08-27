@@ -5,10 +5,12 @@ export default async function queueSendEmails(
   db_: PrismaClient | PrismaTransactionClient | undefined,
   emails: {
     category:
-      | 'conv-new'
-      | 'conv-deleted'
-      | 'conv-added-member'
-      | 'conv-removed-member'
+      | 'group-new'
+      | 'group-deleted'
+      | 'group-added-member'
+      | 'group-removed-member'
+      | 'group-new-membership-request'
+      | 'group-canceled-membership-request'
       | 'remind-payor'
       | 'settled-item'
     from: string

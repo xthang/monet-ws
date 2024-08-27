@@ -254,7 +254,7 @@ enum JobResultType {
 
 model TextTemplate {
   // Functional Fields
-  id          String             @id @default(cuid()) @db.VarChar(25)
+  // id       String             @id @default(cuid()) @db.VarChar(25)
   type        TextTemplateType
   key         String             @db.VarChar(200)
   description String?            @db.Text
@@ -383,6 +383,7 @@ model TaskSendEmail {
   jobStartedAt DateTime? @db.Timestamptz(3)
   sentAt       DateTime? @db.Timestamptz(3)
   sentBy       String?   @db.VarChar(50)
+  sendResult   Json?
   jobError     String?   @db.Text
 }
 
@@ -403,6 +404,7 @@ model TaskSendSms {
   jobStartedAt DateTime? @db.Timestamptz(3)
   sentAt       DateTime? @db.Timestamptz(3)
   sentBy       String?   @db.VarChar(50)
+  sendResult   Json?
   jobError     String?   @db.Text
 }
 
@@ -536,10 +538,11 @@ model Account {
   notifiedAt DateTime? @db.Timestamptz(3)
 
   // Foreign Key Relations
+  organizationMemberships  OrganizationMembership[]
   accountAliases           AccountAlias[]
   groupMemberships         GroupMembership[]
   groupAddedMemberships    GroupMembership[]        @relation(name: "addedByAccount")
-  organizationMemberships  OrganizationMembership[]
+  groupMembershipRequests  GroupMembershipRequest[]
   messages                 Message[]                @relation(name: "Message_sentByAccount")
   deletedMessages          Message[]                @relation(name: "Message_deletedByAccount")
   deletedMoneyRecords      MoneyRecord[]            @relation(name: "MoneyRecord_deletedByAccount")
@@ -620,13 +623,14 @@ enum AccountAliasType {
 
 model AccountPartnerAlias {
   // Functional Fields
-  id                 String  @id @db.VarChar(50)
-  accountAliasId     String  @db.VarChar(50)
-  partnerId          Partner
-  partnerAppId       String? @db.VarChar(50)
-  verification       Json?
-  verificationStatus String? @db.VarChar(20)
-  otherData          Json?
+  id                    String  @id @default(cuid()) @db.VarChar(50)
+  accountAliasId        String  @db.VarChar(50)
+  partnerId             Partner
+  partnerAppId          String? @db.VarChar(50)
+  partnerAccountAliasId String  @db.VarChar(50)
+  verification          Json?
+  verificationStatus    String? @db.VarChar(20)
+  otherData             Json?
 
   // Technical Fields
   createdAt DateTime  @default(now()) @db.Timestamptz(3)
@@ -644,7 +648,7 @@ model AccountPartnerAlias {
   accountAlias AccountAlias @relation(fields: [accountAliasId], references: [id])
 
   // @@unique([accountAliasId, partnerId, (CASE WHEN "deletedAt" IS NULL THEN true ELSE NULL END)])
-  @@unique([accountAliasId, partnerId, isActive])
+  @@unique([accountAliasId, partnerId, partnerAccountAliasId, isActive])
 }
 
 enum Partner {
@@ -786,10 +790,11 @@ model Group {
 
   // Foreign Key Relations
   memberships           GroupMembership[]
+  membershipRequests    GroupMembershipRequest[]
   messages              Message[]
   moneyRecords          MoneyRecord[]
   currencyExchangeRates CurrencyExchangeRate[]
-  lastMessage           Message?               @relation("lastMessage", fields: [lastMessageId], references: [id])
+  lastMessage           Message?                 @relation("lastMessage", fields: [lastMessageId], references: [id])
   tabs                  GroupTab[]
 
   @@unique([lastMessageId])
@@ -854,6 +859,27 @@ model GroupMembership {
 enum GroupMemberRole {
   admin
   mod
+}
+
+model GroupMembershipRequest {
+  // Functional Fields
+  id        Int    @id @default(autoincrement())
+  groupId   String @db.VarChar(50)
+  accountId String @db.VarChar(50)
+
+  // Technical Fields
+  createdAt DateTime  @default(now()) @db.Timestamptz(3)
+  createdBy String    @db.VarChar(50)
+  updatedAt DateTime? @updatedAt @db.Timestamptz(3)
+  updatedBy String?   @db.VarChar(50)
+  deletedAt DateTime? @db.Timestamptz(3)
+  deletedBy String?   @db.VarChar(50)
+  isActive  Boolean?  @default(true)
+
+  group   Group   @relation(fields: [groupId], references: [id])
+  account Account @relation(fields: [accountId], references: [id])
+
+  @@unique([groupId, accountId, isActive])
 }
 
 model ActivityLog {

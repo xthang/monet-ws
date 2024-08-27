@@ -2,7 +2,7 @@ import { type WebSocketServer, WebSocket } from 'ws'
 
 import type { Locale } from '@/constants/locales'
 import db from '@/db'
-import { WsError, WsErrorCode } from '@/types/error'
+import { WsError, WsHttpCode } from '@/types/error'
 import type { WsSendMessageRequestData } from '@/types/ws/request'
 import type { WsChatMessageReceipt, WsResponseFullPayload } from '@/types/ws/response'
 
@@ -27,7 +27,8 @@ export default async function handleNewMessage(
     const timeDiff = Math.abs(sentAt.getTime() - Date.now())
     if (timeDiff > 5 * 60 * 10e3) {
       throw new WsError(
-        WsErrorCode.BAD_REQUEST,
+        WsHttpCode.BAD_REQUEST,
+        null,
         `the diff between sent time (${sentAt}) & current server time (${new Date()}) is too large (${timeDiff})`
       )
     }

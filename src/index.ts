@@ -4,14 +4,16 @@ import { PORT } from './constants/env'
 import { Locale } from './constants/locales'
 import db from './db/index'
 import { verifyToken } from './security/token-verification'
-import { WsError, WsErrorCode } from './types/error'
+import { WsError, WsErrorCode, WsHttpCode } from './types/error'
 import type { WsMessageFullPayload } from './types/ws/message.d'
 import type { WsRequestFullPayload } from './types/ws/request'
 import type { WsResponseFullPayload } from './types/ws/response.d'
 import { findUniqueAccountByAuthAccIdOrThrow } from './utils/db/queries'
 import handleDeleteGroup from './utils/event-handlers/group/handle-delete-group'
 import handleUpdateGroup from './utils/event-handlers/group/handle-update-group'
-import handleUpsertGroupMember from './utils/event-handlers/group-members/handle-upsert-group-members'
+import handleUpsertGroupMembers from './utils/event-handlers/group-members/handle-upsert-group-members'
+import handleCreateGroupMembershipRequest from './utils/event-handlers/group-membership-request/handle-create'
+import handleDeleteGroupMembershipRequest from './utils/event-handlers/group-membership-request/handle-delete'
 import handleDeleteMessage from './utils/event-handlers/message/handle-delete-message'
 import handleNewMessage from './utils/event-handlers/message/handle-new-message'
 import handleUpsertMoneyRecordPartakers from './utils/event-handlers/message/money-record/handle-bunk-upsert-money-record-partakers'
@@ -64,7 +66,7 @@ async function main() {
       if (!token) {
         console.warn(`<-> WSS on.connection:`, request.method, maskedUrl, 'Not authenticated')
         ws.terminate()
-        request.destroy(new WsError(WsErrorCode.NOT_AUTHENTICATED, 'Not authenticated'))
+        request.destroy(new WsError(WsHttpCode.NOT_AUTHENTICATED, null, 'Not authenticated'))
         return
       }
 
@@ -72,7 +74,7 @@ async function main() {
       if (!auth) {
         console.warn(`<-> WSS on.connection:`, request.method, maskedUrl, 'Not authenticated')
         ws.terminate()
-        request.destroy(new WsError(WsErrorCode.NOT_AUTHENTICATED, 'Not authenticated'))
+        request.destroy(new WsError(WsHttpCode.NOT_AUTHENTICATED, null, 'Not authenticated'))
         return
       }
 
@@ -132,8 +134,14 @@ async function main() {
               case 'delete-group':
                 await handleDeleteGroup(wss, this, requestId, locale, data)
                 break
+              case 'create-group-membership-request':
+                await handleCreateGroupMembershipRequest(wss, this, requestId, locale, data)
+                break
+              case 'delete-group-membership-request':
+                await handleDeleteGroupMembershipRequest(wss, this, requestId, locale, data)
+                break
               case 'upsert-group-members':
-                await handleUpsertGroupMember(wss, this, requestId, locale, data)
+                await handleUpsertGroupMembers(wss, this, requestId, locale, data)
                 break
               case 'new-text-message':
                 await handleNewMessage(wss, this, requestId, locale, {
@@ -162,7 +170,9 @@ async function main() {
                 const payload: WsResponseFullPayload = {
                   event: 'callback',
                   requestId,
-                  error: transformError(new WsError(WsErrorCode.BAD_REQUEST, `Invalid event: ${event}`))
+                  error: transformError(
+                    new WsError(WsHttpCode.BAD_REQUEST, WsErrorCode.INVALID_REQUEST_EVENT, `Invalid event: ${event}`)
+                  )
                 }
                 ws.send(JSON.stringify(payload))
               }

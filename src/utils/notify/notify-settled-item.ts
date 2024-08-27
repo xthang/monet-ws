@@ -33,9 +33,9 @@ export default async function notifySettleItems(
       type: $Enums.TextTemplateType.textContent,
       key: {
         in: [
-          TextTemplateKey.SETTLED_ITEM_EMAIL_TITLE,
-          TextTemplateKey.SETTLED_ITEM_EMAIL_CONTENT,
-          TextTemplateKey.SETTLED_ITEM_SMS_CONTENT
+          TextTemplateKey.SETTLED_ITEM__EMAIL_TITLE,
+          TextTemplateKey.SETTLED_ITEM__EMAIL_CONTENT,
+          TextTemplateKey.SETTLED_ITEM__SMS_CONTENT
         ]
       }
     }
@@ -54,11 +54,11 @@ export default async function notifySettleItems(
             from: NOTIFIER_SENDER_NAME,
             to: [{ ...it, emailAddress: address }],
             subject: contentTemplates.find(
-              (it) => it.key === TextTemplateKey.SETTLED_ITEM_EMAIL_TITLE && it.locale === locale_
+              (it) => it.key === TextTemplateKey.SETTLED_ITEM__EMAIL_TITLE && it.locale === locale_
             )!.content,
             text: '',
             html: contentTemplates
-              .find((it) => it.key === TextTemplateKey.SETTLED_ITEM_EMAIL_CONTENT && it.locale === locale_)!
+              .find((it) => it.key === TextTemplateKey.SETTLED_ITEM__EMAIL_CONTENT && it.locale === locale_)!
               .content.replace('{{member_name}}', name ? ` <b>${name}</b>` : '')
               .replace(
                 '{{group}}',
@@ -85,7 +85,7 @@ export default async function notifySettleItems(
             category: 'settled-item',
             to: [{ ...it, phoneNumber: address }],
             text: contentTemplates
-              .find((it) => it.key === TextTemplateKey.SETTLED_ITEM_SMS_CONTENT && it.locale === locale_)!
+              .find((it) => it.key === TextTemplateKey.SETTLED_ITEM__SMS_CONTENT && it.locale === locale_)!
               .content.replace('{{member_name}}', name ? ` ${name}` : '')
               .replace('{{group_name}}', group.name || '[no name]')
               .replace('{{group_link}}', `https://${HOST_NAME}/i/${group.id}?tab=${tabId}&mgsId=${payment.messageId}`)

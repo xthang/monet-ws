@@ -5,10 +5,12 @@ export default async function queueSendSms(
   db_: PrismaClient | PrismaTransactionClient | undefined,
   smses: {
     category:
-      | 'conv-new'
-      | 'conv-deleted'
-      | 'conv-added-member'
-      | 'conv-removed-member'
+      | 'group-new'
+      | 'group-deleted'
+      | 'group-added-member'
+      | 'group-removed-member'
+      | 'group-new-membership-request'
+      | 'group-canceled-membership-request'
       | 'remind-payor'
       | 'settled-item'
     to: { accountId?: string; accountAliasId?: string; phoneNumber: string }[]

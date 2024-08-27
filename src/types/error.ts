@@ -2,11 +2,18 @@ export enum ErrorCode {
   WS_STATE_CLOSED = 'WS_STATE_CLOSED'
 }
 
-export enum WsErrorCode {
+export enum WsHttpCode {
   NOT_AUTHENTICATED = 'NOT_AUTHENTICATED',
   FORBIDDEN = 'FORBIDDEN',
   BAD_REQUEST = 'BAD_REQUEST',
   INTERNAL_SERVER_ERROR = 'INTERNAL_SERVER_ERROR'
+}
+
+export enum WsErrorCode {
+  INVALID_REQUEST_EVENT = 'INVALID_REQUEST_EVENT',
+  GROUP_NOT_FOUND = 'GROUP_NOT_FOUND',
+  INVALID_MEMBERSHIPS = 'INVALID_MEMBERSHIPS',
+  NOT_ALLOWED = 'NOT_ALLOWED'
 }
 
 // Do not export this class! Use XError instead!
@@ -29,6 +36,19 @@ export class XError extends BaseError {
   declare code: ErrorCode
 }
 
-export class WsError extends BaseError {
-  declare code: WsErrorCode
+export class WsError<T = any> extends Error {
+  httpCode: WsHttpCode
+  code: WsErrorCode | null
+  details?: T
+
+  constructor(httpCode: WsHttpCode, code: WsErrorCode | null, message: string, details?: T) {
+    super(message)
+    this.httpCode = httpCode
+    this.code = code
+    this.details = details
+  }
+
+  toString() {
+    return this.name + ': [' + this.httpCode + '-' + this.code + '] ' + this.message
+  }
 }

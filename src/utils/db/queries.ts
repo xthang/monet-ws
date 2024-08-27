@@ -3,7 +3,7 @@ import assert from 'assert'
 import { $Enums, type Prisma } from '@prisma/client'
 
 import db from '@/db'
-import { WsError } from '@/types/error'
+import { WsError, WsErrorCode, WsHttpCode } from '@/types/error'
 
 import { ACCOUNT_SELECT } from './query-constants'
 
@@ -72,10 +72,97 @@ export async function findUniqueGroupMembershipOrThrow<
   const groupIds = new Set(memberships.map((m) => m.groupId))
   assert(
     groupIds.size === 1,
-    new WsError('INVALID_MEMBERSHIPS', `memberships found: ${memberships.length} | groups found: ${groupIds.size}`)
+    new WsError(
+      WsHttpCode.INTERNAL_SERVER_ERROR,
+      WsErrorCode.INVALID_MEMBERSHIPS,
+      `memberships found: ${memberships.length} | groups found: ${groupIds.size}`
+    )
   )
   // return membership that is attached with an account first. If none found, return any membership (which is attached with an alias)
   return memberships.find((m) => m.accountId) ?? memberships[0]
+}
+
+export async function findGroupAndGroupMembership<
+  GroupSelectOrInclude extends { select?: Prisma.GroupSelect; include?: Prisma.GroupInclude },
+  MembershipSelectOrInclude extends { select?: Prisma.GroupMembershipSelect; include?: Prisma.GroupMembershipInclude }
+>(
+  prisma: typeof db,
+  groupId: string,
+  accountId: string,
+  orgId: string | undefined,
+  selectOrInclude?: { group?: GroupSelectOrInclude; membership?: MembershipSelectOrInclude }
+) {
+  const group = await prisma.group.findUnique<{ where: Prisma.GroupWhereUniqueInput } & GroupSelectOrInclude>({
+    where: { id: groupId, orgId: orgId ?? null, deletedAt: null },
+    ...selectOrInclude?.group
+  } satisfies Prisma.GroupFindUniqueArgs as any)
+
+  if (!group) return []
+
+  const memberships = await prisma.groupMembership.findMany<
+    { where: Prisma.GroupMembershipWhereUniqueInput } & MembershipSelectOrInclude
+  >({
+    where: {
+      OR: [
+        { accountId, accountOrPlaceholderId: accountId },
+        { accountAlias: { accountId, deletedAt: null, isActive: true, verificationStatus: 'verified' } }
+      ],
+      groupId,
+      isActive: true
+    },
+    ...selectOrInclude?.membership
+  } satisfies Prisma.GroupMembershipFindManyArgs as any)
+
+  let membership
+  if (memberships.length) {
+    // Note: there are cases where many memberships exist in the same group for 1 account.
+    // For example: a user adds a not-'verified' alias of their account into the same group. And later on, that alias is 'verified'
+    // Example 2: many aliases are added to the same group and later on, these aliases belong to the same newly-registered account
+    const groupIds = new Set(memberships.map((m) => m.groupId))
+    assert(
+      groupIds.size === 1,
+      new WsError(
+        WsHttpCode.INTERNAL_SERVER_ERROR,
+        WsErrorCode.INVALID_MEMBERSHIPS,
+        `memberships found: ${memberships.length} | groups found: ${groupIds.size}`
+      )
+    )
+
+    // return membership that is attached with an account first. If none found, return any membership (which is attached with an alias)
+    membership = memberships.find((m) => m.accountId) ?? memberships[0]
+  }
+
+  if (
+    group.visibility === $Enums.GroupVisibility.public ||
+    group.visibility === $Enums.GroupVisibility.private ||
+    membership
+  )
+    return [group, membership] as const
+
+  return []
+}
+
+export async function findGroupOrThrowAndGroupMembership<
+  GroupSelectOrInclude extends { select?: Prisma.GroupSelect; include?: Prisma.GroupInclude },
+  MembershipSelectOrInclude extends { select?: Prisma.GroupMembershipSelect; include?: Prisma.GroupMembershipInclude }
+>(
+  prisma: typeof db,
+  groupId: string,
+  accountId: string,
+  orgId: string | undefined,
+  selectOrInclude?: { group?: GroupSelectOrInclude; membership?: MembershipSelectOrInclude }
+) {
+  const [group, existedMembership] = await findGroupAndGroupMembership(
+    prisma,
+    groupId,
+    accountId,
+    orgId,
+    selectOrInclude
+  )
+
+  if (!group) throw new WsError(WsHttpCode.BAD_REQUEST, WsErrorCode.GROUP_NOT_FOUND, 'Group not found')
+
+  return [group, existedMembership] as const
 }
 
 export async function findUniqueMessageOrThrow<

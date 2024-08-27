@@ -1,7 +1,7 @@
 import { $Enums } from '@prisma/client'
 import { z } from 'zod'
 
-import type { Locale } from '@/constants/locales.ts'
+import type { Locale } from '@/constants/locales'
 import { NUMBER_TYPES } from '@/constants/phone-number'
 
 export type Auth = {
@@ -26,6 +26,14 @@ export type WsRequestData =
   | {
       event: 'upsert-group-members'
       data: WsUpsertGroupMembersRequestData
+    }
+  | {
+      event: 'create-group-membership-request'
+      data: WsCreateGroupMembershipRequestRequestData
+    }
+  | {
+      event: 'delete-group-membership-request'
+      data: WsDeleteGroupMembershipRequestRequestData
     }
   | {
       event: 'new-text-message'
@@ -138,6 +146,18 @@ export const WsUpsertGroupMembersRequestData = z.object({
 })
 
 export type WsUpsertGroupMembersRequestData = z.infer<typeof WsUpsertGroupMembersRequestData>
+
+export const WsCreateGroupMembershipRequestRequestData = z.object({
+  groupId: z.string()
+})
+
+export type WsCreateGroupMembershipRequestRequestData = z.infer<typeof WsCreateGroupMembershipRequestRequestData>
+
+export const WsDeleteGroupMembershipRequestRequestData = z.object({
+  groupId: z.string()
+})
+
+export type WsDeleteGroupMembershipRequestRequestData = z.infer<typeof WsDeleteGroupMembershipRequestRequestData>
 
 export type WsSendMessageRequestData = {
   groupId: string

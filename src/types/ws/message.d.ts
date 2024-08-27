@@ -25,6 +25,11 @@ type WsMessagePayload =
       data: { groupId: string }
     }
   | {
+      event: 'new-group-membership-request' | 'canceled-group-membership-request'
+      orgId: string | undefined
+      data: { groupId: string }
+    }
+  | {
       event: 'deleted-group'
       orgId: string | undefined
       data: { groupId: string }

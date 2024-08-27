@@ -1,11 +1,15 @@
 import type { $Enums } from '@prisma/client'
 
 import type { Locale } from '@/constants/locales'
+import type { AccountBasicInfo } from '@/types/db'
+
+import { getMemberName } from '../get-name-display'
 
 type AccountAlias = {
   id: string
   type: $Enums.AccountAliasType
   contactValue: string
+  formatted: string | null
   deletedAt?: Date | null
   isActive?: boolean | null
   verificationStatus?: string | null
@@ -13,16 +17,14 @@ type AccountAlias = {
 
 export default function getNotificationRecipientInfoFromMembership(
   member: {
-    account?: {
-      id: string
-      username: string | null
-      fullName: string | null
-      nickname: string | null
-      locale: Locale | null
-      accountAliases: AccountAlias[]
-      deletedAt?: Date | null
-      isActive?: boolean | null
-    } | null
+    account?:
+      | (AccountBasicInfo & {
+          locale: Locale | null
+          accountAliases: AccountAlias[]
+          deletedAt?: Date | null
+          isActive?: boolean | null
+        })
+      | null
     accountAlias?: AccountAlias | null
   },
   defaultLocale: Locale | null
@@ -73,29 +75,4 @@ export default function getNotificationRecipientInfoFromMembership(
     })
 
   return toSendNoti
-}
-
-export function getMemberName({
-  account,
-  accountAlias,
-  accountPlaceholder,
-  nickname
-}: {
-  account?: {
-    username: string | null
-    fullName: string | null
-    nickname: string | null
-  } | null
-  accountAlias?: AccountAlias | null
-  accountPlaceholder?: { name: string | null } | null
-  nickname?: string | null
-}) {
-  return (
-    nickname ??
-    account?.nickname ??
-    account?.fullName ??
-    account?.username ??
-    accountAlias?.contactValue ??
-    accountPlaceholder?.name
-  )
 }

@@ -5,8 +5,10 @@ import type {
   AccountAlias,
   Group,
   GroupMembership,
+  GroupMembershipRequest,
   GroupTab,
   GroupTabSuggestedSettlement,
+  CurrencyInfo,
   CurrencyExchangeRate,
   Job,
   Message,
@@ -29,6 +31,7 @@ type model =
   | 'notification'
   | 'job'
   | 'textTemplate'
+  | 'currencyInfo'
   | 'currencyExchangeRate'
   | 'account'
   | 'accountAlias'
@@ -36,6 +39,7 @@ type model =
   | 'organizationMembership'
   | 'group'
   | 'groupMembership'
+  | 'groupMembershipRequest'
   | 'groupTab'
   | 'message'
   | 'moneyRecord'
@@ -48,7 +52,6 @@ type SoftDeleteProps<T, S> = {
   tx?: PrismaTransactionClient
   where: { id?: string } & Omit<T, 'id'>
   deletedBy: string
-  isActive?: null
   select?: S
 }
 
@@ -56,7 +59,6 @@ type SoftDeletesProps<T> = {
   tx?: PrismaTransactionClient
   where: { ids?: string[] } & T
   deletedBy: string
-  isActive?: null
 }
 
 type ExtendedModel<X, T, K, S> = {
@@ -65,20 +67,43 @@ type ExtendedModel<X, T, K, S> = {
 }
 
 const createSoftDeleteFunctions = <X, T, K, S>(modelName: model): ExtendedModel<X, T, K, S> => {
-  function softDelete({ tx, where: { id, ...where }, deletedBy, isActive, select }: SoftDeleteProps<T, S>) {
+  function softDelete({ tx, where: { id, ...where }, deletedBy, select }: SoftDeleteProps<T, S>) {
     const updateData = {
       where: { id, ...where },
-      data: { deletedAt: new Date(), deletedBy, isActive },
+      data: { deletedAt: new Date(), deletedBy },
       select
     }
 
     return ((tx ?? db)[modelName].update as any)(updateData) as PrismaPromise<X>
   }
 
-  function softDeletes({ tx, where: { ids, ...where }, deletedBy, isActive }: SoftDeletesProps<K>) {
+  function softDeletes({ tx, where: { ids, ...where }, deletedBy }: SoftDeletesProps<K>) {
     const updateData = {
       where: { id: ids && { in: ids }, ...where },
-      data: { deletedAt: new Date(), deletedBy, isActive }
+      data: { deletedAt: new Date(), deletedBy }
+    }
+
+    return ((tx ?? db)[modelName].updateMany as any)(updateData) as PrismaPromise<GetBatchResult>
+  }
+
+  return { softDelete, softDeletes }
+}
+
+const createSoftDeleteFunctions2 = <X, T, K, S>(modelName: model): ExtendedModel<X, T, K, S> => {
+  function softDelete({ tx, where: { id, ...where }, deletedBy, select }: SoftDeleteProps<T, S>) {
+    const updateData = {
+      where: { id, ...where },
+      data: { deletedAt: new Date(), deletedBy, isActive: null },
+      select
+    }
+
+    return ((tx ?? db)[modelName].update as any)(updateData) as PrismaPromise<X>
+  }
+
+  function softDeletes({ tx, where: { ids, ...where }, deletedBy }: SoftDeletesProps<K>) {
+    const updateData = {
+      where: { id: ids && { in: ids }, ...where },
+      data: { deletedAt: new Date(), deletedBy, isActive: null }
     }
 
     return ((tx ?? db)[modelName].updateMany as any)(updateData) as PrismaPromise<GetBatchResult>
@@ -102,20 +127,26 @@ export const extendedModels = {
     Prisma.TextTemplateSelect
   >('textTemplate'),
 
-  currencyExchangeRate: createSoftDeleteFunctions<
+  currencyInfo: createSoftDeleteFunctions<
+    CurrencyInfo,
+    Prisma.CurrencyInfoWhereUniqueInput,
+    Prisma.CurrencyInfoWhereInput,
+    Prisma.CurrencyInfoSelect
+  >('currencyInfo'),
+  currencyExchangeRate: createSoftDeleteFunctions2<
     CurrencyExchangeRate,
     Prisma.CurrencyExchangeRateWhereUniqueInput,
     Prisma.CurrencyExchangeRateWhereInput,
     Prisma.CurrencyExchangeRateSelect
   >('currencyExchangeRate'),
 
-  account: createSoftDeleteFunctions<
+  account: createSoftDeleteFunctions2<
     Account,
     Prisma.AccountWhereUniqueInput,
     Prisma.AccountWhereInput,
     Prisma.AccountSelect
   >('account'),
-  accountAlias: createSoftDeleteFunctions<
+  accountAlias: createSoftDeleteFunctions2<
     AccountAlias,
     Prisma.AccountAliasWhereUniqueInput,
     Prisma.AccountAliasWhereInput,
@@ -127,7 +158,7 @@ export const extendedModels = {
     Prisma.OrganizationWhereInput,
     Prisma.OrganizationSelect
   >('organization'),
-  organizationMembership: createSoftDeleteFunctions<
+  organizationMembership: createSoftDeleteFunctions2<
     OrganizationMembership,
     Prisma.OrganizationMembershipWhereUniqueInput,
     Prisma.OrganizationMembershipWhereInput,
@@ -136,12 +167,18 @@ export const extendedModels = {
   group: createSoftDeleteFunctions<Group, Prisma.GroupWhereUniqueInput, Prisma.GroupWhereInput, Prisma.GroupSelect>(
     'group'
   ),
-  groupMembership: createSoftDeleteFunctions<
+  groupMembership: createSoftDeleteFunctions2<
     GroupMembership,
     Prisma.GroupMembershipWhereUniqueInput,
     Prisma.GroupMembershipWhereInput,
     Prisma.GroupMembershipSelect
   >('groupMembership'),
+  groupMembershipRequest: createSoftDeleteFunctions2<
+    GroupMembershipRequest,
+    Prisma.GroupMembershipRequestWhereUniqueInput,
+    Prisma.GroupMembershipRequestWhereInput,
+    Prisma.GroupMembershipRequestSelect
+  >('groupMembershipRequest'),
   groupTab: createSoftDeleteFunctions<
     GroupTab,
     Prisma.GroupTabWhereUniqueInput,
@@ -160,13 +197,13 @@ export const extendedModels = {
     Prisma.MoneyRecordWhereInput,
     Prisma.MoneyRecordSelect
   >('moneyRecord'),
-  moneyRecordPartaker: createSoftDeleteFunctions<
+  moneyRecordPartaker: createSoftDeleteFunctions2<
     MoneyRecordPartaker,
     Prisma.MoneyRecordPartakerWhereUniqueInput,
     Prisma.MoneyRecordPartakerWhereInput,
     Prisma.MoneyRecordPartakerSelect
   >('moneyRecordPartaker'),
-  groupTabSuggestedSettlement: createSoftDeleteFunctions<
+  groupTabSuggestedSettlement: createSoftDeleteFunctions2<
     GroupTabSuggestedSettlement,
     Prisma.GroupTabSuggestedSettlementWhereUniqueInput,
     Prisma.GroupTabSuggestedSettlementWhereInput,

@@ -28,9 +28,9 @@ export default async function notifyDeletedGroup(
       type: $Enums.TextTemplateType.textContent,
       key: {
         in: [
-          TextTemplateKey.DELETED_CONVO_EMAIL_TITLE,
-          TextTemplateKey.DELETED_CONVO_EMAIL_CONTENT,
-          TextTemplateKey.DELETED_CONVO_SMS_CONTENT
+          TextTemplateKey.DELETED_GROUP__EMAIL_TITLE,
+          TextTemplateKey.DELETED_GROUP__EMAIL_CONTENT,
+          TextTemplateKey.DELETED_GROUP__SMS_CONTENT
         ]
       }
     }
@@ -40,16 +40,16 @@ export default async function notifyDeletedGroup(
     await queueSendEmails(
       tx,
       toEmailAddresses.map(({ channel, name, locale, address, ...it }) => ({
-        category: 'conv-deleted',
+        category: 'group-deleted',
         from: NOTIFIER_SENDER_NAME,
         to: [{ ...it, emailAddress: address }],
         subject: contentTemplates.find(
-          (it) => it.key === TextTemplateKey.DELETED_CONVO_EMAIL_TITLE && it.locale === (locale ?? DEFAULT_LOCALE)
+          (it) => it.key === TextTemplateKey.DELETED_GROUP__EMAIL_TITLE && it.locale === (locale ?? DEFAULT_LOCALE)
         )!.content,
         text: '',
         html: contentTemplates
           .find(
-            (it) => it.key === TextTemplateKey.DELETED_CONVO_EMAIL_CONTENT && it.locale === (locale ?? DEFAULT_LOCALE)
+            (it) => it.key === TextTemplateKey.DELETED_GROUP__EMAIL_CONTENT && it.locale === (locale ?? DEFAULT_LOCALE)
           )!
           .content.replace('{{member_name}}', name ? ` <b>${name}</b>` : '')
           .replace('{{group_name}}', `<b>${group.name || '<i>[no name]</i>'}</b>`)
@@ -59,11 +59,11 @@ export default async function notifyDeletedGroup(
     await queueSendSms(
       tx,
       toPhoneNumbers.map(({ channel, name, locale, address, ...it }) => ({
-        category: 'conv-deleted',
+        category: 'group-deleted',
         to: [{ ...it, phoneNumber: address }],
         text: contentTemplates
           .find(
-            (it) => it.key === TextTemplateKey.DELETED_CONVO_SMS_CONTENT && it.locale === (locale ?? DEFAULT_LOCALE)
+            (it) => it.key === TextTemplateKey.DELETED_GROUP__SMS_CONTENT && it.locale === (locale ?? DEFAULT_LOCALE)
           )!
           .content.replace('{{member_name}}', name ? ` ${name}` : '')
           .replace('{{group_name}}', group.name || '[no name]')

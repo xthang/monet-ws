@@ -4,7 +4,7 @@ import { type WebSocketServer, WebSocket } from 'ws'
 import { ActivityLogType } from '@/constants/data'
 import type { Locale } from '@/constants/locales'
 import db from '@/db'
-import { WsError, WsErrorCode } from '@/types/error'
+import { WsError, WsErrorCode, WsHttpCode } from '@/types/error'
 import type { WsMessageFullPayload } from '@/types/ws/message'
 import { WsUpsertGroupMembersRequestData } from '@/types/ws/request'
 import type { WsResponseFullPayload, WsUpsertGroupMembersReceipt } from '@/types/ws/response'
@@ -19,7 +19,7 @@ import { parsePhoneNo } from '@/utils/phone-number'
 import { broadcastToGroupMembersExceptMe } from '@/utils/ws/broadcast-to-group-members-except-me'
 import { transformError } from '@/utils/ws/transform-error'
 
-export default async function handleUpsertGroupMember(
+export default async function handleUpsertGroupMembers(
   wss: WebSocketServer,
   ws: WebSocket,
   requestId: string,
@@ -65,7 +65,7 @@ export default async function handleUpsertGroupMember(
 
     if (members.updates?.some((it) => it.role !== undefined)) {
       if (hasAdmin && membership.role !== $Enums.GroupMemberRole.admin) {
-        throw new WsError(WsErrorCode.FORBIDDEN, 'Forbidden')
+        throw new WsError(WsHttpCode.FORBIDDEN, WsErrorCode.NOT_ALLOWED, 'Forbidden')
       }
 
       members.updates.forEach(({ id, role }) => {
@@ -78,12 +78,12 @@ export default async function handleUpsertGroupMember(
         const isMe = id === membership.id || mAccountId === accountId || mAccountOrPlaceholderId === accountId
 
         if (role && mAccountPlaceholderId)
-          throw new WsError(WsErrorCode.BAD_REQUEST, 'Can not set role for an account placeholder')
+          throw new WsError(WsHttpCode.BAD_REQUEST, null, 'Can not set role for an account placeholder')
 
-        if (role && role === mRole) throw new WsError(WsErrorCode.BAD_REQUEST, 'Member role is already ' + role)
+        if (role && role === mRole) throw new WsError(WsHttpCode.BAD_REQUEST, null, 'Member role is already ' + role)
 
         if (isMe && iAmTheOnlyAdmin && role === null)
-          throw new WsError(WsErrorCode.BAD_REQUEST, 'You are currently the only admin')
+          throw new WsError(WsHttpCode.BAD_REQUEST, null, 'You are currently the only admin')
       })
     }
 
@@ -91,14 +91,22 @@ export default async function handleUpsertGroupMember(
       const { accountId: mAccountId, accountOrPlaceholderId: mAccountOrPlaceholderId, role: mRole } = memberDict[id]
       const isMe = id === membership.id || mAccountId === accountId || mAccountOrPlaceholderId === accountId
 
-      if (isMe && iAmTheOnlyAdmin) throw new WsError(WsErrorCode.BAD_REQUEST, 'You are currently the only admin')
+      if (isMe && iAmTheOnlyAdmin) throw new WsError(WsHttpCode.BAD_REQUEST, null, 'You are currently the only admin')
 
       if (!isMe) {
         if (mRole === $Enums.GroupMemberRole.admin && membership.role !== $Enums.GroupMemberRole.admin)
-          throw new WsError(WsErrorCode.FORBIDDEN, 'You do not have permission to remove the group Admin')
+          throw new WsError(
+            WsHttpCode.FORBIDDEN,
+            WsErrorCode.NOT_ALLOWED,
+            'You do not have permission to remove the group Admin'
+          )
 
         if (mRole === $Enums.GroupMemberRole.mod && !membership.role)
-          throw new WsError(WsErrorCode.FORBIDDEN, 'You do not have permission to remove the group Moderator')
+          throw new WsError(
+            WsHttpCode.FORBIDDEN,
+            WsErrorCode.NOT_ALLOWED,
+            'You do not have permission to remove the group Moderator'
+          )
       }
     })
 
@@ -159,9 +167,9 @@ export default async function handleUpsertGroupMember(
 
             // validate
             if (type === 'email-addr' && !validateEmailAddr(value))
-              throw new WsError(WsErrorCode.BAD_REQUEST, 'invalid email address')
+              throw new WsError(WsHttpCode.BAD_REQUEST, null, 'invalid email address')
             else if (type === 'phone-no' && !parsePhoneNo(value.number))
-              throw new WsError(WsErrorCode.BAD_REQUEST, 'invalid phone number')
+              throw new WsError(WsHttpCode.BAD_REQUEST, null, 'invalid phone number')
 
             const alias = await tx.accountAlias.upsert({
               where: {
@@ -304,8 +312,7 @@ export default async function handleUpsertGroupMember(
         deleteds = await tx.groupMembership.softDeletes({
           tx,
           where: { groupId, ids: deletes.map((it) => it.id) },
-          deletedBy: accountId,
-          isActive: null
+          deletedBy: accountId
         })
 
         for (const { account, ...deleteMembership } of deleteMemberships) {
@@ -332,7 +339,7 @@ export default async function handleUpsertGroupMember(
         select: { role: true, account: { where: { deletedAt: null, isActive: true } } }
       })
       if (!updatedMembers.find((m) => m.account && m.role === $Enums.GroupMemberRole.admin)) {
-        throw new WsError(WsErrorCode.BAD_REQUEST, 'No admin member found after updating')
+        throw new WsError(WsHttpCode.BAD_REQUEST, null, 'No admin member found after updating')
       }
 
       const membersResult = { createds, updateds, deleteds }

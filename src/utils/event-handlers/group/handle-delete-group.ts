@@ -3,7 +3,7 @@ import { type WebSocketServer, WebSocket } from 'ws'
 
 import type { Locale } from '@/constants/locales'
 import db from '@/db'
-import { WsError, WsErrorCode } from '@/types/error'
+import { WsError, WsErrorCode, WsHttpCode } from '@/types/error'
 import { WsDeleteGroupRequestData } from '@/types/ws/request'
 import { WsResponseFullPayload, WsDeleteGroupReceipt } from '@/types/ws/response'
 import { findUniqueGroupMembershipOrThrow } from '@/utils/db/queries'
@@ -29,7 +29,8 @@ export default async function handleDeleteGroup(
   try {
     // Check member permission
     const membership = await findUniqueGroupMembershipOrThrow(db, groupId, accountId, orgId)
-    if (membership.role !== $Enums.GroupMemberRole.admin) throw new WsError(WsErrorCode.FORBIDDEN, 'Forbidden')
+    if (membership.role !== $Enums.GroupMemberRole.admin)
+      throw new WsError(WsHttpCode.FORBIDDEN, WsErrorCode.NOT_ALLOWED, 'Forbidden')
 
     return db.$transaction(async (tx) => {
       const memberships = await tx.groupMembership.findMany({
