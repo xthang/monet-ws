@@ -83,7 +83,10 @@ export default async function handleSettleUpPayable(
 
           createdBy: accountId
         },
-        select: MONEY_RECORD_SELECT
+        select: {
+          ...MONEY_RECORD_SELECT,
+          expenseDocuments: { where: { deletedBy: null, deletedAt: null }, select: { id: true, fileName: true } }
+        }
       })
 
       await tx.message.update({ where: { id: message.id }, data: { moneyRecordId: moneyRecord.id } })

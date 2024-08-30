@@ -22,6 +22,7 @@ type Model =
   | 'Message'
   | 'MoneyRecord'
   | 'MoneyRecordPartaker'
+  | 'ExpenseDocument'
   | 'GroupTabSuggestedSettlement'
   | 'Order'
   | 'PaymentTransaction'
@@ -41,6 +42,7 @@ type model =
   | 'message'
   | 'moneyRecord'
   | 'moneyRecordPartaker'
+  | 'expenseDocument'
   | 'groupTabSuggestedSettlement'
   | 'order'
   | 'paymentTransaction'
@@ -134,6 +136,7 @@ export const extendedQueries: DynamicQueryExtensionArgs<
   message: extendedQueryFunction as ExtendedQueryFunction<'Message'>,
   moneyRecord: extendedQueryFunction as ExtendedQueryFunction<'MoneyRecord'>,
   moneyRecordPartaker: extendedQueryFunction2 as ExtendedQueryFunction<'MoneyRecordPartaker'>,
+  expenseDocument: extendedQueryFunction as ExtendedQueryFunction<'ExpenseDocument'>,
   groupTabSuggestedSettlement: extendedQueryFunction2 as ExtendedQueryFunction<'GroupTabSuggestedSettlement'>,
   order: extendedQueryFunction as ExtendedQueryFunction<'Order'>,
   paymentTransaction: extendedQueryFunction as ExtendedQueryFunction<'PaymentTransaction'>

@@ -209,6 +209,7 @@ model Config {
 model Job {
   // Functional Fields
   id                 String         @id @default(cuid()) @db.VarChar(25)
+  no                 Int            @default(autoincrement())
   accountId          String?        @db.VarChar(50)
   orgId              String?        @db.VarChar(50)
   type               JobType
@@ -240,6 +241,8 @@ model Job {
   startedAt   DateTime? @db.Timestamptz(3)
   finishedAt  DateTime? @db.Timestamptz(3)
   processTime Float? // @db.Float
+
+  @@unique([no])
 }
 
 enum JobType {
@@ -321,6 +324,7 @@ enum NotificationTemplateStatus {
 model Notification {
   // Functional Fields
   id              String             @id @default(cuid()) @db.VarChar(25)
+  no              Int                @default(autoincrement())
   accountId       String?            @db.VarChar(50)
   orgId           String?            @db.VarChar(50)
   type            NotificationType // provisional
@@ -350,6 +354,8 @@ model Notification {
   readAt          DateTime? @db.Timestamptz(3)
   markedAsReadAt  DateTime? @db.Timestamptz(3)
   contentViewedAt DateTime? @db.Timestamptz(3)
+
+  @@unique([no])
 }
 
 enum NotificationType {
@@ -433,6 +439,7 @@ model CurrencyInfo {
 
 model CurrencyExchangeRate {
   id String @id @default(cuid()) @db.VarChar(25)
+  no Int    @default(autoincrement())
 
   // Functional Fields
   isDefault Boolean?
@@ -454,6 +461,7 @@ model CurrencyExchangeRate {
 
   group Group? @relation(fields: [groupId], references: [id], onDelete: Restrict)
 
+  @@unique([no])
   @@unique([isDefault, base, to, isActive])
   @@unique([groupId, base, to, isActive])
   @@index([isDefault, isActive])
@@ -465,6 +473,7 @@ model CurrencyExchangeRate {
 model Account {
   // Functional Fields
   id            String @id @default(cuid()) @db.VarChar(50)
+  no            Int    @default(autoincrement())
   authAccountId String @db.VarChar(50) // Clerk userId
 
   // Info
@@ -546,9 +555,12 @@ model Account {
   messages                 Message[]                @relation(name: "Message_sentByAccount")
   deletedMessages          Message[]                @relation(name: "Message_deletedByAccount")
   deletedMoneyRecords      MoneyRecord[]            @relation(name: "MoneyRecord_deletedByAccount")
+  createdExpenseDocuments  ExpenseDocument[]        @relation("ExpenseDocument_createdByAccount")
+  uploadedExpenseDocuments ExpenseDocument[]        @relation("ExpenseDocument_uploadedByAccount")
   orders                   Order[]
   subscriptionPaymentTrans PaymentTransaction?      @relation(fields: [subscriptionPaymentTransId], references: [id])
 
+  @@unique([no])
   @@unique([authAccountId])
   @@unique([username, isActive])
   @@unique([subscriptionPaymentTransId])
@@ -577,6 +589,7 @@ enum SubscriptionPlan {
 model AccountAlias {
   // Functional Fields
   id                 String           @id @default(cuid()) @db.VarChar(25)
+  no                 Int              @default(autoincrement())
   accountId          String?          @db.VarChar(50)
   type               AccountAliasType
   rawValue           String           @db.VarChar(350)
@@ -610,6 +623,7 @@ model AccountAlias {
   accountPartnerAliases AccountPartnerAlias[]
   groupMemberships      GroupMembership[]
 
+  @@unique([no])
   // @@unique([type, contactValue, (CASE WHEN "deletedAt" IS NULL THEN true ELSE NULL END)])
   @@unique([type, contactValue, isActive])
 }
@@ -624,6 +638,7 @@ enum AccountAliasType {
 model AccountPartnerAlias {
   // Functional Fields
   id                    String  @id @default(cuid()) @db.VarChar(50)
+  no                    Int     @default(autoincrement())
   accountAliasId        String  @db.VarChar(50)
   partnerId             Partner
   partnerAppId          String? @db.VarChar(50)
@@ -647,6 +662,7 @@ model AccountPartnerAlias {
 
   accountAlias AccountAlias @relation(fields: [accountAliasId], references: [id])
 
+  @@unique([no])
   // @@unique([accountAliasId, partnerId, (CASE WHEN "deletedAt" IS NULL THEN true ELSE NULL END)])
   @@unique([accountAliasId, partnerId, partnerAccountAliasId, isActive])
 }
@@ -667,6 +683,7 @@ enum Partner {
 model AccountPlaceholder {
   // Functional Fields
   id   String @id @default(cuid()) @db.VarChar(25)
+  no   Int    @default(autoincrement())
   name String @db.Text
 
   // Technical Fields
@@ -679,11 +696,14 @@ model AccountPlaceholder {
 
   // Foreign Key Relations
   groupMemberships GroupMembership[]
+
+  @@unique([no])
 }
 
 model Organization {
   // Functional Fields
   id String @id @db.VarChar(50)
+  no Int    @default(autoincrement())
 
   // Clerk
   name     String  @db.VarChar(100)
@@ -713,11 +733,14 @@ model Organization {
 
   // Foreign Key Relations
   memberships OrganizationMembership[]
+
+  @@unique([no])
 }
 
 model OrganizationMembership {
   // Functional Fields
   id String @id @default(cuid()) @db.VarChar(50)
+  no Int    @default(autoincrement())
 
   // Clerk
   orgId     String                     @db.VarChar(50)
@@ -745,6 +768,7 @@ model OrganizationMembership {
   organization Organization @relation(fields: [orgId], references: [id])
   account      Account      @relation(fields: [accountId], references: [id])
 
+  @@unique([no])
   @@unique([orgId, accountId, isActive])
   @@index([orgId])
   @@index([accountId])
@@ -760,6 +784,7 @@ enum OrganizationMembershipRole {
 model Group {
   // Functional Fields
   id           String           @id @default(cuid()) @db.VarChar(25)
+  no           Int              @default(autoincrement())
   type         GroupType
   orgId        String?          @db.VarChar(50)
   name         String?          @db.Text /// @encrypted
@@ -797,6 +822,7 @@ model Group {
   lastMessage           Message?                 @relation("lastMessage", fields: [lastMessageId], references: [id])
   tabs                  GroupTab[]
 
+  @@unique([no])
   @@unique([lastMessageId])
 }
 
@@ -814,6 +840,7 @@ enum GroupVisibility {
 model GroupMembership {
   // Functional Fields
   id                     String           @id @default(cuid()) @db.VarChar(25)
+  no                     Int              @default(autoincrement())
   groupId                String           @db.VarChar(50)
   accountId              String?          @db.VarChar(50)
   accountAliasId         String?          @db.VarChar(50)
@@ -847,6 +874,7 @@ model GroupMembership {
   groupTabSettlements_Payor GroupTabSuggestedSettlement[] @relation(name: "GroupTabSuggestedSettlement_payorMember")
   groupTabSettlements_Payee GroupTabSuggestedSettlement[] @relation(name: "GroupTabSuggestedSettlement_payeeMember")
 
+  @@unique([no])
   @@unique([groupId, accountId, isActive])
   @@unique([groupId, accountAliasId, isActive])
   @@unique([groupId, accountPlaceholderId, isActive])
@@ -864,6 +892,7 @@ enum GroupMemberRole {
 model GroupMembershipRequest {
   // Functional Fields
   id        String @id @default(cuid()) @db.VarChar(25)
+  no        Int    @default(autoincrement())
   groupId   String @db.VarChar(50)
   accountId String @db.VarChar(50)
 
@@ -884,6 +913,7 @@ model GroupMembershipRequest {
   group   Group   @relation(fields: [groupId], references: [id])
   account Account @relation(fields: [accountId], references: [id])
 
+  @@unique([no])
   @@unique([groupId, accountId, isActive])
 }
 
@@ -914,6 +944,7 @@ enum ActivityLogObjectType {
 model GroupTab {
   // Functional Fields
   id      String  @id @default(cuid()) @db.VarChar(25)
+  no      Int     @default(autoincrement())
   groupId String  @db.VarChar(50)
   title   String  @db.Text
   color   String? @db.VarChar(20)
@@ -933,12 +964,14 @@ model GroupTab {
   messages    Message[]
   settlements GroupTabSuggestedSettlement[]
 
+  @@unique([no])
   @@index([groupId])
 }
 
 model Message {
   // Functional Fields
   id      String  @id @default(cuid()) @db.VarChar(25)
+  no      Int     @default(autoincrement())
   uiId    String? @db.VarChar(50)
   groupId String  @db.VarChar(50)
   tabId   String  @db.VarChar(50)
@@ -965,11 +998,14 @@ model Message {
   sentByAccount     Account      @relation("Message_sentByAccount", fields: [sentBy], references: [id])
   deletedByAccount  Account?     @relation("Message_deletedByAccount", fields: [deletedBy], references: [id])
   group_lastMessage Group?       @relation("lastMessage")
+
+  @@unique([no])
 }
 
 model MoneyRecord {
   // Functional Fields
   id                String             @id @default(cuid()) @db.VarChar(25)
+  no                Int                @default(autoincrement())
   groupId           String             @db.VarChar(50)
   tabId             String             @db.VarChar(50)
   messageId         String             @db.VarChar(50)
@@ -1002,8 +1038,10 @@ model MoneyRecord {
   message          Message               @relation(fields: [messageId], references: [id])
   payerMember      GroupMembership       @relation(fields: [payerMemberId], references: [id])
   partakers        MoneyRecordPartaker[]
+  expenseDocuments ExpenseDocument[]
   deletedByAccount Account?              @relation("MoneyRecord_deletedByAccount", fields: [deletedBy], references: [id])
 
+  @@unique([no])
   @@unique([messageId])
   @@unique([groupId, messageId])
 }
@@ -1019,6 +1057,7 @@ enum MoneyRecordStatus {
 model MoneyRecordPartaker {
   // Functional Fields
   id            String   @id @default(cuid()) @db.VarChar(25)
+  no            Int      @default(autoincrement())
   moneyRecordId String   @db.VarChar(50)
   memberId      String   @db.VarChar(50)
   proportion    Decimal?
@@ -1038,14 +1077,52 @@ model MoneyRecordPartaker {
   moneyRecord MoneyRecord     @relation(fields: [moneyRecordId], references: [id])
   member      GroupMembership @relation(fields: [memberId], references: [id])
 
+  @@unique([no])
   @@unique([moneyRecordId, memberId, isActive])
   @@index([moneyRecordId, isActive])
   @@index([memberId, isActive])
 }
 
+model ExpenseDocument {
+  // Functional Fields
+  id            String @id @default(cuid()) @db.VarChar(25)
+  no            Int    @default(autoincrement())
+  uiId          String @db.VarChar(50)
+  groupId       String @db.VarChar(50)
+  tabId         String @db.VarChar(50)
+  moneyRecordId String @db.VarChar(50)
+
+  uploadRequestId   String @db.VarChar(50)
+  fileName          String @db.VarChar(512)
+  mimeType          String @db.VarChar(50)
+  size              Int
+  storageVersion    Int
+  storageNamePrefix String @db.VarChar(512)
+
+  order Int
+
+  // Technical Fields
+  createdAt  DateTime  @default(now()) @db.Timestamptz(3)
+  createdBy  String    @db.VarChar(50)
+  updatedAt  DateTime? @updatedAt @db.Timestamptz(3)
+  updatedBy  String?   @db.VarChar(50)
+  deletedAt  DateTime? @db.Timestamptz(3)
+  deletedBy  String?   @db.VarChar(50)
+  uploadedAt DateTime? @db.Timestamptz(3)
+  uploadedBy String?   @db.VarChar(50)
+
+  moneyRecord       MoneyRecord @relation(fields: [moneyRecordId], references: [id])
+  createdByAccount  Account     @relation("ExpenseDocument_createdByAccount", fields: [createdBy], references: [id])
+  uploadedByAccount Account?    @relation("ExpenseDocument_uploadedByAccount", fields: [uploadedBy], references: [id])
+
+  @@unique([no])
+  @@index([groupId, tabId, moneyRecordId])
+}
+
 model GroupTabSuggestedSettlement {
   // Functional Fields
   id            String  @id @default(cuid()) @db.VarChar(25)
+  no            Int     @default(autoincrement())
   groupId       String  @db.VarChar(50)
   tabId         String  @db.VarChar(50)
   payorMemberId String  @db.VarChar(50)
@@ -1067,10 +1144,13 @@ model GroupTabSuggestedSettlement {
   groupTab    GroupTab        @relation(fields: [tabId], references: [id])
   payorMember GroupMembership @relation(fields: [payorMemberId], references: [id], name: "GroupTabSuggestedSettlement_payorMember")
   payeeMember GroupMembership @relation(fields: [payeeMemberId], references: [id], name: "GroupTabSuggestedSettlement_payeeMember")
+
+  @@unique([no])
 }
 
 model Order {
   id           String  @id @default(cuid()) @db.VarChar(25)
+  no           Int     @default(autoincrement())
   accountId    String  @db.VarChar(50)
   currencyCode String  @db.VarChar(5)
   amount       Decimal
@@ -1092,6 +1172,7 @@ model Order {
   // items OrderItem[]
   paymentTransactions PaymentTransaction[]
 
+  @@unique([no])
   @@unique([paymentProvider, paymentRequestId])
   @@index([paymentProvider])
 }
@@ -1106,6 +1187,7 @@ enum PaymentProvider {
 
 model PaymentTransaction {
   id      String @id @default(cuid()) @db.VarChar(25)
+  no      Int    @default(autoincrement())
   orderId String @db.VarChar(50)
 
   paymentProvider             PaymentProvider
@@ -1128,6 +1210,7 @@ model PaymentTransaction {
   subscriptionAccount Account?
   order               Order    @relation(fields: [orderId], references: [id])
 
+  @@unique([no])
   @@unique([paymentProvider, paymentTransactionId])
   @@index([paymentProvider])
 }

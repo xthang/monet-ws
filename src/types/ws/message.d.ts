@@ -7,12 +7,12 @@ type WsMessageFullPayload = WsMessagePayload & {}
 
 type WsMessagePayload =
   | {
-      event: 'notification'
-      data: WsNotification
-    }
-  | {
       event: 'error'
       data: { code: string; message: string; details?: any }
+    }
+  | {
+      event: 'notification'
+      data: WsNotification
     }
   | {
       event: 'updated-group'
@@ -60,6 +60,11 @@ type WsMessagePayload =
       data: WsChatMessage
     }
   | {
+      event: 'money-record--expense-docs--upserted'
+      orgId: string | undefined
+      data: RequiredProps<WsChatMessage, 'moneyRecord'>
+    }
+  | {
       event: 'new-payable-settlement'
       orgId: string | undefined
       data: RequiredProps<WsChatMessage, 'moneyRecord'>
@@ -67,14 +72,14 @@ type WsMessagePayload =
 
 type WsNotification = any
 
-type WsGroup = RequiredNonNullableProps<Group, 'visibility'>
+type WsGroup = RequiredNonNullableProps<Omit<Group, 'no'>, 'visibility'>
 
-type WsChatMessage = Omit<Message, 'uiId'> & {
+type WsChatMessage = Omit<Message, 'no' | 'uiId'> & {
   moneyRecord?: WsMoneyRecord | null
   deletedByAccount?: AccountBasicInfo | null
 }
 
-type WsMoneyRecord = Omit<MoneyRecord, 'amount' | 'rate' | 'amountPerPartaker'> & {
+type WsMoneyRecord = Omit<MoneyRecord, 'no' | 'amount' | 'rate' | 'amountPerPartaker'> & {
   amount: number | null
   rate: number | null
   amountPerPartaker: number | null
@@ -85,4 +90,5 @@ type WsMoneyRecord = Omit<MoneyRecord, 'amount' | 'rate' | 'amountPerPartaker'> 
       proportion: number | null
     }
   }
+  expenseDocuments: Pick<ExpenseDocument, 'id' | 'fileName'>[]
 }

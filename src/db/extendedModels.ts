@@ -1,25 +1,26 @@
 import type {
   Prisma,
   PrismaPromise,
+  Job,
+  TextTemplate,
   Account,
   AccountAlias,
+  Organization,
+  OrganizationMembership,
+  Notification,
+  CurrencyInfo,
+  CurrencyExchangeRate,
   Group,
   GroupMembership,
   GroupMembershipRequest,
   GroupTab,
   GroupTabSuggestedSettlement,
-  CurrencyInfo,
-  CurrencyExchangeRate,
-  Job,
   Message,
   MoneyRecord,
   MoneyRecordPartaker,
-  Notification,
+  ExpenseDocument,
   Order,
-  Organization,
-  OrganizationMembership,
-  PaymentTransaction,
-  TextTemplate
+  PaymentTransaction
 } from '@prisma/client'
 import type { GetBatchResult } from '@prisma/client/runtime/library'
 
@@ -44,6 +45,7 @@ type model =
   | 'message'
   | 'moneyRecord'
   | 'moneyRecordPartaker'
+  | 'expenseDocument'
   | 'groupTabSuggestedSettlement'
   | 'order'
   | 'paymentTransaction'
@@ -203,6 +205,12 @@ export const extendedModels = {
     Prisma.MoneyRecordPartakerWhereInput,
     Prisma.MoneyRecordPartakerSelect
   >('moneyRecordPartaker'),
+  expenseDocument: createSoftDeleteFunctions<
+    ExpenseDocument,
+    Prisma.ExpenseDocumentWhereUniqueInput,
+    Prisma.ExpenseDocumentWhereInput,
+    Prisma.ExpenseDocumentSelect
+  >('expenseDocument'),
   groupTabSuggestedSettlement: createSoftDeleteFunctions2<
     GroupTabSuggestedSettlement,
     Prisma.GroupTabSuggestedSettlementWhereUniqueInput,

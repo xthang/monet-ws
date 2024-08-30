@@ -53,7 +53,10 @@ export default async function handleCreateMoneyRecord(
           messageId: createdMsg_.id,
           createdBy: accountId
         },
-        select: MONEY_RECORD_SELECT
+        select: {
+          ...MONEY_RECORD_SELECT,
+          expenseDocuments: { where: { deletedBy: null, deletedAt: null }, select: { id: true, fileName: true } }
+        }
       })
 
       const { uiId: createdUiId, ...createdMsg } = await tx.message.update({

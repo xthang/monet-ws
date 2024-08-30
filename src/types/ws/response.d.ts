@@ -107,6 +107,16 @@ type WsDeleteMessageReceipt = {
   error?: WsErrorData
 }
 
+type Ws_MoneyRecord_ExpenseDocuments_Upsert_Receipt = {
+  group_id: string
+  tab_id: string
+  message_id: string
+  money_record_id: string
+  message?: WsChatMessage
+  sent_to?: string[]
+  error?: WsErrorData
+}
+
 type WsSettleUpPayableReceipt = {
   group_id: string
   tab_id: string

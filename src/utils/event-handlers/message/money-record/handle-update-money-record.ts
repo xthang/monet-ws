@@ -40,7 +40,10 @@ export default async function handleUpdateMoneyRecord(
       const updatedMoneyRecord = await tx.moneyRecord.update({
         where: { id: data.id, groupId, tabId, messageId: data.messageId },
         data: { ...data, updatedBy: accountId },
-        select: MONEY_RECORD_SELECT
+        select: {
+          ...MONEY_RECORD_SELECT,
+          expenseDocuments: { where: { deletedBy: null, deletedAt: null }, select: { id: true, fileName: true } }
+        }
       })
 
       await tx.groupTab.update({ where: { id: tabId }, data: { lastActivityAt: new Date() } })

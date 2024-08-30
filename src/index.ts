@@ -21,6 +21,7 @@ import handleUpsertMoneyRecordPartakers from './utils/event-handlers/message/mon
 import handleCreateMoneyRecord from './utils/event-handlers/message/money-record/handle-new-money-record'
 import handleSettleUpPayable from './utils/event-handlers/message/money-record/handle-settle-up-payable'
 import handleUpdateMoneyRecord from './utils/event-handlers/message/money-record/handle-update-money-record'
+import handleUpsertExpenseDocuments from './utils/event-handlers/message/money-record/handle-upsert-expense-documents'
 import { transformError } from './utils/ws/transform-error'
 
 import './utils/polyfills/console'
@@ -164,6 +165,9 @@ async function main() {
                 break
               case 'delete-message':
                 await handleDeleteMessage(wss, this, requestId, locale, data)
+                break
+              case 'money-record--expense-documents-upsert':
+                await handleUpsertExpenseDocuments(wss, this, requestId, locale, data)
                 break
               case 'settle-up-payable':
                 await handleSettleUpPayable(wss, this, requestId, locale, data)

@@ -64,6 +64,10 @@ export type WsRequestData =
       data: WsDeleteMessageRequestData
     }
   | {
+      event: 'money-record--expense-documents-upsert'
+      data: Ws_MoneyRecord_ExpenseDocuments_Upsert_RequestData
+    }
+  | {
       event: 'settle-up-payable'
       data: WsSettleUpPayableRequestData
     }
@@ -252,6 +256,41 @@ export const WsDeleteMessageRequestData = z.object({
 })
 
 export type WsDeleteMessageRequestData = z.infer<typeof WsDeleteMessageRequestData>
+
+export const Ws_MoneyRecord_ExpenseDocuments_Upsert_RequestData = z.object({
+  groupId: z.string(),
+  tabId: z.string(),
+  messageId: z.string(),
+  moneyRecordId: z.string(),
+  data: z.object({
+    create: z
+      .array(
+        z.object({
+          uiId: z.string(),
+          uploadRequestId: z.string(),
+          fileName: z.string(),
+          mimeType: z.string(),
+          size: z.number(),
+          storageNamePrefix: z.string(),
+          order: z.number()
+        })
+      )
+      .optional(),
+    update: z
+      .array(
+        z.object({
+          id: z.string(),
+          order: z.number()
+        })
+      )
+      .optional(),
+    delete: z.array(z.string()).optional()
+  })
+})
+
+export type Ws_MoneyRecord_ExpenseDocuments_Upsert_RequestData = z.infer<
+  typeof Ws_MoneyRecord_ExpenseDocuments_Upsert_RequestData
+>
 
 export const WsSettleUpPayableRequestData = z.object({
   groupId: z.string(),
