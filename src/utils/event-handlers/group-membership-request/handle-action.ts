@@ -3,8 +3,8 @@ import { type WebSocketServer, WebSocket } from 'ws'
 import type { Locale } from '@/constants/locales'
 import db from '@/db'
 import type { WsMessageFullPayload } from '@/types/ws/message.d'
-import { Ws_Group_MembershipRequest_Action_RequestData } from '@/types/ws/request'
-import type { Ws_Group_MembershipRequest_Action_Receipt, WsResponseFullPayload } from '@/types/ws/response'
+import { Ws_GroupMembershipRequest_Action_RequestData } from '@/types/ws/request'
+import type { Ws_GroupMembershipRequest_Action_Receipt, WsResponseFullPayload } from '@/types/ws/response'
 import { findUniqueAccountOrThrow, findUniqueGroupMembershipOrThrow } from '@/utils/db/queries'
 import { ACCOUNT_ALIAS_SELECT, MEMBER_SELECT_WHERE } from '@/utils/db/query-constants'
 import { fromDbLocale } from '@/utils/db/transform/locale'
@@ -18,10 +18,10 @@ export default async function handleGroupMembershipRequestAction(
   ws: WebSocket,
   requestId: string,
   locale: Locale,
-  rawInput: Ws_Group_MembershipRequest_Action_RequestData
+  rawInput: Ws_GroupMembershipRequest_Action_RequestData
 ) {
   // Validate inputs
-  const input = Ws_Group_MembershipRequest_Action_RequestData.parse(rawInput)
+  const input = Ws_GroupMembershipRequest_Action_RequestData.parse(rawInput)
 
   const { accountId, orgId } = ws.auth
   const { groupId, requestId: membershipRequestId, accountId: requestAccountId, action } = input
@@ -108,7 +108,7 @@ export default async function handleGroupMembershipRequestAction(
       // BROADCAST ...
 
       const broadcastPayload = {
-        event: 'group--membership-request--action',
+        event: 'group-membership-request--action',
         orgId,
         data: { groupId: group.id, action }
       } satisfies WsMessageFullPayload
@@ -135,7 +135,7 @@ export default async function handleGroupMembershipRequestAction(
           request_id: membershipRequestId,
           account_id: requestAccountId,
           sent_to: Array.from(sentTo)
-        } satisfies Ws_Group_MembershipRequest_Action_Receipt
+        } satisfies Ws_GroupMembershipRequest_Action_Receipt
       }
       ws.send(JSON.stringify(payload))
     })
@@ -150,7 +150,7 @@ export default async function handleGroupMembershipRequestAction(
         request_id: membershipRequestId,
         account_id: requestAccountId,
         error: transformError(e)
-      } satisfies Ws_Group_MembershipRequest_Action_Receipt
+      } satisfies Ws_GroupMembershipRequest_Action_Receipt
     }
     ws.send(JSON.stringify(payload))
   }

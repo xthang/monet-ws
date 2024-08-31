@@ -1,12 +1,11 @@
 import { $Enums } from '@prisma/client'
-import { type WebSocketServer, WebSocket } from 'ws'
+import type { WebSocketServer, WebSocket } from 'ws'
 
 import { ActivityLogType, DEFAULT_GROUP_VISIBILITY } from '@/constants/data'
 import type { Locale } from '@/constants/locales'
 import db from '@/db'
-import { WsUpdateGroupRequestData } from '@/types/ws/request'
-import { WsResponseFullPayload, WsUpdateGroupReceipt } from '@/types/ws/response'
-import calculateTabSettlement from '@/utils/db/calculate-group-tab-settlement'
+import { Ws_Group_Update_RequestData } from '@/types/ws/request'
+import type { WsResponseFullPayload, Ws_Group_Update_Receipt } from '@/types/ws/response'
 import { findUniqueGroupMembershipOrThrow } from '@/utils/db/queries'
 import { broadcastToGroupMembersExceptMe } from '@/utils/ws/broadcast-to-group-members-except-me'
 import { transformError } from '@/utils/ws/transform-error'
@@ -16,14 +15,14 @@ export default async function handleUpdateGroup(
   ws: WebSocket,
   requestId: string,
   locale: Locale,
-  rawInput: WsUpdateGroupRequestData
+  rawInput: Ws_Group_Update_RequestData
 ) {
   // Validate inputs
-  const input = WsUpdateGroupRequestData.parse(rawInput)
+  const input = Ws_Group_Update_RequestData.parse(rawInput)
 
   const { accountId, orgId } = ws.auth
   const { groupId, data } = input
-  const { name, description, photo, visibility, baseCurrency, note } = data
+  const { name, description, photo, visibility, defaultCurrency, note } = data
 
   try {
     // check permission
@@ -45,21 +44,17 @@ export default async function handleUpdateGroup(
             description,
             photo,
             visibility,
-            baseCurrency,
+            defaultCurrency,
             note,
             updatedBy: accountId,
             lastActivityAt: new Date(),
             lastActiveAccounts
           },
-          include: { tabs: baseCurrency != undefined }
+          include: { tabs: defaultCurrency != undefined }
         })
 
         updatedGroup = { ...updatedGroup, visibility: updatedGroup.visibility ?? DEFAULT_GROUP_VISIBILITY }
       }
-
-      if (baseCurrency != undefined)
-        for (const tab of updatedGroup!.tabs)
-          await calculateTabSettlement(accountId, tx, groupId, { baseCurrency }, tab.id)
 
       await tx.activityLog.create({
         data: {
@@ -77,7 +72,7 @@ export default async function handleUpdateGroup(
       let sentTo = null
       if (updatedGroup) {
         sentTo = await broadcastToGroupMembersExceptMe(wss, ws, tx, accountId, orgId, groupId, {
-          event: 'updated-group',
+          event: 'group--updated',
           orgId,
           data: { group: updatedGroup }
         })
@@ -91,7 +86,7 @@ export default async function handleUpdateGroup(
           group_id: groupId,
           group: updatedGroup,
           sent_to: sentTo && Array.from(sentTo)
-        } satisfies WsUpdateGroupReceipt
+        } satisfies Ws_Group_Update_Receipt
       }
       ws.send(JSON.stringify(payload))
     })
@@ -104,7 +99,7 @@ export default async function handleUpdateGroup(
       data: {
         group_id: groupId,
         error: transformError(e)
-      } satisfies WsUpdateGroupReceipt
+      } satisfies Ws_Group_Update_Receipt
     }
     ws.send(JSON.stringify(payload))
   }

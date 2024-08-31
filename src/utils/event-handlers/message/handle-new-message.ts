@@ -1,10 +1,10 @@
-import { type WebSocketServer, WebSocket } from 'ws'
+import type { WebSocketServer, WebSocket } from 'ws'
 
 import type { Locale } from '@/constants/locales'
 import db from '@/db'
 import { WsError, WsHttpCode } from '@/types/error'
-import type { WsSendMessageRequestData } from '@/types/ws/request'
-import type { WsChatMessageReceipt, WsResponseFullPayload } from '@/types/ws/response'
+import type { Ws_Message_Text_Send_RequestData } from '@/types/ws/request'
+import type { Ws_Message_Send_Receipt, WsResponseFullPayload } from '@/types/ws/response'
 
 import { findUniqueGroupMembershipOrThrow } from '../../db/queries'
 import { MESSAGE_SELECT } from '../../db/query-constants'
@@ -16,7 +16,7 @@ export default async function handleNewMessage(
   ws: WebSocket,
   requestId: string,
   locale: Locale,
-  message: WsSendMessageRequestData
+  message: Ws_Message_Text_Send_RequestData
 ) {
   const { accountId, orgId } = ws.auth
   const { groupId, tabId, uiId, text, sentAt } = message
@@ -57,7 +57,7 @@ export default async function handleNewMessage(
       })
 
       const sentTo = await broadcastToGroupMembersExceptMe(wss, ws, tx, accountId, orgId, groupId, {
-        event: 'new-message',
+        event: 'message--text--new',
         orgId,
         data: createdMsgWithoutUiId
       })
@@ -72,7 +72,7 @@ export default async function handleNewMessage(
           ui_id: createdUiId!,
           message: createdMsg as RequiredNonNullableProps<typeof createdMsg, 'uiId'>,
           sent_to: Array.from(sentTo)
-        } satisfies WsChatMessageReceipt
+        } satisfies Ws_Message_Send_Receipt
       }
       ws.send(JSON.stringify(payload))
     })
@@ -87,7 +87,7 @@ export default async function handleNewMessage(
         tab_id: tabId,
         ui_id: uiId,
         error: transformError(e)
-      } satisfies WsChatMessageReceipt
+      } satisfies Ws_Message_Send_Receipt
     }
     ws.send(JSON.stringify(payload))
   }

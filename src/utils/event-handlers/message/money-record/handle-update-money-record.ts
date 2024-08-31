@@ -1,12 +1,12 @@
 import { $Enums } from '@prisma/client'
-import { type WebSocketServer, WebSocket } from 'ws'
+import type { WebSocketServer, WebSocket } from 'ws'
 
 import { ActivityLogType } from '@/constants/data'
 import type { Locale } from '@/constants/locales'
 import db from '@/db'
 import type { WsMoneyRecord } from '@/types/ws/message'
-import { WsUpdateMoneyRecordRequestData } from '@/types/ws/request'
-import type { WsResponseFullPayload, WsUpdateMoneyRecordReceipt } from '@/types/ws/response'
+import { Ws_MoneyRecord_Update_RequestData } from '@/types/ws/request'
+import type { WsResponseFullPayload, Ws_MoneyRecord_Update_Receipt } from '@/types/ws/response'
 
 import calculateTabSettlement from '../../../db/calculate-group-tab-settlement'
 import { findUniqueMessageOrThrow } from '../../../db/queries'
@@ -20,10 +20,10 @@ export default async function handleUpdateMoneyRecord(
   ws: WebSocket,
   requestId: string,
   locale: Locale,
-  rawInput: WsUpdateMoneyRecordRequestData
+  rawInput: Ws_MoneyRecord_Update_RequestData
 ) {
   // Validate inputs
-  const input = WsUpdateMoneyRecordRequestData.parse(rawInput)
+  const input = Ws_MoneyRecord_Update_RequestData.parse(rawInput)
 
   const { accountId, orgId } = ws.auth
   const { groupId, tabId, data } = input
@@ -46,7 +46,7 @@ export default async function handleUpdateMoneyRecord(
         }
       })
 
-      await tx.groupTab.update({ where: { id: tabId }, data: { lastActivityAt: new Date() } })
+      const tab = await tx.groupTab.update({ where: { id: tabId }, data: { lastActivityAt: new Date() } })
 
       const lastActiveAccountSet = new Set(group.lastActiveAccounts?.split(','))
       lastActiveAccountSet.add(accountId)
@@ -61,7 +61,7 @@ export default async function handleUpdateMoneyRecord(
         data.ratePerBase !== undefined ||
         data.rate !== undefined ||
         data.amountPerPartaker !== undefined
-      if (affectedUpdate) await calculateTabSettlement(accountId, tx, groupId, group, tabId)
+      if (affectedUpdate) await calculateTabSettlement(accountId, tx, groupId, tabId, tab)
 
       await tx.activityLog.create({
         data: {
@@ -126,7 +126,7 @@ export default async function handleUpdateMoneyRecord(
       const wsMessage = { ...message, moneyRecordId: wsMoneyRecord.id, moneyRecord: wsMoneyRecord }
 
       const sentTo = await broadcastToGroupMembersExceptMe(wss, ws, tx, accountId, orgId, groupId, {
-        event: 'updated-money-record',
+        event: 'money-record--updated',
         orgId,
         data: wsMessage
       })
@@ -142,7 +142,7 @@ export default async function handleUpdateMoneyRecord(
           money_record_id: updatedMoneyRecord.id,
           message: wsMessage,
           sent_to: Array.from(sentTo)
-        } satisfies WsUpdateMoneyRecordReceipt
+        } satisfies Ws_MoneyRecord_Update_Receipt
       }
       ws.send(JSON.stringify(payload))
     })
@@ -158,7 +158,7 @@ export default async function handleUpdateMoneyRecord(
         message_id: data.messageId,
         money_record_id: data.id,
         error: transformError(e)
-      } satisfies WsUpdateMoneyRecordReceipt
+      } satisfies Ws_MoneyRecord_Update_Receipt
     }
     ws.send(JSON.stringify(payload))
   }

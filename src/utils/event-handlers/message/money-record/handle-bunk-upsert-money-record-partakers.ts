@@ -1,12 +1,12 @@
 import { $Enums } from '@prisma/client'
-import { type WebSocketServer, WebSocket } from 'ws'
+import type { WebSocketServer, WebSocket } from 'ws'
 
 import { ActivityLogType } from '@/constants/data'
 import type { Locale } from '@/constants/locales'
 import db from '@/db'
 import type { WsMoneyRecord } from '@/types/ws/message'
-import { WsUpsertMoneyRecordPartakersRequestData } from '@/types/ws/request'
-import type { WsResponseFullPayload, WsUpdateMoneyRecordReceipt } from '@/types/ws/response'
+import { Ws_MoneyRecordPartakers_Upsert_RequestData } from '@/types/ws/request'
+import type { WsResponseFullPayload, Ws_MoneyRecord_Update_Receipt } from '@/types/ws/response'
 
 import calculateTabSettlement from '../../../db/calculate-group-tab-settlement'
 import { findUniqueMoneyRecordOrThrow } from '../../../db/queries'
@@ -23,17 +23,17 @@ export default async function handleUpsertMoneyRecordPartakers(
   ws: WebSocket,
   requestId: string,
   locale: Locale,
-  rawInput: WsUpsertMoneyRecordPartakersRequestData
+  rawInput: Ws_MoneyRecordPartakers_Upsert_RequestData
 ) {
   // Validate inputs
-  const input = WsUpsertMoneyRecordPartakersRequestData.parse(rawInput)
+  const input = Ws_MoneyRecordPartakers_Upsert_RequestData.parse(rawInput)
 
   const { accountId, orgId } = ws.auth
   const { groupId, tabId, messageId, moneyRecordId, data } = input
 
   try {
     // check permission
-    const [membership, message, moneyRecord] = await findUniqueMoneyRecordOrThrow(
+    const [membership, { groupTab, ...message }, moneyRecord] = await findUniqueMoneyRecordOrThrow(
       db,
       groupId,
       tabId,
@@ -42,8 +42,8 @@ export default async function handleUpsertMoneyRecordPartakers(
       accountId,
       orgId,
       {
-        membership: { select: { group: { select: { baseCurrency: true, lastActiveAccounts: true } } } },
-        message: { select: MESSAGE_SELECT },
+        membership: { select: { group: { select: { lastActiveAccounts: true } } } },
+        message: { select: { ...MESSAGE_SELECT, groupTab: true } },
         moneyRecord: {
           select: {
             ...MONEY_RECORD_SELECT_NO_PARTAKERS,
@@ -81,18 +81,20 @@ export default async function handleUpsertMoneyRecordPartakers(
       )
     calls.push(...updates)
 
-    const tabUpdate = db.groupTab.update({ where: { id: tabId }, data: { lastActivityAt: new Date() } })
-    calls.push(tabUpdate)
+    if (upserts.length || updates.length) {
+      const tabUpdate = db.groupTab.update({ where: { id: tabId }, data: { lastActivityAt: new Date() } })
+      calls.push(tabUpdate)
 
-    const lastActiveAccountSet = new Set(group.lastActiveAccounts?.split(','))
-    lastActiveAccountSet.add(accountId)
-    const lastActiveAccounts = Array.from(lastActiveAccountSet).slice(undefined, 4).join(',')
+      const lastActiveAccountSet = new Set(group.lastActiveAccounts?.split(','))
+      lastActiveAccountSet.add(accountId)
+      const lastActiveAccounts = Array.from(lastActiveAccountSet).slice(undefined, 4).join(',')
 
-    const groupUpdate = db.group.update({
-      where: { id: groupId },
-      data: { lastActivityAt: new Date(), lastActiveAccounts }
-    })
-    calls.push(groupUpdate)
+      const groupUpdate = db.group.update({
+        where: { id: groupId },
+        data: { lastActivityAt: new Date(), lastActiveAccounts }
+      })
+      calls.push(groupUpdate)
+    }
 
     const logInsert = db.activityLog.create({
       data: {
@@ -108,7 +110,7 @@ export default async function handleUpsertMoneyRecordPartakers(
 
     const res = await db.$transaction(calls)
 
-    await calculateTabSettlement(accountId, db, groupId, group, tabId)
+    await calculateTabSettlement(accountId, db, groupId, tabId, groupTab)
 
     // BROADCAST ...
 
@@ -166,7 +168,7 @@ export default async function handleUpsertMoneyRecordPartakers(
     const wsMessage = { ...message, moneyRecordId: wsMoneyRecord.id, moneyRecord: wsMoneyRecord }
 
     const sentTo = await broadcastToGroupMembersExceptMe(wss, ws, db, accountId, orgId, groupId, {
-      event: 'updated-money-record',
+      event: 'money-record--updated',
       orgId,
       data: wsMessage
     })
@@ -182,7 +184,7 @@ export default async function handleUpsertMoneyRecordPartakers(
         money_record_id: moneyRecord.id,
         message: wsMessage,
         sent_to: Array.from(sentTo)
-      } satisfies WsUpdateMoneyRecordReceipt
+      } satisfies Ws_MoneyRecord_Update_Receipt
     }
     ws.send(JSON.stringify(payload))
   } catch (e: any) {
@@ -197,7 +199,7 @@ export default async function handleUpsertMoneyRecordPartakers(
         message_id: messageId,
         money_record_id: moneyRecordId,
         error: transformError(e)
-      } satisfies WsUpdateMoneyRecordReceipt
+      } satisfies Ws_MoneyRecord_Update_Receipt
     }
     ws.send(JSON.stringify(payload))
   }

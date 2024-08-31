@@ -1,11 +1,11 @@
 import { $Enums } from '@prisma/client'
-import { type WebSocketServer, WebSocket } from 'ws'
+import type { WebSocketServer, WebSocket } from 'ws'
 
 import type { Locale } from '@/constants/locales'
 import db from '@/db'
 import { WsError, WsErrorCode, WsHttpCode } from '@/types/error'
-import { WsDeleteGroupRequestData } from '@/types/ws/request'
-import { WsResponseFullPayload, WsDeleteGroupReceipt } from '@/types/ws/response'
+import { Ws_Group_Delete_RequestData } from '@/types/ws/request'
+import type { WsResponseFullPayload, Ws_Group_Delete_Receipt } from '@/types/ws/response'
 import { findUniqueGroupMembershipOrThrow } from '@/utils/db/queries'
 import { ACCOUNT_SELECT } from '@/utils/db/query-constants'
 import { fromDbLocale } from '@/utils/db/transform/locale'
@@ -19,10 +19,10 @@ export default async function handleDeleteGroup(
   ws: WebSocket,
   requestId: string,
   locale: Locale,
-  rawInput: WsDeleteGroupRequestData
+  rawInput: Ws_Group_Delete_RequestData
 ) {
   // Validate inputs
-  const groupId = WsDeleteGroupRequestData.parse(rawInput)
+  const groupId = Ws_Group_Delete_RequestData.parse(rawInput)
 
   const { accountId, orgId } = ws.auth
 
@@ -81,7 +81,7 @@ export default async function handleDeleteGroup(
       // BROADCAST ...
 
       const sentTo = await broadcastToGroupMembersExceptMe(wss, ws, tx, accountId, orgId, groupId, {
-        event: 'deleted-group',
+        event: 'group--deleted',
         orgId,
         data: { groupId: deletedGroup.id }
       })
@@ -90,7 +90,7 @@ export default async function handleDeleteGroup(
       const payload: WsResponseFullPayload = {
         event: 'callback',
         requestId,
-        data: { group_id: groupId, sent_to: Array.from(sentTo) } satisfies WsDeleteGroupReceipt
+        data: { group_id: groupId, sent_to: Array.from(sentTo) } satisfies Ws_Group_Delete_Receipt
       }
       ws.send(JSON.stringify(payload))
     })
@@ -103,7 +103,7 @@ export default async function handleDeleteGroup(
       data: {
         group_id: groupId,
         error: transformError(e)
-      } satisfies WsDeleteGroupReceipt
+      } satisfies Ws_Group_Delete_Receipt
     }
     ws.send(JSON.stringify(payload))
   }

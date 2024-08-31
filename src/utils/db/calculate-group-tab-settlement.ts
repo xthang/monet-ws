@@ -1,4 +1,4 @@
-import type { Group } from '@prisma/client'
+import type { GroupTab } from '@prisma/client'
 
 import type { PrismaClient, PrismaTransactionClient } from '@/db/types'
 
@@ -10,8 +10,8 @@ export default async function calculateTabSettlement(
   accountId: string,
   db: PrismaClient | PrismaTransactionClient,
   groupId: string,
-  group: Pick<Group, 'baseCurrency'>,
-  tabId: string
+  tabId: string,
+  tab: Pick<GroupTab, 'baseCurrency'>
 ) {
   const members = await db.groupMembership.findMany({ where: { groupId, isActive: true } })
   const memberDict = Object.fromEntries(
@@ -71,8 +71,8 @@ export default async function calculateTabSettlement(
   for (const {
     moneyRecord: { currency, amount, ratePerBase, rate, partakers, calculated }
   } of moneyRecords) {
-    const invalidRequiredRate = currency !== group.baseCurrency && (!rate || rate <= 0)
-    const invalidDisallowdRate = currency === group.baseCurrency && rate
+    const invalidRequiredRate = currency !== tab.baseCurrency && (!rate || rate <= 0)
+    const invalidDisallowdRate = currency === tab.baseCurrency && rate
 
     calculateMoneyRecord(amount, ratePerBase, rate, invalidRequiredRate, invalidDisallowdRate, partakers, calculated)
   }

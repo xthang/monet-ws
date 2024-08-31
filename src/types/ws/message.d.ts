@@ -3,6 +3,8 @@ import type { Group, Message, MoneyRecord, MoneyRecordPartaker } from '@prisma/c
 import type { AccountBasicInfo } from '../db/index'
 import type { ParticipantMember } from '../participant-member'
 
+import type { Ws_GroupTab_Update_RequestData } from './request'
+
 type WsMessageFullPayload = WsMessagePayload & {}
 
 type WsMessagePayload =
@@ -15,49 +17,59 @@ type WsMessagePayload =
       data: WsNotification
     }
   | {
-      event: 'updated-group'
+      event: 'group--updated'
       orgId: string | undefined
       data: { group: WsGroup }
     }
   | {
-      event: 'upserted-group-members'
+      event: 'group--deleted'
       orgId: string | undefined
       data: { groupId: string }
     }
   | {
-      event: 'new-group-membership-request' | 'canceled-group-membership-request'
+      event: 'group-members--upserted'
       orgId: string | undefined
       data: { groupId: string }
     }
   | {
-      event: 'group--membership-request--action'
+      event: 'group-membership-request--new' | 'group-membership-request--canceled'
+      orgId: string | undefined
+      data: { groupId: string }
+    }
+  | {
+      event: 'group-membership-request--action'
       orgId: string | undefined
       data: { groupId: string; action: 'approve' | 'reject' }
     }
   | {
-      event: 'deleted-group'
+      event: 'group-tab--created' | 'group-tab--deleted'
       orgId: string | undefined
-      data: { groupId: string }
+      data: { groupId: string; tabId: string }
     }
   | {
-      event: 'new-message'
+      event: 'group-tab--updated'
+      orgId: string | undefined
+      data: { groupId: string; tabId: string; data: Ws_GroupTab_Update_RequestData['data'] }
+    }
+  | {
+      event: 'message--text--new'
       orgId: string | undefined
       data: WsChatMessage
     }
   | {
-      event: 'updated-chat-message'
+      event: 'message--updated'
       orgId: string | undefined
       data: WsChatMessage
     }
   | {
-      event: 'updated-money-record'
+      event: 'message--deleted'
+      orgId: string | undefined
+      data: WsChatMessage
+    }
+  | {
+      event: 'money-record--updated'
       orgId: string | undefined
       data: RequiredProps<WsChatMessage, 'moneyRecord'>
-    }
-  | {
-      event: 'deleted-message'
-      orgId: string | undefined
-      data: WsChatMessage
     }
   | {
       event: 'money-record--expense-docs--upserted'
@@ -65,7 +77,7 @@ type WsMessagePayload =
       data: RequiredProps<WsChatMessage, 'moneyRecord'>
     }
   | {
-      event: 'new-payable-settlement'
+      event: 'payable-settlement--new'
       orgId: string | undefined
       data: RequiredProps<WsChatMessage, 'moneyRecord'>
     }

@@ -6,8 +6,8 @@ import type { Locale } from '@/constants/locales'
 import db from '@/db'
 import { WsError, WsErrorCode, WsHttpCode } from '@/types/error'
 import type { WsMessageFullPayload } from '@/types/ws/message'
-import { WsUpsertGroupMembersRequestData } from '@/types/ws/request'
-import type { WsResponseFullPayload, WsUpsertGroupMembersReceipt } from '@/types/ws/response'
+import { Ws_GroupMembers_Upsert_RequestData } from '@/types/ws/request'
+import type { WsResponseFullPayload, Ws_GroupMembers_Upsert_Receipt } from '@/types/ws/response'
 import { findUniqueAccountOrThrow, findUniqueGroupMembershipOrThrow } from '@/utils/db/queries'
 import { ACCOUNT_SELECT, MEMBER_SELECT_WHERE } from '@/utils/db/query-constants'
 import { transformPhoneNoToDbAlias } from '@/utils/db/transform/account-alias'
@@ -24,10 +24,10 @@ export default async function handleUpsertGroupMembers(
   ws: WebSocket,
   requestId: string,
   locale: Locale,
-  rawInput: WsUpsertGroupMembersRequestData
+  rawInput: Ws_GroupMembers_Upsert_RequestData
 ) {
   // Validate inputs
-  const input = WsUpsertGroupMembersRequestData.parse(rawInput)
+  const input = Ws_GroupMembers_Upsert_RequestData.parse(rawInput)
 
   const { accountId, orgId } = ws.auth
   const {
@@ -361,7 +361,7 @@ export default async function handleUpsertGroupMembers(
       // BROADCAST ...
 
       const broadcastPayload = {
-        event: 'upserted-group-members',
+        event: 'group-members--upserted',
         orgId,
         data: { groupId: group.id }
       } satisfies WsMessageFullPayload
@@ -391,7 +391,7 @@ export default async function handleUpsertGroupMembers(
           group_id: groupId,
           members: membersResult,
           sent_to: Array.from(sentTo)
-        } satisfies WsUpsertGroupMembersReceipt
+        } satisfies Ws_GroupMembers_Upsert_Receipt
       }
       ws.send(JSON.stringify(payload))
     })
@@ -404,7 +404,7 @@ export default async function handleUpsertGroupMembers(
       data: {
         group_id: groupId,
         error: transformError(e)
-      } satisfies WsUpsertGroupMembersReceipt
+      } satisfies Ws_GroupMembers_Upsert_Receipt
     }
     ws.send(JSON.stringify(payload))
   }

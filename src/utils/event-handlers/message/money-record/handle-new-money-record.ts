@@ -1,12 +1,12 @@
 import { $Enums } from '@prisma/client'
-import { type WebSocketServer, WebSocket } from 'ws'
+import type { WebSocketServer, WebSocket } from 'ws'
 
 import { ActivityLogType } from '@/constants/data'
 import type { Locale } from '@/constants/locales'
 import db from '@/db'
 import type { WsMoneyRecord } from '@/types/ws/message'
-import { WsCreateMoneyRecordRequestData } from '@/types/ws/request'
-import type { WsChatMessageReceipt, WsResponseFullPayload } from '@/types/ws/response'
+import { Ws_MoneyRecord_Create_RequestData } from '@/types/ws/request'
+import type { Ws_Message_Send_Receipt, WsResponseFullPayload } from '@/types/ws/response'
 
 import calculateTabSettlement from '../../../db/calculate-group-tab-settlement'
 import { findUniqueGroupMembershipOrThrow } from '../../../db/queries'
@@ -20,10 +20,10 @@ export default async function handleCreateMoneyRecord(
   ws: WebSocket,
   requestId: string,
   locale: Locale,
-  rawInput: WsCreateMoneyRecordRequestData
+  rawInput: Ws_MoneyRecord_Create_RequestData
 ) {
   // Validate inputs
-  const input = WsCreateMoneyRecordRequestData.parse(rawInput)
+  const input = Ws_MoneyRecord_Create_RequestData.parse(rawInput)
 
   const { accountId, orgId } = ws.auth
   const {
@@ -64,7 +64,7 @@ export default async function handleCreateMoneyRecord(
         data: { moneyRecordId: moneyRecord.id }
       })
 
-      await tx.groupTab.update({ where: { id: tabId }, data: { lastActivityAt: new Date() } })
+      const tab = await tx.groupTab.update({ where: { id: tabId }, data: { lastActivityAt: new Date() } })
 
       const lastActiveAccountSet = new Set(group.lastActiveAccounts?.split(','))
       lastActiveAccountSet.add(accountId)
@@ -75,7 +75,7 @@ export default async function handleCreateMoneyRecord(
         data: { lastMessageId: createdMsg.id, lastActivityAt: new Date(), lastActiveAccounts }
       })
 
-      await calculateTabSettlement(accountId, tx, groupId, group, tabId)
+      await calculateTabSettlement(accountId, tx, groupId, tabId, tab)
 
       await tx.activityLog.create({
         data: {
@@ -144,7 +144,7 @@ export default async function handleCreateMoneyRecord(
       }
 
       const sentTo = await broadcastToGroupMembersExceptMe(wss, ws, tx, accountId, orgId, groupId, {
-        event: 'new-message',
+        event: 'message--text--new',
         orgId,
         data: wsMessageWithoutUiId
       })
@@ -159,7 +159,7 @@ export default async function handleCreateMoneyRecord(
           ui_id: createdUiId!,
           message: { ...wsMessageWithoutUiId, uiId: createdUiId! },
           sent_to: Array.from(sentTo)
-        } satisfies WsChatMessageReceipt
+        } satisfies Ws_Message_Send_Receipt
       }
       ws.send(JSON.stringify(payload))
     })
@@ -174,7 +174,7 @@ export default async function handleCreateMoneyRecord(
         tab_id: tabId,
         ui_id: uiId,
         error: transformError(e)
-      } satisfies WsChatMessageReceipt
+      } satisfies Ws_Message_Send_Receipt
     }
     ws.send(JSON.stringify(payload))
   }

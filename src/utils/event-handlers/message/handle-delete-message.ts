@@ -1,11 +1,11 @@
 import { ActivityLogObjectType } from '@prisma/client'
-import { type WebSocketServer, WebSocket } from 'ws'
+import type { WebSocketServer, WebSocket } from 'ws'
 
 import { ActivityLogType } from '@/constants/data'
 import type { Locale } from '@/constants/locales'
 import db from '@/db'
-import type { WsDeleteMessageRequestData } from '@/types/ws/request'
-import type { WsDeleteMessageReceipt, WsResponseFullPayload } from '@/types/ws/response'
+import type { Ws_Message_Delete_RequestData } from '@/types/ws/request'
+import type { Ws_Message_Delete_Receipt, WsResponseFullPayload } from '@/types/ws/response'
 
 import calculateTabSettlement from '../../db/calculate-group-tab-settlement'
 import { findUniqueGroupMembershipOrThrow } from '../../db/queries'
@@ -17,7 +17,7 @@ export default async function handleDeleteMessage(
   ws: WebSocket,
   requestId: string,
   locale: Locale,
-  message: WsDeleteMessageRequestData
+  message: Ws_Message_Delete_RequestData
 ) {
   const { accountId, orgId } = ws.auth
   const { groupId, tabId, id: messageId } = message
@@ -37,6 +37,7 @@ export default async function handleDeleteMessage(
           id: true,
           groupId: true,
           tabId: true,
+          groupTab: true,
           moneyRecordId: true,
           deletedAt: true,
           deletedBy: true,
@@ -54,7 +55,7 @@ export default async function handleDeleteMessage(
         })
 
         if (deletedMoneyRecord) {
-          await calculateTabSettlement(accountId, tx, groupId, group, deleted.tabId)
+          await calculateTabSettlement(accountId, tx, groupId, deleted.tabId, (deleted as any).groupTab)
 
           await tx.activityLog.create({
             data: {
@@ -83,7 +84,7 @@ export default async function handleDeleteMessage(
       // BROADCAST ...
 
       const sentTo = await broadcastToGroupMembersExceptMe(wss, ws, tx, accountId, orgId, groupId, {
-        event: 'deleted-message',
+        event: 'message--deleted',
         orgId,
         data: deleted
       })
@@ -98,7 +99,7 @@ export default async function handleDeleteMessage(
           message_id: messageId,
           message: deleted,
           sent_to: Array.from(sentTo)
-        } satisfies WsDeleteMessageReceipt
+        } satisfies Ws_Message_Delete_Receipt
       }
       ws.send(JSON.stringify(payload))
     })
@@ -113,7 +114,7 @@ export default async function handleDeleteMessage(
         tab_id: tabId,
         message_id: messageId,
         error: transformError(e)
-      } satisfies WsDeleteMessageReceipt
+      } satisfies Ws_Message_Delete_Receipt
     }
     ws.send(JSON.stringify(payload))
   }

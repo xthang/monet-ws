@@ -1,11 +1,11 @@
 import { $Enums } from '@prisma/client'
-import { type WebSocketServer, WebSocket } from 'ws'
+import type { WebSocketServer, WebSocket } from 'ws'
 
 import type { Locale } from '@/constants/locales'
 import db from '@/db'
 import { WsError, WsErrorCode, WsHttpCode } from '@/types/error'
-import { WsDeleteGroupMembershipRequestRequestData } from '@/types/ws/request'
-import type { WsResponseFullPayload, WsDeleteGroupMembershipRequestReceipt } from '@/types/ws/response'
+import { Ws_GroupMembershipRequest_Delete_RequestData } from '@/types/ws/request'
+import type { WsResponseFullPayload, Ws_GroupMembershipRequest_Delete_Receipt } from '@/types/ws/response'
 import { findGroupOrThrowAndGroupMembership, findUniqueAccountOrThrow } from '@/utils/db/queries'
 import { MEMBER_SELECT_FOR_NOTIFY } from '@/utils/db/query-constants'
 import { fromDbLocale } from '@/utils/db/transform/locale'
@@ -20,10 +20,10 @@ export default async function handleDeleteGroupMembershipRequest(
   ws: WebSocket,
   requestId: string,
   locale: Locale,
-  rawInput: WsDeleteGroupMembershipRequestRequestData
+  rawInput: Ws_GroupMembershipRequest_Delete_RequestData
 ) {
   // Validate inputs
-  const input = WsDeleteGroupMembershipRequestRequestData.parse(rawInput)
+  const input = Ws_GroupMembershipRequest_Delete_RequestData.parse(rawInput)
 
   const { accountId, orgId } = ws.auth
   const { groupId } = input
@@ -92,7 +92,7 @@ export default async function handleDeleteGroupMembershipRequest(
       // BROADCAST ...
 
       const sentTo = await broadcastToGroupMembersExceptMe(wss, ws, tx, accountId, orgId, groupId, {
-        event: 'canceled-group-membership-request',
+        event: 'group-membership-request--canceled',
         orgId,
         data: { groupId: group.id }
       })
@@ -104,7 +104,7 @@ export default async function handleDeleteGroupMembershipRequest(
         data: {
           group_id: groupId,
           sent_to: Array.from(sentTo)
-        } satisfies WsDeleteGroupMembershipRequestReceipt
+        } satisfies Ws_GroupMembershipRequest_Delete_Receipt
       }
       ws.send(JSON.stringify(payload))
     })
@@ -117,7 +117,7 @@ export default async function handleDeleteGroupMembershipRequest(
       data: {
         group_id: groupId,
         error: transformError(e)
-      } satisfies WsDeleteGroupMembershipRequestReceipt
+      } satisfies Ws_GroupMembershipRequest_Delete_Receipt
     }
     ws.send(JSON.stringify(payload))
   }

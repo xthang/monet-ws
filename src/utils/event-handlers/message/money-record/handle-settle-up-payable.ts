@@ -1,12 +1,12 @@
 import { $Enums } from '@prisma/client'
-import { type WebSocketServer, WebSocket } from 'ws'
+import type { WebSocketServer, WebSocket } from 'ws'
 
 import { ActivityLogType } from '@/constants/data'
 import type { Locale } from '@/constants/locales'
 import db from '@/db'
 import type { WsMoneyRecord } from '@/types/ws/message'
-import { WsSettleUpPayableRequestData } from '@/types/ws/request'
-import type { WsResponseFullPayload, WsSettleUpPayableReceipt } from '@/types/ws/response'
+import { Ws_Payable_SettleUp_RequestData } from '@/types/ws/request'
+import type { WsResponseFullPayload, Ws_Payable_SettleUp_Receipt } from '@/types/ws/response'
 import { getMemberName } from '@/utils/get-name-display'
 import notifySettleItems from '@/utils/notify/message/money-record/notify-settled-item'
 
@@ -23,10 +23,10 @@ export default async function handleSettleUpPayable(
   ws: WebSocket,
   requestId: string,
   locale: Locale,
-  rawInput: WsSettleUpPayableRequestData
+  rawInput: Ws_Payable_SettleUp_RequestData
 ) {
   // Validate inputs
-  const input = WsSettleUpPayableRequestData.parse(rawInput)
+  const input = Ws_Payable_SettleUp_RequestData.parse(rawInput)
 
   const { accountId, orgId } = ws.auth
   const { groupId, tabId, settlementId, description } = input
@@ -39,6 +39,7 @@ export default async function handleSettleUpPayable(
     const { group } = membership
 
     const {
+      groupTab,
       payorMemberId,
       payorMember: payorMemberForNotify_,
       payeeMemberId,
@@ -47,6 +48,7 @@ export default async function handleSettleUpPayable(
     } = await db.groupTabSuggestedSettlement.findUniqueOrThrow({
       where: { id: settlementId, groupId, tabId, settlementRecordId: null, isActive: true },
       select: {
+        groupTab: true,
         payorMemberId: true,
         payorMember: { select: MEMBER_SELECT_FULL_FOR_NOTIFY },
         payeeMemberId: true,
@@ -76,7 +78,7 @@ export default async function handleSettleUpPayable(
           settlementId,
           description: description ?? 'Reimbursement',
           payerMemberId: payorMemberId,
-          currency: group.baseCurrency,
+          currency: groupTab.baseCurrency,
           amount: payableAmount,
 
           partakers: { create: { memberId: payeeMemberId, proportion: 1, createdBy: accountId } },
@@ -143,7 +145,7 @@ export default async function handleSettleUpPayable(
         await notifySettleItems(tx, group, tabId, toSendNoti, {
           payor: { name: getMemberName(payorMemberForNotify_) ?? '[no name]' },
           payee: { name: getMemberName(payeeMemberForNotify_) ?? '[no name]' },
-          currency: group.baseCurrency,
+          currency: groupTab.baseCurrency,
           amount: amount!.toNumber(),
           messageId: message.id
         })
@@ -210,7 +212,7 @@ export default async function handleSettleUpPayable(
       const wsMessage = { ...message, moneyRecordId: wsMoneyRecord.id, moneyRecord: wsMoneyRecord }
 
       const sentTo = await broadcastToGroupMembersExceptMe(wss, ws, tx, accountId, orgId, groupId, {
-        event: 'new-payable-settlement',
+        event: 'payable-settlement--new',
         orgId,
         data: wsMessage
       })
@@ -225,7 +227,7 @@ export default async function handleSettleUpPayable(
           settlement_id: settlementId,
           message: wsMessage,
           sent_to: Array.from(sentTo)
-        } satisfies WsSettleUpPayableReceipt
+        } satisfies Ws_Payable_SettleUp_Receipt
       }
       ws.send(JSON.stringify(payload))
     })
@@ -240,7 +242,7 @@ export default async function handleSettleUpPayable(
         tab_id: tabId,
         settlement_id: settlementId,
         error: transformError(e)
-      } satisfies WsSettleUpPayableReceipt
+      } satisfies Ws_Payable_SettleUp_Receipt
     }
     ws.send(JSON.stringify(payload))
   }

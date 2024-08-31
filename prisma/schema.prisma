@@ -783,20 +783,20 @@ enum OrganizationMembershipRole {
 
 model Group {
   // Functional Fields
-  id           String           @id @default(cuid()) @db.VarChar(25)
-  no           Int              @default(autoincrement())
-  type         GroupType
-  orgId        String?          @db.VarChar(50)
-  name         String?          @db.Text /// @encrypted
-  description  String?          @db.Text /// @encrypted
-  photo        String?          @db.Text
-  visibility   GroupVisibility?
-  theme        String?          @db.VarChar(20)
-  darkMode     String?          @db.VarChar(10)
-  emoji        String?          @db.VarChar(20)
+  id              String           @id @default(cuid()) @db.VarChar(25)
+  no              Int              @default(autoincrement())
+  type            GroupType
+  orgId           String?          @db.VarChar(50)
+  name            String?          @db.Text /// @encrypted
+  description     String?          @db.Text /// @encrypted
+  photo           String?          @db.Text
+  visibility      GroupVisibility?
+  theme           String?          @db.VarChar(20)
+  darkMode        String?          @db.VarChar(10)
+  emoji           String?          @db.VarChar(20)
+  defaultCurrency Currency
   // status    GroupStatus?
-  baseCurrency Currency
-  note         String?          @db.Text /// @encrypted
+  note            String?          @db.Text /// @encrypted
 
   lastActivityAt     DateTime? @db.Timestamptz(3)
   lastTabId          String?   @db.VarChar(50)
@@ -943,12 +943,13 @@ enum ActivityLogObjectType {
 
 model GroupTab {
   // Functional Fields
-  id      String  @id @default(cuid()) @db.VarChar(25)
-  no      Int     @default(autoincrement())
-  groupId String  @db.VarChar(50)
-  title   String  @db.Text
-  color   String? @db.VarChar(20)
-  note    String? @db.Text
+  id           String   @id @default(cuid()) @db.VarChar(25)
+  no           Int      @default(autoincrement())
+  groupId      String   @db.VarChar(50)
+  title        String   @db.Text
+  color        String?  @db.VarChar(20)
+  baseCurrency Currency
+  note         String?  @db.Text
 
   // Technical Fields
   createdAt DateTime  @default(now()) @db.Timestamptz(3)
@@ -960,9 +961,10 @@ model GroupTab {
 
   lastActivityAt DateTime? @db.Timestamptz(3)
 
-  group       Group                         @relation(fields: [groupId], references: [id])
-  messages    Message[]
-  settlements GroupTabSuggestedSettlement[]
+  group        Group                         @relation(fields: [groupId], references: [id])
+  messages     Message[]
+  moneyRecords MoneyRecord[]
+  settlements  GroupTabSuggestedSettlement[]
 
   @@unique([no])
   @@index([groupId])
@@ -1035,6 +1037,7 @@ model MoneyRecord {
 
   // Foreign Key Relations
   group            Group                 @relation(fields: [groupId], references: [id])
+  tab              GroupTab              @relation(fields: [tabId], references: [id])
   message          Message               @relation(fields: [messageId], references: [id])
   payerMember      GroupMembership       @relation(fields: [payerMemberId], references: [id])
   partakers        MoneyRecordPartaker[]

@@ -1,5 +1,5 @@
 import { $Enums, type Prisma } from '@prisma/client'
-import { type WebSocketServer, WebSocket } from 'ws'
+import type { WebSocketServer, WebSocket } from 'ws'
 
 import { ActivityLogType } from '@/constants/data'
 import type { Locale } from '@/constants/locales'
@@ -79,14 +79,15 @@ export default async function handleUpsertExpenseDocuments(
           tx
         })
 
-      if (created || updated || deleted)
+      if (created || updated || deleted) {
         await tx.groupTab.update({ where: { id: tabId }, data: { lastActivityAt: new Date() } })
 
-      const lastActiveAccountSet = new Set(group.lastActiveAccounts?.split(','))
-      lastActiveAccountSet.add(accountId)
-      const lastActiveAccounts = Array.from(lastActiveAccountSet).slice(undefined, 4).join(',')
+        const lastActiveAccountSet = new Set(group.lastActiveAccounts?.split(','))
+        lastActiveAccountSet.add(accountId)
+        const lastActiveAccounts = Array.from(lastActiveAccountSet).slice(undefined, 4).join(',')
 
-      await tx.group.update({ where: { id: groupId }, data: { lastActivityAt: new Date(), lastActiveAccounts } })
+        await tx.group.update({ where: { id: groupId }, data: { lastActivityAt: new Date(), lastActiveAccounts } })
+      }
 
       await tx.activityLog.create({
         data: {

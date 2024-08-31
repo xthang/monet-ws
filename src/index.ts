@@ -15,6 +15,7 @@ import handleUpsertGroupMembers from './utils/event-handlers/group-members/handl
 import handleGroupMembershipRequestAction from './utils/event-handlers/group-membership-request/handle-action'
 import handleCreateGroupMembershipRequest from './utils/event-handlers/group-membership-request/handle-create'
 import handleDeleteGroupMembershipRequest from './utils/event-handlers/group-membership-request/handle-delete'
+import { handleCreateGroupTab, handleDeleteGroupTab, handleUpdateGroupTab } from './utils/event-handlers/group-tab'
 import handleDeleteMessage from './utils/event-handlers/message/handle-delete-message'
 import handleNewMessage from './utils/event-handlers/message/handle-new-message'
 import handleUpsertMoneyRecordPartakers from './utils/event-handlers/message/money-record/handle-bunk-upsert-money-record-partakers'
@@ -130,46 +131,55 @@ async function main() {
             this.auth = { accountId, authAccountId: auth.userId, orgId: auth.ordId, locale: this.auth.locale }
 
             switch (event) {
-              case 'update-group':
+              case 'group--update':
                 await handleUpdateGroup(wss, this, requestId, locale, data)
                 break
-              case 'delete-group':
+              case 'group--delete':
                 await handleDeleteGroup(wss, this, requestId, locale, data)
                 break
-              case 'upsert-group-members':
+              case 'group-members--upsert':
                 await handleUpsertGroupMembers(wss, this, requestId, locale, data)
                 break
-              case 'create-group-membership-request':
+              case 'group-membership-request--create':
                 await handleCreateGroupMembershipRequest(wss, this, requestId, locale, data)
                 break
-              case 'delete-group-membership-request':
+              case 'group-membership-request--delete':
                 await handleDeleteGroupMembershipRequest(wss, this, requestId, locale, data)
                 break
-              case 'group--membership-request--action':
+              case 'group-membership-request--action':
                 await handleGroupMembershipRequestAction(wss, this, requestId, locale, data)
                 break
-              case 'new-text-message':
+              case 'group-tab--create':
+                await handleCreateGroupTab(wss, this, requestId, locale, data)
+                break
+              case 'group-tab--update':
+                await handleUpdateGroupTab(wss, this, requestId, locale, data)
+                break
+              case 'group-tab--delete':
+                await handleDeleteGroupTab(wss, this, requestId, locale, data)
+                break
+              case 'message--text--new':
                 await handleNewMessage(wss, this, requestId, locale, {
                   ...data,
                   sentAt: new Date(Date.parse(data.sentAt as any))
                 })
                 break
-              case 'new-money-record':
-                await handleCreateMoneyRecord(wss, this, requestId, locale, data)
-                break
-              case 'update-money-record':
-                await handleUpdateMoneyRecord(wss, this, requestId, locale, data)
-                break
-              case 'upsert-money-record-partakers':
-                await handleUpsertMoneyRecordPartakers(wss, this, requestId, locale, data)
-                break
-              case 'delete-message':
+              case 'message--delete':
                 await handleDeleteMessage(wss, this, requestId, locale, data)
                 break
-              case 'money-record--expense-documents-upsert':
+              case 'money-record--new':
+                await handleCreateMoneyRecord(wss, this, requestId, locale, data)
+                break
+              case 'money-record--update':
+                await handleUpdateMoneyRecord(wss, this, requestId, locale, data)
+                break
+              case 'money-record-partakers--upsert':
+                await handleUpsertMoneyRecordPartakers(wss, this, requestId, locale, data)
+                break
+              case 'money-record--expense-documents--upsert':
                 await handleUpsertExpenseDocuments(wss, this, requestId, locale, data)
                 break
-              case 'settle-up-payable':
+              case 'payable--settle-up':
                 await handleSettleUpPayable(wss, this, requestId, locale, data)
                 break
               default: {

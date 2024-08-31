@@ -16,63 +16,75 @@ export type WsRequestFullPayload = { requestId: string; token: string; locale: L
 
 export type WsRequestData =
   | {
-      event: 'update-group'
-      data: WsUpdateGroupRequestData
+      event: 'group--update'
+      data: Ws_Group_Update_RequestData
     }
   | {
-      event: 'delete-group'
-      data: WsDeleteGroupRequestData
+      event: 'group--delete'
+      data: Ws_Group_Delete_RequestData
     }
   | {
-      event: 'upsert-group-members'
-      data: WsUpsertGroupMembersRequestData
+      event: 'group-members--upsert'
+      data: Ws_GroupMembers_Upsert_RequestData
     }
   | {
-      event: 'create-group-membership-request'
-      data: WsCreateGroupMembershipRequestRequestData
+      event: 'group-membership-request--create'
+      data: Ws_GroupMembershipRequest_Create_RequestData
     }
   | {
-      event: 'delete-group-membership-request'
-      data: WsDeleteGroupMembershipRequestRequestData
+      event: 'group-membership-request--delete'
+      data: Ws_GroupMembershipRequest_Delete_RequestData
     }
   | {
-      event: 'group--membership-request--action'
-      data: Ws_Group_MembershipRequest_Action_RequestData
+      event: 'group-membership-request--action'
+      data: Ws_GroupMembershipRequest_Action_RequestData
     }
   | {
-      event: 'new-text-message'
-      data: WsSendMessageRequestData
+      event: 'group-tab--create'
+      data: Ws_GroupTab_Create_RequestData
     }
   | {
-      event: 'update-mgs'
+      event: 'group-tab--update'
+      data: Ws_GroupTab_Update_RequestData
+    }
+  | {
+      event: 'group-tab--delete'
+      data: Ws_GroupTab_Delete_RequestData
+    }
+  | {
+      event: 'message--text--new'
+      data: Ws_Message_Text_Send_RequestData
+    }
+  | {
+      event: 'message--update'
       data: unknown
     }
   | {
-      event: 'new-money-record'
-      data: WsCreateMoneyRecordRequestData
+      event: 'message--delete'
+      data: Ws_Message_Delete_RequestData
     }
   | {
-      event: 'update-money-record'
-      data: WsUpdateMoneyRecordRequestData
+      event: 'money-record--new'
+      data: Ws_MoneyRecord_Create_RequestData
     }
   | {
-      event: 'upsert-money-record-partakers'
-      data: WsUpsertMoneyRecordPartakersRequestData
+      event: 'money-record--update'
+      data: Ws_MoneyRecord_Update_RequestData
     }
   | {
-      event: 'delete-message'
-      data: WsDeleteMessageRequestData
+      event: 'money-record-partakers--upsert'
+      data: Ws_MoneyRecordPartakers_Upsert_RequestData
     }
   | {
-      event: 'money-record--expense-documents-upsert'
+      event: 'money-record--expense-documents--upsert'
       data: Ws_MoneyRecord_ExpenseDocuments_Upsert_RequestData
     }
   | {
-      event: 'settle-up-payable'
-      data: WsSettleUpPayableRequestData
+      event: 'payable--settle-up'
+      data: Ws_Payable_SettleUp_RequestData
     }
 
-export const WsUpdateGroupRequestData = z.object({
+export const Ws_Group_Update_RequestData = z.object({
   groupId: z.string(),
   data: z.object({
     name: z.string().nullable().optional(),
@@ -80,16 +92,16 @@ export const WsUpdateGroupRequestData = z.object({
     photo: z.string().nullable().optional(),
     visibility: z.nativeEnum($Enums.GroupVisibility).optional(),
     emoji: z.string().optional(),
-    baseCurrency: z.nativeEnum($Enums.Currency).optional(),
+    defaultCurrency: z.nativeEnum($Enums.Currency).optional(),
     note: z.string().nullable().optional()
   })
 })
 
-export type WsUpdateGroupRequestData = z.infer<typeof WsUpdateGroupRequestData>
+export type Ws_Group_Update_RequestData = z.infer<typeof Ws_Group_Update_RequestData>
 
-export const WsDeleteGroupRequestData = z.string()
+export const Ws_Group_Delete_RequestData = z.string()
 
-export type WsDeleteGroupRequestData = z.infer<typeof WsDeleteGroupRequestData>
+export type Ws_Group_Delete_RequestData = z.infer<typeof Ws_Group_Delete_RequestData>
 
 export const AccountOrPlaceholderCreate = z.union([
   z.object({ accountId: z.string() }),
@@ -120,7 +132,7 @@ export const AccountOrPlaceholderCreate = z.union([
   z.object({ accountPlaceholder: z.object({ name: z.string() }) })
 ])
 
-export const WsUpsertGroupMembersRequestData = z.object({
+export const Ws_GroupMembers_Upsert_RequestData = z.object({
   groupId: z.string(),
   type: z.enum(['replace-member']).optional(),
   data: z.object({
@@ -153,32 +165,56 @@ export const WsUpsertGroupMembersRequestData = z.object({
   isUpdateOrder: z.boolean().optional()
 })
 
-export type WsUpsertGroupMembersRequestData = z.infer<typeof WsUpsertGroupMembersRequestData>
+export type Ws_GroupMembers_Upsert_RequestData = z.infer<typeof Ws_GroupMembers_Upsert_RequestData>
 
-export const WsCreateGroupMembershipRequestRequestData = z.object({
+export const Ws_GroupMembershipRequest_Create_RequestData = z.object({
   groupId: z.string()
 })
 
-export type WsCreateGroupMembershipRequestRequestData = z.infer<typeof WsCreateGroupMembershipRequestRequestData>
+export type Ws_GroupMembershipRequest_Create_RequestData = z.infer<typeof Ws_GroupMembershipRequest_Create_RequestData>
 
-export const WsDeleteGroupMembershipRequestRequestData = z.object({
+export const Ws_GroupMembershipRequest_Delete_RequestData = z.object({
   groupId: z.string()
 })
 
-export type WsDeleteGroupMembershipRequestRequestData = z.infer<typeof WsDeleteGroupMembershipRequestRequestData>
+export type Ws_GroupMembershipRequest_Delete_RequestData = z.infer<typeof Ws_GroupMembershipRequest_Delete_RequestData>
 
-export const Ws_Group_MembershipRequest_Action_RequestData = z.object({
+export const Ws_GroupMembershipRequest_Action_RequestData = z.object({
   groupId: z.string(),
   accountId: z.string(),
   requestId: z.string(),
   action: z.enum(['approve', 'reject'])
 })
 
-export type Ws_Group_MembershipRequest_Action_RequestData = z.infer<
-  typeof Ws_Group_MembershipRequest_Action_RequestData
->
+export type Ws_GroupMembershipRequest_Action_RequestData = z.infer<typeof Ws_GroupMembershipRequest_Action_RequestData>
 
-export type WsSendMessageRequestData = {
+export const Ws_GroupTab_Create_RequestData = z.object({
+  groupId: z.string(),
+  data: z.object({ title: z.string(), color: z.string().optional(), baseCurrency: z.nativeEnum($Enums.Currency) })
+})
+
+export type Ws_GroupTab_Create_RequestData = z.infer<typeof Ws_GroupTab_Create_RequestData>
+
+export const Ws_GroupTab_Update_RequestData = z.object({
+  id: z.string(),
+  groupId: z.string(),
+  data: z.object({
+    title: z.string().optional(),
+    color: z.string().optional(),
+    baseCurrency: z.nativeEnum($Enums.Currency).optional()
+  })
+})
+
+export type Ws_GroupTab_Update_RequestData = z.infer<typeof Ws_GroupTab_Update_RequestData>
+
+export const Ws_GroupTab_Delete_RequestData = z.object({
+  groupId: z.string(),
+  id: z.string()
+})
+
+export type Ws_GroupTab_Delete_RequestData = z.infer<typeof Ws_GroupTab_Delete_RequestData>
+
+export type Ws_Message_Text_Send_RequestData = {
   groupId: string
   tabId: string
   uiId: string
@@ -186,7 +222,15 @@ export type WsSendMessageRequestData = {
   sentAt: Date
 }
 
-export const WsCreateMoneyRecordRequestData = z.object({
+export const Ws_Message_Delete_RequestData = z.object({
+  groupId: z.string(),
+  tabId: z.string(),
+  id: z.string()
+})
+
+export type Ws_Message_Delete_RequestData = z.infer<typeof Ws_Message_Delete_RequestData>
+
+export const Ws_MoneyRecord_Create_RequestData = z.object({
   groupId: z.string(),
   tabId: z.string(),
   data: z.object({
@@ -205,9 +249,9 @@ export const WsCreateMoneyRecordRequestData = z.object({
   })
 })
 
-export type WsCreateMoneyRecordRequestData = z.infer<typeof WsCreateMoneyRecordRequestData>
+export type Ws_MoneyRecord_Create_RequestData = z.infer<typeof Ws_MoneyRecord_Create_RequestData>
 
-export const WsUpdateMoneyRecordRequestData = z.object({
+export const Ws_MoneyRecord_Update_RequestData = z.object({
   groupId: z.string(),
   tabId: z.string(),
   data: z.object({
@@ -225,9 +269,9 @@ export const WsUpdateMoneyRecordRequestData = z.object({
   })
 })
 
-export type WsUpdateMoneyRecordRequestData = z.infer<typeof WsUpdateMoneyRecordRequestData>
+export type Ws_MoneyRecord_Update_RequestData = z.infer<typeof Ws_MoneyRecord_Update_RequestData>
 
-export const WsUpsertMoneyRecordPartakersRequestData = z.object({
+export const Ws_MoneyRecordPartakers_Upsert_RequestData = z.object({
   groupId: z.string(),
   tabId: z.string(),
   messageId: z.string(),
@@ -247,15 +291,7 @@ export const WsUpsertMoneyRecordPartakersRequestData = z.object({
   )
 })
 
-export type WsUpsertMoneyRecordPartakersRequestData = z.infer<typeof WsUpsertMoneyRecordPartakersRequestData>
-
-export const WsDeleteMessageRequestData = z.object({
-  groupId: z.string(),
-  tabId: z.string(),
-  id: z.string()
-})
-
-export type WsDeleteMessageRequestData = z.infer<typeof WsDeleteMessageRequestData>
+export type Ws_MoneyRecordPartakers_Upsert_RequestData = z.infer<typeof Ws_MoneyRecordPartakers_Upsert_RequestData>
 
 export const Ws_MoneyRecord_ExpenseDocuments_Upsert_RequestData = z.object({
   groupId: z.string(),
@@ -292,11 +328,11 @@ export type Ws_MoneyRecord_ExpenseDocuments_Upsert_RequestData = z.infer<
   typeof Ws_MoneyRecord_ExpenseDocuments_Upsert_RequestData
 >
 
-export const WsSettleUpPayableRequestData = z.object({
+export const Ws_Payable_SettleUp_RequestData = z.object({
   groupId: z.string(),
   tabId: z.string(),
   settlementId: z.string(),
   description: z.string().optional()
 })
 
-export type WsSettleUpPayableRequestData = z.infer<typeof WsSettleUpPayableRequestData>
+export type Ws_Payable_SettleUp_RequestData = z.infer<typeof Ws_Payable_SettleUp_RequestData>
