@@ -6,6 +6,7 @@ import type { Locale } from '@/constants/locales'
 import db from '@/db'
 import { WsUpdateGroupRequestData } from '@/types/ws/request'
 import { WsResponseFullPayload, WsUpdateGroupReceipt } from '@/types/ws/response'
+import calculateTabSettlement from '@/utils/db/calculate-group-tab-settlement'
 import { findUniqueGroupMembershipOrThrow } from '@/utils/db/queries'
 import { broadcastToGroupMembersExceptMe } from '@/utils/ws/broadcast-to-group-members-except-me'
 import { transformError } from '@/utils/ws/transform-error'
@@ -49,11 +50,16 @@ export default async function handleUpdateGroup(
             updatedBy: accountId,
             lastActivityAt: new Date(),
             lastActiveAccounts
-          }
+          },
+          include: { tabs: baseCurrency != undefined }
         })
 
         updatedGroup = { ...updatedGroup, visibility: updatedGroup.visibility ?? DEFAULT_GROUP_VISIBILITY }
       }
+
+      if (baseCurrency != undefined)
+        for (const tab of updatedGroup!.tabs)
+          await calculateTabSettlement(accountId, tx, groupId, { baseCurrency }, tab.id)
 
       await tx.activityLog.create({
         data: {
