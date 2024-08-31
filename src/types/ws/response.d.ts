@@ -82,7 +82,7 @@ type Ws_GroupTab_Create_Receipt = {
 
 type Ws_GroupTab_Update_Receipt = {
   group_id: string
-  tab_id: string
+  tab_ids: string[]
   sent_to?: string[]
   error?: WsErrorData
 }

@@ -23,8 +23,7 @@ export async function handleUpdateGroupTab(
   const input = Ws_GroupTab_Update_RequestData.parse(rawInput)
 
   const { accountId, orgId } = ws.auth
-  const { groupId, id, data } = input
-  const { title, color, baseCurrency } = data
+  const { groupId, data: tabs } = input
 
   try {
     // check permission
@@ -32,11 +31,12 @@ export async function handleUpdateGroupTab(
       select: { group: true }
     })
 
-    const tab = await db.$transaction(async (tx) => {
-      const tab = await tx.groupTab.update({
-        where: { id, groupId },
-        data: { title, color, baseCurrency, updatedBy: accountId, lastActivityAt: new Date() }
-      })
+    await db.$transaction(async (tx) => {
+      for (const { id, title, color, baseCurrency, order } of tabs)
+        await tx.groupTab.update({
+          where: { id, groupId },
+          data: { title, color, baseCurrency, order, updatedBy: accountId, lastActivityAt: new Date() }
+        })
 
       const lastActiveAccountSet = new Set(group.lastActiveAccounts?.split(','))
       lastActiveAccountSet.add(accountId)
@@ -47,7 +47,8 @@ export async function handleUpdateGroupTab(
         data: { lastActivityAt: new Date(), lastActiveAccounts }
       })
 
-      if (baseCurrency != undefined) await calculateTabSettlement(accountId, tx, groupId, tab.id, { baseCurrency })
+      for (const { id, baseCurrency } of tabs)
+        if (baseCurrency != undefined) await calculateTabSettlement(accountId, tx, groupId, id, { baseCurrency })
 
       await tx.activityLog.create({
         data: {
@@ -59,8 +60,6 @@ export async function handleUpdateGroupTab(
           createdBy: accountId
         }
       })
-
-      return tab
     })
 
     // BROADCAST ...
@@ -68,7 +67,7 @@ export async function handleUpdateGroupTab(
     const sentTo = await broadcastToGroupMembersExceptMe(wss, ws, db, accountId, orgId, groupId, {
       event: 'group-tab--updated',
       orgId,
-      data: { groupId, tabId: tab.id, data }
+      data: { groupId, data: tabs }
     })
 
     // send receipt back to itself
@@ -77,7 +76,7 @@ export async function handleUpdateGroupTab(
       requestId,
       data: {
         group_id: groupId,
-        tab_id: tab.id,
+        tab_ids: tabs.map((t) => t.id),
         sent_to: Array.from(sentTo)
       } satisfies Ws_GroupTab_Update_Receipt
     }
@@ -90,7 +89,7 @@ export async function handleUpdateGroupTab(
       requestId,
       data: {
         group_id: groupId,
-        tab_id: id,
+        tab_ids: tabs.map((t) => t.id),
         error: transformError(e)
       } satisfies Ws_GroupTab_Update_Receipt
     }

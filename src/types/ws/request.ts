@@ -190,19 +190,27 @@ export type Ws_GroupMembershipRequest_Action_RequestData = z.infer<typeof Ws_Gro
 
 export const Ws_GroupTab_Create_RequestData = z.object({
   groupId: z.string(),
-  data: z.object({ title: z.string(), color: z.string().optional(), baseCurrency: z.nativeEnum($Enums.Currency) })
+  data: z.object({
+    title: z.string(),
+    color: z.string().optional(),
+    baseCurrency: z.nativeEnum($Enums.Currency),
+    order: z.number()
+  })
 })
 
 export type Ws_GroupTab_Create_RequestData = z.infer<typeof Ws_GroupTab_Create_RequestData>
 
 export const Ws_GroupTab_Update_RequestData = z.object({
-  id: z.string(),
   groupId: z.string(),
-  data: z.object({
-    title: z.string().optional(),
-    color: z.string().optional(),
-    baseCurrency: z.nativeEnum($Enums.Currency).optional()
-  })
+  data: z.array(
+    z.object({
+      id: z.string(),
+      title: z.string().optional(),
+      color: z.string().optional(),
+      baseCurrency: z.nativeEnum($Enums.Currency).optional(),
+      order: z.number().optional()
+    })
+  )
 })
 
 export type Ws_GroupTab_Update_RequestData = z.infer<typeof Ws_GroupTab_Update_RequestData>

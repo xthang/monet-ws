@@ -24,7 +24,7 @@ export async function handleCreateGroupTab(
   const { accountId, orgId } = ws.auth
   const {
     groupId,
-    data: { title, color, baseCurrency }
+    data: { title, color, baseCurrency, order }
   } = input
 
   try {
@@ -34,7 +34,9 @@ export async function handleCreateGroupTab(
     })
 
     const tab = await db.$transaction(async (tx) => {
-      const tab = await tx.groupTab.create({ data: { groupId, title, color, baseCurrency, createdBy: accountId } })
+      const tab = await tx.groupTab.create({
+        data: { groupId, title, color, baseCurrency, order, createdBy: accountId }
+      })
 
       const lastActiveAccountSet = new Set(group.lastActiveAccounts?.split(','))
       lastActiveAccountSet.add(accountId)

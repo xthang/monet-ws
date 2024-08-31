@@ -950,6 +950,7 @@ model GroupTab {
   color        String?  @db.VarChar(20)
   baseCurrency Currency
   note         String?  @db.Text
+  order        Int
 
   // Technical Fields
   createdAt DateTime  @default(now()) @db.Timestamptz(3)

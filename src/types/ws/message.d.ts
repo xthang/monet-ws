@@ -49,7 +49,7 @@ type WsMessagePayload =
   | {
       event: 'group-tab--updated'
       orgId: string | undefined
-      data: { groupId: string; tabId: string; data: Ws_GroupTab_Update_RequestData['data'] }
+      data: { groupId: string; data: Ws_GroupTab_Update_RequestData['data'] }
     }
   | {
       event: 'message--text--new'
