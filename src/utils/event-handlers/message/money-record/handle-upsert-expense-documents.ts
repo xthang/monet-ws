@@ -38,7 +38,7 @@ export default async function handleUpsertExpenseDocuments(
       accountId,
       orgId,
       {
-        membership: { select: { group: { select: { baseCurrency: true, lastActiveAccounts: true } } } },
+        membership: { select: { group: { select: { lastActiveAccounts: true } } } },
         message: { select: MESSAGE_SELECT },
         moneyRecord: { select: MONEY_RECORD_SELECT }
       }

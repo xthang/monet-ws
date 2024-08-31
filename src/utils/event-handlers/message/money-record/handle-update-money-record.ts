@@ -31,7 +31,7 @@ export default async function handleUpdateMoneyRecord(
   try {
     // check permission
     const [membership, message] = await findUniqueMessageOrThrow(db, groupId, tabId, data.messageId, accountId, orgId, {
-      membership: { select: { group: { select: { baseCurrency: true, lastActiveAccounts: true } } } },
+      membership: { select: { group: { select: { lastActiveAccounts: true } } } },
       message: { select: MESSAGE_SELECT }
     })
     const { group } = membership
