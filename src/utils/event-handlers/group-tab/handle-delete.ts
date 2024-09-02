@@ -37,7 +37,7 @@ export async function handleDeleteGroupTab(
 
       const fileDeleteResp = await fetch(`${FILE_SERVICE_URL}/sync/v1/delete-group-tab/${groupId}/${id}`, {
         method: 'DELETE',
-        headers: { 'api-key': FILE_SERVICE_SYSTEM_SYNC_API_KEY }
+        headers: { 'x-api-key': FILE_SERVICE_SYSTEM_SYNC_API_KEY }
       })
       const fileDeleteRespStatus = fileDeleteResp.status
       if (fileDeleteRespStatus !== 200) {
