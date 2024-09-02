@@ -2,8 +2,10 @@ import { $Enums } from '@prisma/client'
 import type { WebSocketServer, WebSocket } from 'ws'
 
 import { ActivityLogType } from '@/constants/data'
+import { FILE_SERVICE_SYSTEM_SYNC_API_KEY, FILE_SERVICE_URL } from '@/constants/env'
 import type { Locale } from '@/constants/locales'
 import db from '@/db'
+import { WsError, WsErrorCode, WsHttpCode } from '@/types/error'
 import { Ws_GroupTab_Delete_RequestData } from '@/types/ws/request'
 import type { Ws_GroupTab_Delete_Receipt, WsResponseFullPayload } from '@/types/ws/response'
 
@@ -32,6 +34,15 @@ export async function handleDeleteGroupTab(
 
     const tab = await db.$transaction(async (tx) => {
       const deleted = await tx.groupTab.softDelete({ tx, where: { id, groupId }, deletedBy: accountId })
+
+      const fileDeleteResp = await fetch(`${FILE_SERVICE_URL}/sync/v1/delete-group-tab/${groupId}/${id}`, {
+        method: 'DELETE',
+        headers: { 'api-key': FILE_SERVICE_SYSTEM_SYNC_API_KEY }
+      })
+      const fileDeleteRespStatus = fileDeleteResp.status
+      if (fileDeleteRespStatus !== 200) {
+        throw new WsError(WsHttpCode.INTERNAL_SERVER_ERROR, WsErrorCode.FILE_DELETE_ERROR, 'File delete error')
+      }
 
       const lastActiveAccountSet = new Set(group.lastActiveAccounts?.split(','))
       lastActiveAccountSet.add(accountId)
