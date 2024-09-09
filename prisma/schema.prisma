@@ -559,6 +559,10 @@ model Account {
   uploadedExpenseDocuments ExpenseDocument[]        @relation("ExpenseDocument_uploadedByAccount")
   orders                   Order[]
   subscriptionPaymentTrans PaymentTransaction?      @relation(fields: [subscriptionPaymentTransId], references: [id])
+  contacts                 Contact[]                @relation("Contact_account")
+  contacts_contactAccount  Contact[]                @relation("Contact_contactAccount")
+  contactLists             ContactList[]
+  contactListMappings      ContactListMapping[]
 
   @@unique([no])
   @@unique([authAccountId])
@@ -779,6 +783,83 @@ enum OrganizationMembershipRole {
   member
   basic_member
   guest_member
+}
+
+model Contact {
+  // Functional Fields
+  id String @id @default(cuid()) @db.VarChar(25)
+  no Int    @default(autoincrement())
+
+  accountId        String  @db.VarChar(50)
+  contactAccountId String  @db.VarChar(50)
+  nickname         String? @db.Text
+
+  // Technical Fields
+  createdAt DateTime  @default(now()) @db.Timestamptz(3)
+  createdBy String    @db.VarChar(50)
+  updatedAt DateTime? @updatedAt @db.Timestamptz(3)
+  updatedBy String?   @db.VarChar(50)
+  deletedAt DateTime? @db.Timestamptz(3)
+  deletedBy String?   @db.VarChar(50)
+  isActive  Boolean?  @default(true)
+
+  account             Account              @relation("Contact_account", fields: [accountId], references: [id])
+  contactAccount      Account              @relation("Contact_contactAccount", fields: [contactAccountId], references: [id])
+  contactListMappings ContactListMapping[]
+
+  @@unique([no])
+  @@unique([accountId, contactAccountId, isActive])
+  @@index([accountId, isActive])
+}
+
+model ContactList {
+  // Functional Fields
+  id String @id @default(cuid()) @db.VarChar(25)
+  no Int    @default(autoincrement())
+
+  accountId String @db.VarChar(50)
+  name      String @db.Text
+
+  // Technical Fields
+  createdAt DateTime  @default(now()) @db.Timestamptz(3)
+  createdBy String    @db.VarChar(50)
+  updatedAt DateTime? @updatedAt @db.Timestamptz(3)
+  updatedBy String?   @db.VarChar(50)
+  deletedAt DateTime? @db.Timestamptz(3)
+  deletedBy String?   @db.VarChar(50)
+
+  account             Account              @relation(fields: [accountId], references: [id])
+  contactListMappings ContactListMapping[]
+
+  @@unique([no])
+  @@index([accountId])
+}
+
+model ContactListMapping {
+  // Functional Fields
+  no Int @default(autoincrement())
+
+  accountId     String @db.VarChar(50)
+  contactListId String @db.VarChar(50)
+  contactId     String @db.VarChar(50)
+
+  // Technical Fields
+  createdAt DateTime  @default(now()) @db.Timestamptz(3)
+  createdBy String    @db.VarChar(50)
+  updatedAt DateTime? @updatedAt @db.Timestamptz(3)
+  updatedBy String?   @db.VarChar(50)
+  deletedAt DateTime? @db.Timestamptz(3)
+  deletedBy String?   @db.VarChar(50)
+  isActive  Boolean?  @default(true)
+
+  account     Account     @relation(fields: [accountId], references: [id])
+  contactList ContactList @relation(fields: [contactListId], references: [id])
+  contact     Contact     @relation(fields: [contactId], references: [id])
+
+  @@unique([no])
+  @@unique([contactListId, contactId, isActive])
+  @@index([accountId, isActive])
+  @@index([contactListId, isActive])
 }
 
 model Group {
@@ -1098,7 +1179,7 @@ model ExpenseDocument {
 
   uploadRequestId   String @db.VarChar(50)
   fileName          String @db.VarChar(512)
-  mimeType          String @db.VarChar(50)
+  mimeType          String @db.VarChar(100)
   size              Int
   storageVersion    Int
   storageNamePrefix String @db.VarChar(512)
@@ -1164,6 +1245,8 @@ model Order {
   paymentRequestStatus    String?         @db.VarChar(20)
   paymentRequestOtherData Json?           @db.Json
 
+  lastTransactionId String? @unique
+
   // Technical Fields
   createdAt DateTime  @default(now()) @db.Timestamptz(3)
   createdBy String    @db.VarChar(50)
@@ -1175,6 +1258,7 @@ model Order {
   account             Account              @relation(fields: [accountId], references: [id])
   // items OrderItem[]
   paymentTransactions PaymentTransaction[]
+  lastTransaction     PaymentTransaction?  @relation("Order_lastTransaction", fields: [lastTransactionId], references: [id])
 
   @@unique([no])
   @@unique([paymentProvider, paymentRequestId])
@@ -1186,7 +1270,12 @@ enum PaymentProvider {
   Paypal
   Stripe
   // Vietnam
+  NAPAS
   Momo
+  VNPAY
+  Zalopay
+  ViettelMoney
+  VNPTMoney
 }
 
 model PaymentTransaction {
@@ -1213,6 +1302,7 @@ model PaymentTransaction {
 
   subscriptionAccount Account?
   order               Order    @relation(fields: [orderId], references: [id])
+  order_lastTrans     Order?   @relation("Order_lastTransaction")
 
   @@unique([no])
   @@unique([paymentProvider, paymentTransactionId])

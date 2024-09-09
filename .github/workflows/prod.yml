@@ -77,6 +77,6 @@ jobs:
             docker pull ghcr.io/${{ env.NAMESPACE }}/${{ env.IMAGE_NAME }}:latest
             docker logout
             docker stop ${{ env.IMAGE_NAME }} || true
-            docker rm ${{ env.IMAGE_NAME }}  || true
+            docker rm ${{ env.IMAGE_NAME }} || true
             docker run -d --restart=always --name ${{ env.IMAGE_NAME }} --add-host=host.docker.internal:host-gateway -p ${{ env.PUBLIC_PORT }}:${{ env.LOCAL_PORT }} ghcr.io/${{ env.NAMESPACE }}/${{ env.IMAGE_NAME }}:latest
-            docker rmi $(docker images --filter=reference='ghcr.io/${{ env.NAMESPACE }}/${{ env.IMAGE_NAME }}' --filter "dangling=true" -q)
+            docker rmi $(docker images --filter=reference='ghcr.io/${{ env.NAMESPACE }}/${{ env.IMAGE_NAME }}' --filter "dangling=true" -q) || true

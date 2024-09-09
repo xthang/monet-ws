@@ -65,9 +65,16 @@ async function main() {
       const url = new URL(`http://${process.env.HOST ?? 'localhost'}${request.url}`)
       const maskedUrl = request.url?.replaceAll(/(?=.)token=.*?(?=&|$)/gi, 'token=...')
 
+      const headers = request.headers
+
+      const ips = []
+      if (request.socket.remoteAddress) ips.push(`remote: ${request.socket.remoteAddress}`)
+      if (headers['x-real-ip']) ips.push(`real-ip: ${headers['x-real-ip']}`)
+      if (headers['x-forwarded-for']) ips.push(`Forwarded-For: ${headers['x-forwarded-for']}`)
+
       const token = url.searchParams.get('token')
       if (!token) {
-        console.warn(`<-> WSS on.connection:`, request.method, maskedUrl, 'Not authenticated')
+        console.warn(`<-> WSS on.connection |`, ips.join(' - '), '|', request.method, maskedUrl, 'Not authenticated')
         ws.terminate()
         request.destroy(new WsError(WsHttpCode.NOT_AUTHENTICATED, null, 'Not authenticated'))
         return
@@ -75,7 +82,7 @@ async function main() {
 
       const auth = verifyToken(token)
       if (!auth) {
-        console.warn(`<-> WSS on.connection:`, request.method, maskedUrl, 'Not authenticated')
+        console.warn(`<-> WSS on.connection |`, ips.join(' - '), '|', request.method, maskedUrl, 'Not authenticated')
         ws.terminate()
         request.destroy(new WsError(WsHttpCode.NOT_AUTHENTICATED, null, 'Not authenticated'))
         return
@@ -92,7 +99,14 @@ async function main() {
         locale: (accountLocale?.replaceAll('_', '-') ?? null) as Locale | null
       }
 
-      console.log(`<-> WSS on.connection:`, request.method, maskedUrl, `[${accountId}-${auth.userId}-${auth.ordId}]`)
+      console.log(
+        `<-> WSS on.connection |`,
+        ips.join(' - '),
+        '|',
+        request.method,
+        maskedUrl,
+        `[${accountId}-${auth.userId}-${auth.ordId}]`
+      )
 
       if (!wss.socketsByAccount[accountId]) wss.socketsByAccount[accountId] = { clients: new Set([ws]) }
       else wss.socketsByAccount[accountId].clients.add(ws)
