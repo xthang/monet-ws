@@ -1,7 +1,10 @@
 import { WebSocketServer, type WebSocket } from 'ws'
 
 import { PORT } from './constants/env'
-import { Locale } from './constants/locales'
+// loadDbCaches must be placed after load dotenv
+// eslint-disable-next-line import/order
+import { loadDbCaches } from './constants/db-caches'
+import type { SupportedLocale } from './constants/locales'
 import db from './db/index'
 import { verifyToken } from './security/token-verification'
 import { WsError, WsErrorCode, WsHttpCode } from './types/error'
@@ -54,6 +57,8 @@ process
 
 async function main() {
   try {
+    await loadDbCaches()
+
     const wss = new WebSocketServer({ port: PORT }) as WebSocketServer
     wss.socketsByAccount = {}
 
@@ -96,7 +101,7 @@ async function main() {
         accountId,
         authAccountId: auth.userId,
         orgId: auth.ordId,
-        locale: (accountLocale?.replaceAll('_', '-') ?? null) as Locale | null
+        locale: (accountLocale?.replaceAll('_', '-') ?? null) as SupportedLocale | null
       }
 
       console.log(

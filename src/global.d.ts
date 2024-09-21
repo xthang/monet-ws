@@ -79,6 +79,6 @@ interface Console {
 
 declare namespace NodeJS {
   interface ProcessEnv {
-    readonly NEXT_PUBLIC_ENVIRONMENT: 'dev' | 'staging' | 'production' | 'test'
+    readonly ENVIRONMENT: 'dev' | 'staging' | 'production' | 'test'
   }
 }

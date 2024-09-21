@@ -1,6 +1,6 @@
 import { type WebSocketServer, WebSocket } from 'ws'
 
-import type { Locale } from '@/constants/locales'
+import type { SupportedLocale } from '@/constants/locales'
 import db from '@/db'
 import type { WsMessageFullPayload } from '@/types/ws/message.d'
 import { Ws_GroupMembershipRequest_Action_RequestData } from '@/types/ws/request'
@@ -17,7 +17,7 @@ export default async function handleGroupMembershipRequestAction(
   wss: WebSocketServer,
   ws: WebSocket,
   requestId: string,
-  locale: Locale,
+  locale: SupportedLocale,
   rawInput: Ws_GroupMembershipRequest_Action_RequestData
 ) {
   // Validate inputs
@@ -94,7 +94,7 @@ export default async function handleGroupMembershipRequestAction(
         accountId?: string
         accountAliasId?: string
         name?: string
-        locale?: Locale | null
+        locale?: SupportedLocale | null
         channel: 'email' | 'sms'
         address: string
       }[] = getNotificationRecipientInfoFromMembership(

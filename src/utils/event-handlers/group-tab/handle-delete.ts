@@ -3,7 +3,7 @@ import type { WebSocketServer, WebSocket } from 'ws'
 
 import { ActivityLogType } from '@/constants/data'
 import { FILE_SERVICE_SYSTEM_SYNC_API_KEY, FILE_SERVICE_URL } from '@/constants/env'
-import type { Locale } from '@/constants/locales'
+import type { SupportedLocale } from '@/constants/locales'
 import db from '@/db'
 import { WsError, WsErrorCode, WsHttpCode } from '@/types/error'
 import { Ws_GroupTab_Delete_RequestData } from '@/types/ws/request'
@@ -17,7 +17,7 @@ export async function handleDeleteGroupTab(
   wss: WebSocketServer,
   ws: WebSocket,
   requestId: string,
-  locale: Locale,
+  locale: SupportedLocale,
   rawInput: Ws_GroupTab_Delete_RequestData
 ) {
   // Validate inputs

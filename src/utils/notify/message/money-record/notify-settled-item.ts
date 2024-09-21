@@ -4,7 +4,7 @@ import { $Enums } from '@prisma/client'
 
 import { TextTemplateKey } from '@/constants/data'
 import { HOST_NAME, NOTIFIER_SENDER_NAME } from '@/constants/env'
-import { DEFAULT_LOCALE, loadI18n, SupportedLocale, type Locale } from '@/constants/locales'
+import { DEFAULT_LOCALE, loadI18n, type SupportedLocale } from '@/constants/locales'
 import type { PrismaClient, PrismaTransactionClient } from '@/db/types'
 import queueSendEmails from '@/utils/queue/queue-send-email'
 import queueSendSms from '@/utils/queue/queue-send-sms'
@@ -18,7 +18,7 @@ export default async function notifySettleItems(
     accountAliasId?: string
     role: 'payor' | 'payee'
     name?: string
-    locale?: Locale | null
+    locale?: SupportedLocale | null
     channel: 'email' | 'sms'
     address: string
   }[],
@@ -52,6 +52,7 @@ export default async function notifySettleItems(
             category: 'settled-item',
             from: NOTIFIER_SENDER_NAME,
             to: [{ ...it, emailAddress: address }],
+            locale: locale ?? DEFAULT_LOCALE,
             subject: contentTemplates.find(
               (it) => it.key === TextTemplateKey.SETTLED_ITEM__EMAIL_TITLE && it.locale === locale_
             )!.content,
@@ -83,6 +84,7 @@ export default async function notifySettleItems(
           return {
             category: 'settled-item',
             to: [{ ...it, phoneNumber: address }],
+            locale: locale ?? DEFAULT_LOCALE,
             text: contentTemplates
               .find((it) => it.key === TextTemplateKey.SETTLED_ITEM__SMS_CONTENT && it.locale === locale_)!
               .content.replace('{{member_name}}', name ? ` ${name}` : '')

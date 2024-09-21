@@ -2,7 +2,7 @@ import { $Enums, type Group } from '@prisma/client'
 
 import { TextTemplateKey } from '@/constants/data'
 import { NOTIFIER_SENDER_NAME } from '@/constants/env'
-import { DEFAULT_LOCALE, Locale } from '@/constants/locales'
+import { DEFAULT_LOCALE, type SupportedLocale } from '@/constants/locales'
 import type { PrismaTransactionClient } from '@/db/types'
 import queueSendEmails from '@/utils/queue/queue-send-email'
 import queueSendSms from '@/utils/queue/queue-send-sms'
@@ -13,7 +13,7 @@ export default async function notifyDeletedGroup(
     accountId?: string
     accountAliasId?: string
     name?: string
-    locale?: Locale | null
+    locale?: SupportedLocale | null
     channel: 'email' | 'sms'
     address: string
   }[],
@@ -42,6 +42,7 @@ export default async function notifyDeletedGroup(
         category: 'group-deleted',
         from: NOTIFIER_SENDER_NAME,
         to: [{ ...it, emailAddress: address }],
+        locale: locale ?? DEFAULT_LOCALE,
         subject: contentTemplates.find(
           (it) => it.key === TextTemplateKey.DELETED_GROUP__EMAIL_TITLE && it.locale === (locale ?? DEFAULT_LOCALE)
         )!.content,
@@ -60,6 +61,7 @@ export default async function notifyDeletedGroup(
       toPhoneNumbers.map(({ channel, name, locale, address, ...it }) => ({
         category: 'group-deleted',
         to: [{ ...it, phoneNumber: address }],
+        locale: locale ?? DEFAULT_LOCALE,
         text: contentTemplates
           .find(
             (it) => it.key === TextTemplateKey.DELETED_GROUP__SMS_CONTENT && it.locale === (locale ?? DEFAULT_LOCALE)

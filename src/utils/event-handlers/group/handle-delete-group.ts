@@ -2,7 +2,7 @@ import { $Enums } from '@prisma/client'
 import type { WebSocketServer, WebSocket } from 'ws'
 
 import { FILE_SERVICE_SYSTEM_SYNC_API_KEY, FILE_SERVICE_URL } from '@/constants/env'
-import type { Locale } from '@/constants/locales'
+import type { SupportedLocale } from '@/constants/locales'
 import db from '@/db'
 import { WsError, WsErrorCode, WsHttpCode } from '@/types/error'
 import { Ws_Group_Delete_RequestData } from '@/types/ws/request'
@@ -19,7 +19,7 @@ export default async function handleDeleteGroup(
   wss: WebSocketServer,
   ws: WebSocket,
   requestId: string,
-  locale: Locale,
+  locale: SupportedLocale,
   rawInput: Ws_Group_Delete_RequestData
 ) {
   // Validate inputs
@@ -71,7 +71,7 @@ export default async function handleDeleteGroup(
         accountId?: string
         accountAliasId?: string
         name?: string
-        locale?: Locale | null
+        locale?: SupportedLocale | null
         channel: 'email' | 'sms'
         address: string
       }[] = []

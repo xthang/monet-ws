@@ -1,6 +1,6 @@
 import type { $Enums } from '@prisma/client'
 
-import type { Locale } from '@/constants/locales'
+import type { SupportedLocale } from '@/constants/locales'
 import type { AccountBasicInfo } from '@/types/db'
 
 import { getMemberName } from '../get-name-display'
@@ -19,7 +19,7 @@ export default function getNotificationRecipientInfoFromMembership(
   member: {
     account?:
       | (AccountBasicInfo & {
-          locale: Locale | null
+          locale: SupportedLocale | null
           accountAliases: AccountAlias[]
           deletedAt?: Date | null
           isActive?: boolean | null
@@ -27,7 +27,7 @@ export default function getNotificationRecipientInfoFromMembership(
       | null
     accountAlias?: AccountAlias | null
   },
-  defaultLocale: Locale | null
+  defaultLocale: SupportedLocale | null
 ) {
   const { account, accountAlias } = member
 
@@ -35,7 +35,7 @@ export default function getNotificationRecipientInfoFromMembership(
     accountId?: string
     accountAliasId?: string
     name?: string
-    locale?: Locale | null
+    locale?: SupportedLocale | null
     channel: 'email' | 'sms'
     address: string
   }[] = []

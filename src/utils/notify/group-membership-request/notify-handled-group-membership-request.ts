@@ -2,7 +2,7 @@ import { $Enums, type Group } from '@prisma/client'
 
 import { TextTemplateKey } from '@/constants/data'
 import { HOST_NAME, NOTIFIER_SENDER_NAME } from '@/constants/env'
-import { DEFAULT_LOCALE, type Locale } from '@/constants/locales'
+import { DEFAULT_LOCALE, type SupportedLocale } from '@/constants/locales'
 import type { PrismaTransactionClient } from '@/db/types'
 import queueSendEmails from '@/utils/queue/queue-send-email'
 import queueSendSms from '@/utils/queue/queue-send-sms'
@@ -13,7 +13,7 @@ export default async function notifyHandledGroupMembershipRequest(
     accountId?: string
     accountAliasId?: string
     name?: string
-    locale?: Locale | null
+    locale?: SupportedLocale | null
     channel: 'email' | 'sms'
     address: string
   }[],
@@ -50,6 +50,7 @@ export default async function notifyHandledGroupMembershipRequest(
         category: `group-membership-request-${action === 'approve' ? 'approved' : 'rejected'}`,
         from: NOTIFIER_SENDER_NAME,
         to: [{ ...it, emailAddress: address }],
+        locale: locale ?? DEFAULT_LOCALE,
         subject: contentTemplates.find(
           (it) =>
             it.key ===
@@ -82,6 +83,7 @@ export default async function notifyHandledGroupMembershipRequest(
       toPhoneNumbers.map(({ channel, name, locale, address, ...it }) => ({
         category: `group-membership-request-${action === 'approve' ? 'approved' : 'rejected'}`,
         to: [{ ...it, phoneNumber: address }],
+        locale: locale ?? DEFAULT_LOCALE,
         text: contentTemplates
           .find(
             (it) =>

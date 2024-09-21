@@ -2,7 +2,7 @@ import { $Enums } from '@prisma/client'
 import type { WebSocketServer, WebSocket } from 'ws'
 
 import { ActivityLogType } from '@/constants/data'
-import type { Locale } from '@/constants/locales'
+import type { SupportedLocale } from '@/constants/locales'
 import db from '@/db'
 import type { WsMoneyRecord } from '@/types/ws/message'
 import { Ws_MoneyRecordPartakers_Upsert_RequestData } from '@/types/ws/request'
@@ -22,7 +22,7 @@ export default async function handleUpsertMoneyRecordPartakers(
   wss: WebSocketServer,
   ws: WebSocket,
   requestId: string,
-  locale: Locale,
+  locale: SupportedLocale,
   rawInput: Ws_MoneyRecordPartakers_Upsert_RequestData
 ) {
   // Validate inputs

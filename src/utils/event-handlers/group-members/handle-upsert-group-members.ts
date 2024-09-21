@@ -2,7 +2,7 @@ import { $Enums, type Prisma } from '@prisma/client'
 import { type WebSocketServer, WebSocket } from 'ws'
 
 import { ActivityLogType } from '@/constants/data'
-import type { Locale } from '@/constants/locales'
+import type { SupportedLocale } from '@/constants/locales'
 import db from '@/db'
 import { WsError, WsErrorCode, WsHttpCode } from '@/types/error'
 import type { WsMessageFullPayload } from '@/types/ws/message'
@@ -23,7 +23,7 @@ export default async function handleUpsertGroupMembers(
   wss: WebSocketServer,
   ws: WebSocket,
   requestId: string,
-  locale: Locale,
+  locale: SupportedLocale,
   rawInput: Ws_GroupMembers_Upsert_RequestData
 ) {
   // Validate inputs
@@ -118,7 +118,7 @@ export default async function handleUpsertGroupMembers(
         accountId?: string
         accountAliasId?: string
         name?: string
-        locale?: Locale | null
+        locale?: SupportedLocale | null
         channel: 'email' | 'sms'
         address: string
         type: 'added' | 'removed'

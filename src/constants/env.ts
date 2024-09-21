@@ -2,6 +2,8 @@ import assert from 'assert'
 
 import * as dotenv from 'dotenv'
 
+export const APP_SRC_DIR = process.cwd() + '/src'
+
 const dotenvs: string[] = ['.env']
 
 const { error: dotenvConfigError } = dotenv.config()

@@ -3,7 +3,7 @@ import type { WebSocketServer, WebSocket } from 'ws'
 
 import { ActivityLogType } from '@/constants/data'
 import { FILE_SERVICE_SYSTEM_SYNC_API_KEY, FILE_SERVICE_URL } from '@/constants/env'
-import type { Locale } from '@/constants/locales'
+import type { SupportedLocale } from '@/constants/locales'
 import db from '@/db'
 import { WsError, WsErrorCode, WsHttpCode } from '@/types/error'
 import type { Ws_Message_Delete_RequestData } from '@/types/ws/request'
@@ -18,7 +18,7 @@ export default async function handleDeleteMessage(
   wss: WebSocketServer,
   ws: WebSocket,
   requestId: string,
-  locale: Locale,
+  locale: SupportedLocale,
   message: Ws_Message_Delete_RequestData
 ) {
   const { accountId, orgId } = ws.auth

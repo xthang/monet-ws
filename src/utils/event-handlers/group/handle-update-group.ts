@@ -2,7 +2,7 @@ import { $Enums } from '@prisma/client'
 import type { WebSocketServer, WebSocket } from 'ws'
 
 import { ActivityLogType, DEFAULT_GROUP_VISIBILITY } from '@/constants/data'
-import type { Locale } from '@/constants/locales'
+import type { SupportedLocale } from '@/constants/locales'
 import db from '@/db'
 import { Ws_Group_Update_RequestData } from '@/types/ws/request'
 import type { WsResponseFullPayload, Ws_Group_Update_Receipt } from '@/types/ws/response'
@@ -14,7 +14,7 @@ export default async function handleUpdateGroup(
   wss: WebSocketServer,
   ws: WebSocket,
   requestId: string,
-  locale: Locale,
+  locale: SupportedLocale,
   rawInput: Ws_Group_Update_RequestData
 ) {
   // Validate inputs

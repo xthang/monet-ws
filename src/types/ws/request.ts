@@ -1,7 +1,7 @@
 import { $Enums } from '@prisma/client'
 import { z } from 'zod'
 
-import type { Locale } from '@/constants/locales'
+import type { SupportedLocale } from '@/constants/locales'
 import { NUMBER_TYPES } from '@/constants/phone-number'
 
 export type Auth = {
@@ -9,10 +9,10 @@ export type Auth = {
   authAccountId: string
   orgId?: string
 
-  locale: Locale | null
+  locale: SupportedLocale | null
 }
 
-export type WsRequestFullPayload = { requestId: string; token: string; locale: Locale } & WsRequestData
+export type WsRequestFullPayload = { requestId: string; token: string; locale: SupportedLocale } & WsRequestData
 
 export type WsRequestData =
   | {

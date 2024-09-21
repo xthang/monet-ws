@@ -2,7 +2,7 @@ import { $Enums } from '@prisma/client'
 import type { WebSocketServer, WebSocket } from 'ws'
 
 import { ActivityLogType } from '@/constants/data'
-import type { Locale } from '@/constants/locales'
+import type { SupportedLocale } from '@/constants/locales'
 import db from '@/db'
 import { Ws_GroupTab_Create_RequestData } from '@/types/ws/request'
 import type { Ws_GroupTab_Create_Receipt, WsResponseFullPayload } from '@/types/ws/response'
@@ -15,7 +15,7 @@ export async function handleCreateGroupTab(
   wss: WebSocketServer,
   ws: WebSocket,
   requestId: string,
-  locale: Locale,
+  locale: SupportedLocale,
   rawInput: Ws_GroupTab_Create_RequestData
 ) {
   // Validate inputs

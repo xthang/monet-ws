@@ -1,6 +1,6 @@
 import type { WebSocketServer, WebSocket } from 'ws'
 
-import type { Locale } from '@/constants/locales'
+import type { SupportedLocale } from '@/constants/locales'
 import db from '@/db'
 import { WsError, WsHttpCode } from '@/types/error'
 import type { Ws_Message_Text_Send_RequestData } from '@/types/ws/request'
@@ -15,7 +15,7 @@ export default async function handleNewMessage(
   wss: WebSocketServer,
   ws: WebSocket,
   requestId: string,
-  locale: Locale,
+  locale: SupportedLocale,
   message: Ws_Message_Text_Send_RequestData
 ) {
   const { accountId, orgId } = ws.auth

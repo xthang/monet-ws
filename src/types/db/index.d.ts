@@ -6,7 +6,7 @@ import type {
   MoneyRecordPartaker as DbMoneyRecordPartaker
 } from '@prisma/client'
 
-import type { Locale } from '@/constants/locales.ts'
+import type { SupportedLocale } from '@/constants/locales'
 
 import type { PhoneNumber } from '../phone-number'
 
@@ -23,7 +23,7 @@ type Account = Pick<
   | 'nickname'
   | 'imageUrl'
   | 'role'
-> & { locale: Locale }
+> & { locale: SupportedLocale }
 type AccountBasicInfo = Pick<
   DbAccount,
   | 'id'

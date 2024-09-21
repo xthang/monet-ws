@@ -368,15 +368,16 @@ enum NotificationStatus {
 }
 
 model TaskSendEmail {
-  id       Int    @id @default(autoincrement())
+  id       Int     @id @default(autoincrement())
   category String
   from     String
   to       Json[]
   cc       Json[]
   bcc      Json[]
-  subject  String @db.Text
-  text     String @db.Text
-  html     String @db.Text
+  locale   Locale?
+  subject  String  @db.Text
+  text     String  @db.Text
+  html     String  @db.Text
 
   // Technical Fields
   createdAt DateTime  @default(now()) @db.Timestamptz(3)
@@ -394,10 +395,11 @@ model TaskSendEmail {
 }
 
 model TaskSendSms {
-  id       Int    @id @default(autoincrement())
+  id       Int     @id @default(autoincrement())
   category String
   to       Json[]
-  content  String @db.Text
+  locale   Locale?
+  content  String  @db.Text
 
   // Technical Fields
   createdAt DateTime  @default(now()) @db.Timestamptz(3)
