@@ -74,11 +74,8 @@ web_modules/
 
 # dotenv environment variable files
 # .env
-.env.development.local
-.env.test.local
-.env.staging.local
-.env.production.local
 .env.local
+.env.*.local
 
 # parcel-bundler cache (https://parceljs.org/)
 .cache
@@ -138,11 +135,14 @@ dist
 
 ###########################################
 
+.DS_Store
+
 /ignore/
+/ignored/
 /logs/
 
 # Sentry Config File
-.sentryclirc
+/.sentryclirc
 
-src/locales/*/messages.ts
-src/locales/*/messages.js
+/src/locales/*/messages.ts
+/src/locales/*/messages.js
