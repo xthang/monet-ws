@@ -1,5 +1,8 @@
 import { WebSocketServer, type WebSocket } from 'ws'
 
+import type { WsMessageFullPayload } from '@/types/ws/message'
+import type { WsResponseFullPayload } from '@/types/ws/response'
+
 import { PORT } from './constants/env'
 // loadDbCaches must be placed after load dotenv
 // eslint-disable-next-line import/order
@@ -8,9 +11,7 @@ import type { SupportedLocale } from './constants/locales'
 import db from './db/index'
 import { verifyToken } from './security/token-verification'
 import { WsError, WsErrorCode, WsHttpCode } from './types/error'
-import type { WsMessageFullPayload } from './types/ws/message.d'
 import type { WsRequestFullPayload } from './types/ws/request'
-import type { WsResponseFullPayload } from './types/ws/response.d'
 import { findUniqueAccountByAuthAccIdOrThrow } from './utils/db/queries'
 import handleDeleteGroup from './utils/event-handlers/group/handle-delete-group'
 import handleUpdateGroup from './utils/event-handlers/group/handle-update-group'

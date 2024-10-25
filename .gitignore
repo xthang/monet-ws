@@ -137,6 +137,8 @@ dist
 
 .DS_Store
 
+/.idea
+
 /ignore/
 /ignored/
 /logs/
