@@ -11,6 +11,11 @@ const longParentPath = Array.from({ length: 10 }, (_, i) => '../'.repeat(i + 1).
 
 /** @type {import('eslint').Linter.Config[]} */
 export default [
+  {
+    // files: ['**/*.{js,mjs,cjs,ts}'],
+    ignores: ['node_modules/', 'build/', 'public/', 'dist/', 'ignore/', 'ignored/']
+  },
+
   pluginJs.configs.recommended,
   ...tseslint.configs.recommended,
 
@@ -22,9 +27,6 @@ export default [
 
   {
     name: 'x-eslint',
-
-    // files: ['**/*.{js,mjs,cjs,ts}'],
-    ignores: ['node_modules/', '.nuxt/', 'build/', 'public/', 'dist/', '/ignore/', '/ignored/'],
 
     languageOptions: {
       globals: {

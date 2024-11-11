@@ -161,5 +161,6 @@ export const MONEY_RECORD_SELECT = {
   deletedBy: true,
   deletedByAccount: { select: ACCOUNT_SELECT },
   settlementId: true,
+  settledById: true,
   status: true
 } as const satisfies Prisma.MoneyRecordSelect

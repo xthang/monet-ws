@@ -633,6 +633,7 @@ model AccountAlias {
   @@unique([no])
   // @@unique([type, contactValue, (CASE WHEN "deletedAt" IS NULL THEN true ELSE NULL END)])
   @@unique([type, contactValue, isActive])
+  @@index([accountId])
 }
 
 enum AccountAliasType {
@@ -840,7 +841,7 @@ model ContactList {
 
 model ContactListMapping {
   // Functional Fields
-  no Int @default(autoincrement())
+  no Int @id @default(autoincrement())
 
   accountId     String @db.VarChar(50)
   contactListId String @db.VarChar(50)
@@ -859,7 +860,6 @@ model ContactListMapping {
   contactList ContactList @relation(fields: [contactListId], references: [id])
   contact     Contact     @relation(fields: [contactId], references: [id])
 
-  @@unique([no])
   @@unique([contactListId, contactId, isActive])
   @@index([accountId, isActive])
   @@index([contactListId, isActive])
@@ -1099,8 +1099,8 @@ model MoneyRecord {
   time              DateTime?          @default(now()) @db.Timestamptz(3)
   type              MoneyRecordType?
   // subType        String?            @db.VarChar(30)
-  description       String             @db.Text /// @encrypted // LongText 
-  note              String?            @db.Text /// @encrypted // LongText 
+  description       String             @db.Text /// @encrypted // LongText
+  note              String?            @db.Text /// @encrypted // LongText
   payerMemberId     String             @db.VarChar(50)
   amount            Decimal?
   currency          Currency
@@ -1110,6 +1110,7 @@ model MoneyRecord {
   status            MoneyRecordStatus?
 
   settlementId String? @db.VarChar(50)
+  settledById  String? @db.VarChar(50)
 
   // Technical Fields
   createdAt DateTime  @default(now()) @db.Timestamptz(3)
@@ -1127,6 +1128,8 @@ model MoneyRecord {
   payerMember      GroupMembership       @relation(fields: [payerMemberId], references: [id])
   partakers        MoneyRecordPartaker[]
   expenseDocuments ExpenseDocument[]
+  // settlement       GroupTabSuggestedSettlement? @relation(fields: [settlementId], references: [id])
+  // settledBy        GroupTabSuggestedSettlement? @relation("MoneyRecord_settledBy", fields: [settledById], references: [id])
   deletedByAccount Account?              @relation("MoneyRecord_deletedByAccount", fields: [deletedBy], references: [id])
 
   @@unique([no])
@@ -1232,6 +1235,8 @@ model GroupTabSuggestedSettlement {
   groupTab    GroupTab        @relation(fields: [tabId], references: [id])
   payorMember GroupMembership @relation(fields: [payorMemberId], references: [id], name: "GroupTabSuggestedSettlement_payorMember")
   payeeMember GroupMembership @relation(fields: [payeeMemberId], references: [id], name: "GroupTabSuggestedSettlement_payeeMember")
+  // settlementRecord MoneyRecord?
+  // settledRecords   MoneyRecord[]   @relation("MoneyRecord_settledBy")
 
   @@unique([no])
 }
@@ -1265,6 +1270,7 @@ model Order {
 
   @@unique([no])
   @@unique([paymentProvider, paymentRequestId])
+  @@index([accountId])
   @@index([paymentProvider])
 }
 
