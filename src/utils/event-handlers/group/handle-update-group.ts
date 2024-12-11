@@ -51,14 +51,15 @@ export default async function handleUpdateGroup(
             lastActiveAccounts
           },
           select: {
+            id: true,
             name: name !== undefined,
             description: description !== undefined,
             photo: photo !== undefined,
             visibility: visibility !== undefined,
             defaultCurrency: defaultCurrency !== undefined,
-            note: note !== undefined
-          },
-          include: { tabs: defaultCurrency != undefined }
+            note: note !== undefined,
+            tabs: defaultCurrency != undefined
+          }
         })
 
         updatedGroup = {

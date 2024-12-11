@@ -84,7 +84,10 @@ type WsMessagePayload =
 
 type WsNotification = any
 
-type WsGroup = RequiredNonNullableProps<Omit<Group, 'no'>, 'visibility'>
+type WsGroup = Pick<Group, 'id'> &
+  Partial<Pick<Group, 'name' | 'description' | 'photo' | 'defaultCurrency' | 'note'>> & {
+    visibility?: NonNullable<Group['visibility']>
+  }
 
 type WsChatMessage = Omit<Message, 'no' | 'uiId'> & {
   moneyRecord?: WsMoneyRecord | null
