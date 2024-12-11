@@ -50,10 +50,22 @@ export default async function handleUpdateGroup(
             lastActivityAt: new Date(),
             lastActiveAccounts
           },
+          select: {
+            name: name !== undefined,
+            description: description !== undefined,
+            photo: photo !== undefined,
+            visibility: visibility !== undefined,
+            defaultCurrency: defaultCurrency !== undefined,
+            note: note !== undefined
+          },
           include: { tabs: defaultCurrency != undefined }
         })
 
-        updatedGroup = { ...updatedGroup, visibility: updatedGroup.visibility ?? DEFAULT_GROUP_VISIBILITY }
+        updatedGroup = {
+          ...updatedGroup,
+          photo: photo !== undefined ? '<updated>' : null,
+          visibility: updatedGroup.visibility ?? DEFAULT_GROUP_VISIBILITY
+        }
       }
 
       await tx.activityLog.create({
