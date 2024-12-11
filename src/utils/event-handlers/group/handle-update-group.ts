@@ -64,8 +64,8 @@ export default async function handleUpdateGroup(
 
         updatedGroup = {
           ...updatedGroup,
-          photo: photo !== undefined ? '<updated>' : null,
-          visibility: updatedGroup.visibility ?? DEFAULT_GROUP_VISIBILITY
+          photo: photo === undefined ? undefined : '<updated>',
+          visibility: visibility === undefined ? undefined : (updatedGroup.visibility ?? DEFAULT_GROUP_VISIBILITY)
         }
       }
 
