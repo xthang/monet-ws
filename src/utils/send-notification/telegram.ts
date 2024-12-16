@@ -56,7 +56,7 @@ export async function sendTelegramMessageToGroup(
       const params = {
         chat_id: chatId,
         parse_mode: 'HTML',
-        text: `<b>[${process.env.SERVER_ID}]</b> <b>[${process.env.name ?? '--'}]</b> <b>[${tag}]</b> [<i>${level}</i>] ${messages
+        text: `<b>[MONET-WS]</b> <b>[${process.env.ENVIRONMENT}]</b> <b>[${tag}]</b> [<i>${level}</i>] ${messages
           .map((it) =>
             it
               .replaceAll('&', '&amp;')
