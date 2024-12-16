@@ -73,7 +73,13 @@ export default async function handleCreateGroupMembershipRequest(
         address: string
       }[] = adminMemberships.flatMap((m) =>
         getNotificationRecipientInfoFromMembership(
-          { ...m, account: { ...m.account!, locale: m.account!.locale && fromDbLocale(m.account!.locale) } },
+          {
+            ...m,
+            account: {
+              ...m.account!,
+              locale: m.account!.locale && (fromDbLocale(m.account!.locale) as SupportedLocale)
+            }
+          },
           locale
         )
       )

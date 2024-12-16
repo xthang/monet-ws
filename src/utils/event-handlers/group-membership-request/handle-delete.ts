@@ -76,7 +76,13 @@ export default async function handleDeleteGroupMembershipRequest(
         address: string
       }[] = adminMemberships.flatMap((m) =>
         getNotificationRecipientInfoFromMembership(
-          { ...m, account: { ...m.account!, locale: m.account!.locale && fromDbLocale(m.account!.locale) } },
+          {
+            ...m,
+            account: {
+              ...m.account!,
+              locale: m.account!.locale && (fromDbLocale(m.account!.locale) as SupportedLocale)
+            }
+          },
           locale
         )
       )

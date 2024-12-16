@@ -116,7 +116,9 @@ export default async function handleSettleUpPayable(
           ...payorMemberForNotify_,
           account: payorMemberForNotify_.account && {
             ...payorMemberForNotify_.account,
-            locale: payorMemberForNotify_.account.locale && fromDbLocale(payorMemberForNotify_.account.locale)
+            locale:
+              payorMemberForNotify_.account.locale &&
+              (fromDbLocale(payorMemberForNotify_.account.locale) as SupportedLocale)
           }
         }
 
@@ -131,7 +133,9 @@ export default async function handleSettleUpPayable(
           ...payeeMemberForNotify_,
           account: payeeMemberForNotify_.account && {
             ...payeeMemberForNotify_.account,
-            locale: payeeMemberForNotify_.account.locale && fromDbLocale(payeeMemberForNotify_.account.locale)
+            locale:
+              payeeMemberForNotify_.account.locale &&
+              (fromDbLocale(payeeMemberForNotify_.account.locale) as SupportedLocale)
           }
         }
 

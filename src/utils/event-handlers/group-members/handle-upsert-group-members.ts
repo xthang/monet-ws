@@ -154,7 +154,7 @@ export default async function handleUpsertGroupMembers(
             })
             toSendNoti.push(
               ...getNotificationRecipientInfoFromMembership(
-                { account: { ...acc, locale: acc.locale && fromDbLocale(acc.locale) } },
+                { account: { ...acc, locale: acc.locale && (fromDbLocale(acc.locale) as SupportedLocale) } },
                 locale
               ).map((it) => ({
                 ...it,
@@ -321,7 +321,10 @@ export default async function handleUpsertGroupMembers(
               ...getNotificationRecipientInfoFromMembership(
                 {
                   ...deleteMembership,
-                  account: account && { ...account, locale: account.locale && fromDbLocale(account.locale) }
+                  account: account && {
+                    ...account,
+                    locale: account.locale && (fromDbLocale(account.locale) as SupportedLocale)
+                  }
                 },
                 locale
               ).map((it) => ({

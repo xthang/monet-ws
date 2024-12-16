@@ -13,20 +13,21 @@ msgstr ""
 "Language-Team: \n"
 "Plural-Forms: \n"
 
-#: src/utils/notify/message/money-record/notify-settled-item.ts:67
-#: src/utils/notify/message/money-record/notify-settled-item.ts:93
+#. placeholder {0}: payment.payor.name
+#: src/utils/notify/message/money-record/notify-settled-item.ts:72
+#: src/utils/notify/message/money-record/notify-settled-item.ts:98
 msgid "{0} has"
 msgstr ""
 
-#: src/utils/notify/message/money-record/notify-settled-item.ts:68
-#: src/utils/notify/message/money-record/notify-settled-item.ts:94
+#: src/utils/notify/message/money-record/notify-settled-item.ts:73
+#: src/utils/notify/message/money-record/notify-settled-item.ts:99
 msgid "you"
 msgstr ""
 
-#: src/utils/notify/message/money-record/notify-settled-item.ts:67
+#: src/utils/notify/message/money-record/notify-settled-item.ts:72
 msgid "<i>You</i> have"
 msgstr ""
 
-#: src/utils/notify/message/money-record/notify-settled-item.ts:93
+#: src/utils/notify/message/money-record/notify-settled-item.ts:98
 msgid "You have"
 msgstr ""

@@ -80,7 +80,7 @@ export default async function handleDeleteGroup(
           ...membership,
           account: membership.account && {
             ...membership.account,
-            locale: membership.account.locale && fromDbLocale(membership.account.locale)
+            locale: membership.account.locale && (fromDbLocale(membership.account.locale) as SupportedLocale)
           }
         }
 

@@ -3,6 +3,7 @@ import assert from 'assert'
 import { $Enums } from '@prisma/client'
 
 import db from '@/db'
+import { fromDbLocale } from '@/utils/db/transform/locale'
 import { sleep } from '@/utils/time'
 
 import { TextTemplateKey } from './data'
@@ -36,12 +37,14 @@ async function _loadDbCaches(count: number) {
   const templates = await db.textTemplate.findMany({
     where: {
       type: $Enums.TextTemplateType.textContent,
-      key: TextTemplateKey.EMAIL_HTML_TEMPLATE_GENERAL
-    }
+      key: TextTemplateKey.EMAIL_HTML_TEMPLATE_GENERAL,
+      status: $Enums.TextTemplateStatus.active
+    },
+    select: { locale: true, content: true }
   })
 
   EMAIL_HTML_TEMPLATE_GENERAL = Object.fromEntries(
-    templates.map(({ locale, content }) => [locale.replace('_', '-'), content])
+    templates.map(({ locale, content }) => [fromDbLocale(locale), content])
   )
   console.log(`--  [${count}] loaded EMAIL_HTML_TEMPLATE_GENERAL:`, Object.keys(EMAIL_HTML_TEMPLATE_GENERAL))
 

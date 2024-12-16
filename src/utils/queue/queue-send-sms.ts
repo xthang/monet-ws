@@ -1,8 +1,8 @@
-import type { $Enums } from '@prisma/client'
-
 import type { SupportedLocale } from '@/constants/locales'
 import db from '@/db'
 import type { PrismaClient, PrismaTransactionClient } from '@/db/types'
+
+import { toDbLocale } from '../db/transform/locale'
 
 export default async function queueSendSms(
   db_: PrismaClient | PrismaTransactionClient | undefined,
@@ -25,7 +25,7 @@ export default async function queueSendSms(
   await (db_ ?? db).taskSendSms.createMany({
     data: smses.map(({ locale, text, ...m }) => ({
       ...m,
-      locale: locale.replaceAll('-', '_') as $Enums.Locale,
+      locale: toDbLocale(locale),
       content: text,
       createdBy: 'system'
     }))

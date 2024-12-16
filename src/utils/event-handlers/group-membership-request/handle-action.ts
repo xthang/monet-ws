@@ -98,7 +98,12 @@ export default async function handleGroupMembershipRequestAction(
         channel: 'email' | 'sms'
         address: string
       }[] = getNotificationRecipientInfoFromMembership(
-        { account: { ...requestAccount, locale: requestAccount.locale && fromDbLocale(requestAccount.locale) } },
+        {
+          account: {
+            ...requestAccount,
+            locale: requestAccount.locale && (fromDbLocale(requestAccount.locale) as SupportedLocale)
+          }
+        },
         locale
       )
 

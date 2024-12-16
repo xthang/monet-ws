@@ -6,6 +6,7 @@ import { TextTemplateKey } from '@/constants/data'
 import { HOST_NAME, NOTIFIER_SENDER_NAME } from '@/constants/env'
 import { DEFAULT_LOCALE, loadI18n, type SupportedLocale } from '@/constants/locales'
 import type { PrismaClient, PrismaTransactionClient } from '@/db/types'
+import { fromDbLocale } from '@/utils/db/transform/locale'
 import queueSendEmails from '@/utils/queue/queue-send-email'
 import queueSendSms from '@/utils/queue/queue-send-sms'
 
@@ -27,25 +28,29 @@ export default async function notifySettleItems(
   const toEmailAddresses = to.filter((it) => it.channel === 'email')
   const toPhoneNumbers = to.filter((it) => it.channel === 'sms')
 
-  const contentTemplates = await db.textTemplate.findMany({
-    where: {
-      type: $Enums.TextTemplateType.textContent,
-      key: {
-        in: [
-          TextTemplateKey.SETTLED_ITEM__EMAIL_TITLE,
-          TextTemplateKey.SETTLED_ITEM__EMAIL_CONTENT,
-          TextTemplateKey.SETTLED_ITEM__SMS_CONTENT
-        ]
-      }
-    }
-  })
+  const contentTemplates = (
+    await db.textTemplate.findMany({
+      where: {
+        type: $Enums.TextTemplateType.textContent,
+        key: {
+          in: [
+            TextTemplateKey.SETTLED_ITEM__EMAIL_TITLE,
+            TextTemplateKey.SETTLED_ITEM__EMAIL_CONTENT,
+            TextTemplateKey.SETTLED_ITEM__SMS_CONTENT
+          ]
+        },
+        status: $Enums.TextTemplateStatus.active
+      },
+      select: { key: true, locale: true, content: true }
+    })
+  ).map(({ locale, ...others }) => ({ locale: fromDbLocale(locale), ...others }))
 
   if (toEmailAddresses.length) {
     await queueSendEmails(
       db,
       await Promise.all(
         toEmailAddresses.map(async ({ channel, role, name, locale, address, ...it }) => {
-          const locale_ = (locale ?? DEFAULT_LOCALE) as SupportedLocale
+          const locale_ = locale ?? DEFAULT_LOCALE
           const i18n = await loadI18n(locale_)
 
           return {
@@ -78,7 +83,7 @@ export default async function notifySettleItems(
       db,
       await Promise.all(
         toPhoneNumbers.map(async ({ channel, role, name, locale, address, ...it }) => {
-          const locale_ = (locale ?? DEFAULT_LOCALE) as SupportedLocale
+          const locale_ = locale ?? DEFAULT_LOCALE
           const i18n = await loadI18n(locale_)
 
           return {

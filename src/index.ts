@@ -13,6 +13,7 @@ import { verifyToken } from './security/token-verification'
 import { WsError, WsErrorCode, WsHttpCode } from './types/error'
 import type { WsRequestFullPayload } from './types/ws/request'
 import { findUniqueAccountByAuthAccIdOrThrow } from './utils/db/queries'
+import { fromDbLocale } from './utils/db/transform/locale'
 import handleDeleteGroup from './utils/event-handlers/group/handle-delete-group'
 import handleUpdateGroup from './utils/event-handlers/group/handle-update-group'
 import handleUpsertGroupMembers from './utils/event-handlers/group-members/handle-upsert-group-members'
@@ -102,7 +103,7 @@ async function main() {
         accountId,
         authAccountId: auth.userId,
         orgId: auth.ordId,
-        locale: (accountLocale?.replaceAll('_', '-') ?? null) as SupportedLocale | null
+        locale: accountLocale && (fromDbLocale(accountLocale) as SupportedLocale)
       }
 
       console.log(

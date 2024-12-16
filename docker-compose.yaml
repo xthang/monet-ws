@@ -3,3 +3,5 @@ services:
     container_name: monet-ws
     build:
       context: .
+      args:
+        - CI_COMMIT_SHA=........

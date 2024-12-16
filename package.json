@@ -24,8 +24,8 @@
     "prepare": "husky"
   },
   "dependencies": {
-    "@lingui/core": "^4",
-    "@prisma/client": "^5",
+    "@lingui/core": "^5",
+    "@prisma/client": "^6",
     "dotenv": "^16",
     "jsonwebtoken": "^9",
     "libphonenumber-js": "^1",
@@ -36,12 +36,12 @@
     "zod": "^3"
   },
   "devDependencies": {
-    "@lingui/cli": "^4",
-    "@lingui/macro": "^4.14",
-    "@lingui/swc-plugin": "4.0.9",
+    "@lingui/cli": "^5",
+    "@lingui/macro": "^5.1",
+    "@lingui/swc-plugin": "5.0.1",
     "@swc-node/register": "^1.10",
     "@swc/cli": "^0.5",
-    "@swc/core": "~1.5",
+    "@swc/core": "~1.9",
     "@types/jsonwebtoken": "^9",
     "@types/lodash": "^4",
     "@types/ws": "^8",
@@ -57,7 +57,7 @@
     "lint-staged": "^15",
     "nodemon": "^3",
     "prettier": "^3",
-    "prisma": "^5",
+    "prisma": "^6",
     "ts-node": "^10",
     "tsconfig-paths": "^4",
     "typescript": "^5",

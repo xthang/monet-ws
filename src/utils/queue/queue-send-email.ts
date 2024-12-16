@@ -1,9 +1,9 @@
-import type { $Enums } from '@prisma/client'
-
 import { EMAIL_HTML_TEMPLATE_GENERAL } from '@/constants/db-caches'
 import type { SupportedLocale } from '@/constants/locales'
 import db from '@/db'
 import type { PrismaClient, PrismaTransactionClient } from '@/db/types'
+
+import { toDbLocale } from '../db/transform/locale'
 
 export default async function queueSendEmails(
   db_: PrismaClient | PrismaTransactionClient | undefined,
@@ -31,7 +31,7 @@ export default async function queueSendEmails(
   await (db_ ?? db).taskSendEmail.createMany({
     data: emails.map(({ locale, html, ...em }) => ({
       ...em,
-      locale: locale.replaceAll('-', '_') as $Enums.Locale,
+      locale: toDbLocale(locale),
       html: EMAIL_HTML_TEMPLATE_GENERAL[locale].replace('{{content}}', html),
       createdBy: 'system'
     }))

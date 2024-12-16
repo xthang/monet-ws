@@ -6,12 +6,18 @@
 
 # Want to help us make this template better? Share your feedback here: https://forms.gle/ybq9Krt8jtBL3iCk7
 
-ARG NODE_VERSION=20
+ARG NODE_VERSION=23
 # ARG PNPM_VERSION=9.7.1
 
 ################################################################################
 # Use node image for base image for all stages.
 FROM node:${NODE_VERSION}-alpine as base
+
+# Prisma 6.0.1:
+# cause: PrismaClientInitializationError: Unable to require(`/app/node_modules/.pnpm/@prisma+client@6.0.1_prisma@6.0.1/node_modules/.prisma/client/libquery_engine-linux-musl-arm64-openssl-1.1.x.so.node`).
+# The Prisma engines do not seem to be compatible with your system. Please refer to the documentation about Prisma's system requirements: https://pris.ly/d/system-requirements
+# Details: Error loading shared library libssl.so.1.1: No such file or directory (needed by /app/node_modules/.pnpm/@prisma+client@6.0.1_prisma@6.0.1/node_modules/.prisma/client/libquery_engine-linux-musl-arm64-openssl-1.1.x.so.node)
+RUN apk add --no-cache openssl
 
 # Set working directory for all build stages.
 WORKDIR /usr/src/app
