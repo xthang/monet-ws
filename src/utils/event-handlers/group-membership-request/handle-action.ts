@@ -1,7 +1,10 @@
+import { $Enums } from '@prisma/client'
 import { type WebSocketServer, WebSocket } from 'ws'
 
+import { FREE_PLAN_MAX_GROUP_MEMBERS } from '@/constants/env'
 import type { SupportedLocale } from '@/constants/locales'
 import db from '@/db'
+import { WsError, WsErrorCode, WsHttpCode } from '@/types/error'
 import type { WsMessageFullPayload } from '@/types/ws/message.d'
 import { Ws_GroupMembershipRequest_Action_RequestData } from '@/types/ws/request'
 import type { Ws_GroupMembershipRequest_Action_Receipt, WsResponseFullPayload } from '@/types/ws/response'
@@ -64,6 +67,23 @@ export default async function handleGroupMembershipRequestAction(
         rejectedAt: null
       }
     })
+
+    if (action === 'approve') {
+      const hasProGroupAdmin = memberships.some(
+        (m) =>
+          m.role === $Enums.GroupMemberRole.admin &&
+          m.account?.subscriptionPlan &&
+          m.account.subscriptionEndedAt! > new Date()
+      )
+
+      if (memberships.length >= FREE_PLAN_MAX_GROUP_MEMBERS && !hasProGroupAdmin) {
+        throw new WsError(
+          WsHttpCode.BAD_REQUEST,
+          WsErrorCode.GROUP_MEMBERS_MAXIMUM_REACHED,
+          'Maximum group members reached'
+        )
+      }
+    }
 
     return await db.$transaction(async (tx) => {
       if (action === 'approve') {

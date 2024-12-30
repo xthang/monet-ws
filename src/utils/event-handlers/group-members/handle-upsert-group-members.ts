@@ -2,6 +2,7 @@ import { $Enums, type Prisma } from '@prisma/client'
 import { type WebSocketServer, WebSocket } from 'ws'
 
 import { ActivityLogType } from '@/constants/data'
+import { FREE_PLAN_MAX_GROUP_MEMBERS } from '@/constants/env'
 import type { SupportedLocale } from '@/constants/locales'
 import db from '@/db'
 import { WsError, WsErrorCode, WsHttpCode } from '@/types/error'
@@ -58,10 +59,29 @@ export default async function handleUpsertGroupMembers(
     const memberDict = Object.fromEntries(memberships.map(({ id, ...m }) => [id, m]))
 
     // Check member permission
-    const hasAdmin = !!memberships.find((m) => m.role === $Enums.GroupMemberRole.admin)
+    const hasAdmin = memberships.some((m) => m.role === $Enums.GroupMemberRole.admin)
     const iAmTheOnlyAdmin =
       membership.role === $Enums.GroupMemberRole.admin &&
       memberships.filter((m) => m.role === $Enums.GroupMemberRole.admin).length <= 1
+
+    if (members.creates?.length) {
+      const hasProGroupAdmin =
+        hasAdmin &&
+        memberships.some(
+          (m) =>
+            m.role === $Enums.GroupMemberRole.admin &&
+            m.account?.subscriptionPlan &&
+            m.account.subscriptionEndedAt! > new Date()
+        )
+
+      if (memberships.length >= FREE_PLAN_MAX_GROUP_MEMBERS && !hasProGroupAdmin) {
+        throw new WsError(
+          WsHttpCode.BAD_REQUEST,
+          WsErrorCode.GROUP_MEMBERS_MAXIMUM_REACHED,
+          'Maximum group members reached'
+        )
+      }
+    }
 
     if (members.updates?.some((it) => it.role !== undefined)) {
       if (hasAdmin && membership.role !== $Enums.GroupMemberRole.admin) {
@@ -341,7 +361,7 @@ export default async function handleUpsertGroupMembers(
         where: { groupId, isActive: true },
         select: { role: true, account: { where: { deletedAt: null, isActive: true } } }
       })
-      if (!updatedMembers.find((m) => m.account && m.role === $Enums.GroupMemberRole.admin)) {
+      if (!updatedMembers.some((m) => m.account && m.role === $Enums.GroupMemberRole.admin)) {
         throw new WsError(WsHttpCode.BAD_REQUEST, null, 'No admin member found after updating')
       }
 

@@ -14,9 +14,20 @@ export const ACCOUNT_SELECT = {
   role: true
 } as const satisfies Prisma.AccountSelect
 
+export const ACCOUNT_SELECT__SUBSCRIPTION = {
+  ...ACCOUNT_SELECT,
+  subscriptionPlan: true,
+  subscriptionEndedAt: true
+} as const satisfies Prisma.AccountSelect
+
 export const ACCOUNT_SELECT_WHERE = {
   where: { deletedAt: null, isActive: true },
   select: ACCOUNT_SELECT
+} as const satisfies { where: Prisma.AccountWhereInput; select: Prisma.AccountSelect }
+
+export const ACCOUNT_SELECT_WHERE__SUBSCRIPTION = {
+  where: { deletedAt: null, isActive: true },
+  select: ACCOUNT_SELECT__SUBSCRIPTION
 } as const satisfies { where: Prisma.AccountWhereInput; select: Prisma.AccountSelect }
 
 export const ACCOUNT_ALIAS_SELECT = {
@@ -54,12 +65,12 @@ export const MEMBER_SELECT = {
 export const MEMBER_SELECT_WHERE = {
   ...MEMBER_SELECT,
 
-  account: ACCOUNT_SELECT_WHERE,
+  account: ACCOUNT_SELECT_WHERE__SUBSCRIPTION,
   accountAlias: {
     where: { verificationStatus: 'verified', deletedAt: null, isActive: true },
     select: {
       ...ACCOUNT_ALIAS_SELECT,
-      account: ACCOUNT_SELECT_WHERE // TODO: only select the connected account if the alias is 'verified' and the account is in the current org. We are fixing this in code
+      account: ACCOUNT_SELECT_WHERE__SUBSCRIPTION // TODO: only select the connected account if the alias is 'verified' and the account is in the current org. We are fixing this in code
     }
   },
   accountPlaceholder: { where: { deletedAt: null }, select: ACCOUNT_PLACEHOLDER_SELECT }
