@@ -1,17 +1,22 @@
+import assert from 'assert'
+
 import { $Enums } from '@prisma/client'
+import type { AccountAlias, GroupMembership } from '@prisma/client'
 import { type WebSocketServer, WebSocket } from 'ws'
 
 import { FREE_PLAN_MAX_GROUP_MEMBERS } from '@/constants/env'
 import type { SupportedLocale } from '@/constants/locales'
 import db from '@/db'
+import type { AccountBasicInfo } from '@/types/db'
 import { WsError, WsErrorCode, WsHttpCode } from '@/types/error'
 import type { WsMessageFullPayload } from '@/types/ws/message.d'
 import { Ws_GroupMembershipRequest_Action_RequestData } from '@/types/ws/request'
 import type { Ws_GroupMembershipRequest_Action_Receipt, WsResponseFullPayload } from '@/types/ws/response'
 import { findUniqueAccountOrThrow, findUniqueGroupMembershipOrThrow } from '@/utils/db/queries'
-import { ACCOUNT_ALIAS_SELECT, MEMBER_SELECT_WHERE } from '@/utils/db/query-constants'
+import { ACCOUNT_ALIAS_SELECT, ACCOUNT_SELECT, MEMBER_SELECT_WHERE } from '@/utils/db/query-constants'
 import { fromDbLocale } from '@/utils/db/transform/locale'
 import getNotificationRecipientInfoFromMembership from '@/utils/notify/get-notification-recipient-info-from-membership'
+import notifyUpdatedGroupMembers from '@/utils/notify/group-membership/notify-updated-group-members'
 import notifyHandledGroupMembershipRequest from '@/utils/notify/group-membership-request/notify-handled-group-membership-request'
 import { broadcastToGroupMembersExceptMe } from '@/utils/ws/broadcast-to-group-members-except-me'
 import { transformError } from '@/utils/ws/transform-error'
@@ -27,18 +32,19 @@ export default async function handleGroupMembershipRequestAction(
   const input = Ws_GroupMembershipRequest_Action_RequestData.parse(rawInput)
 
   const { accountId, orgId } = ws.auth
-  const { groupId, requestId: membershipRequestId, accountId: requestAccountId, action } = input
+  const { groupId, requestId: membershipRequestId, accountId: requestAccountId, action, replacedMemberId } = input
 
   try {
     // check permission
     const {
-      group: { memberships, ...group }
+      group: { orgId: groupOrgId, memberships, ...group }
     } = await findUniqueGroupMembershipOrThrow(db, groupId, accountId, orgId, {
       select: {
         group: {
           select: {
             id: true,
             name: true,
+            orgId: true,
             memberships: {
               where: { deletedAt: null, deletedBy: null, isActive: true },
               select: MEMBER_SELECT_WHERE
@@ -68,6 +74,14 @@ export default async function handleGroupMembershipRequestAction(
       }
     })
 
+    if (action === 'approve' || action === 'replace') {
+      // Check if account is in the org
+      if (groupOrgId)
+        await db.organizationMembership.findUniqueOrThrow({
+          where: { orgId_accountId_isActive: { orgId: groupOrgId, accountId: requestAccountId, isActive: true } }
+        })
+    }
+
     if (action === 'approve') {
       const hasProGroupAdmin = memberships.some(
         (m) =>
@@ -85,6 +99,41 @@ export default async function handleGroupMembershipRequestAction(
       }
     }
 
+    let replacedMember:
+      | (Pick<GroupMembership, 'id' | 'accountId' | 'accountAliasId'> & {
+          account: (AccountBasicInfo & { locale: $Enums.Locale | null; accountAliases: AccountAlias[] }) | null
+          accountAlias: AccountAlias | null
+        })
+      | undefined
+    if (action === 'replace') {
+      if (!replacedMemberId) {
+        throw new WsError(WsHttpCode.BAD_REQUEST, null, 'field required: replacedMemberId')
+      }
+
+      replacedMember = await db.groupMembership.findUniqueOrThrow({
+        where: {
+          id: replacedMemberId,
+          groupId,
+          deletedAt: null,
+          isActive: true
+        },
+        select: {
+          id: true,
+          accountId: true,
+          accountAliasId: true,
+          account: {
+            where: { deletedAt: null, isActive: true },
+            select: {
+              ...ACCOUNT_SELECT,
+              locale: true,
+              accountAliases: { where: { verificationStatus: 'verified', deletedAt: null, isActive: true } }
+            }
+          },
+          accountAlias: { where: { deletedAt: null, isActive: true } } // verificationStatus: 'verified'
+        }
+      })
+    }
+
     return await db.$transaction(async (tx) => {
       if (action === 'approve') {
         await tx.groupMembership.create({
@@ -97,6 +146,37 @@ export default async function handleGroupMembershipRequestAction(
             createdBy: accountId
           }
         })
+      } else if (action === 'replace') {
+        assert(replacedMember, 'replacedMember')
+
+        await tx.groupMembership.update({
+          where: {
+            id: replacedMember.id,
+            deletedAt: null,
+            isActive: true
+          },
+          data: {
+            accountId: requestAccountId,
+            accountAliasId: null,
+            accountPlaceholderId: null,
+            accountOrPlaceholderId: requestAccountId,
+            addedByAccountId: accountId,
+            updatedBy: accountId
+          }
+        })
+
+        // queue Email/SMS to replaced member
+        const toSendNoti = getNotificationRecipientInfoFromMembership(
+          {
+            ...replacedMember,
+            account: replacedMember.account && {
+              ...replacedMember.account,
+              locale: replacedMember.account.locale && (fromDbLocale(replacedMember.account.locale) as SupportedLocale)
+            }
+          },
+          locale
+        ).map((it) => ({ ...it, type: 'removed' as const }))
+        if (toSendNoti.length) await notifyUpdatedGroupMembers(group, toSendNoti, tx)
       }
 
       await db.groupMembershipRequest.update({
@@ -105,7 +185,7 @@ export default async function handleGroupMembershipRequestAction(
           groupId_accountId_isActive: { groupId, accountId: requestAccountId, isActive: true }
         },
         data:
-          action === 'approve'
+          action === 'approve' || action === 'replace'
             ? { isActive: null, approvedBy: accountId, approvedAt: new Date() }
             : { isActive: null, rejectedBy: accountId, rejectedAt: new Date() }
       })

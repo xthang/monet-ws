@@ -39,7 +39,7 @@ type WsMessagePayload =
   | {
       event: 'group-membership-request--action'
       orgId: string | undefined
-      data: { groupId: string; action: 'approve' | 'reject' }
+      data: { groupId: string; action: 'approve' | 'reject' | 'replace' }
     }
   | {
       event: 'group-tab--created' | 'group-tab--deleted'

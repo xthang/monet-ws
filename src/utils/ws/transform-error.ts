@@ -1,7 +1,9 @@
-export function transformError(e: any) {
+import type { WsError } from '@/types/error'
+
+export function transformError(e: Error) {
   return {
-    code: e.code ?? 'INTERNAL_ERROR',
+    code: (e as WsError).code ?? 'INTERNAL_ERROR',
     message: e.message,
-    details: e.details ?? JSON.parse(JSON.stringify(e))
+    details: (e as WsError).details ?? JSON.parse(JSON.stringify(e))
   }
 }

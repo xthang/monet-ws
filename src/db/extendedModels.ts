@@ -64,19 +64,19 @@ type SoftDeletesProps<T> = {
 }
 
 type ExtendedModel<X, T, K, S> = {
-  softDelete(props: SoftDeleteProps<T, S>): PrismaPromise<X>
+  softDelete<Output = X>(props: SoftDeleteProps<T, S>): PrismaPromise<Output>
   softDeletes(props: SoftDeletesProps<K>): PrismaPromise<GetBatchResult> // returns updated count
 }
 
 const createSoftDeleteFunctions = <X, T, K, S>(modelName: model): ExtendedModel<X, T, K, S> => {
-  function softDelete({ tx, where: { id, ...where }, deletedBy, select }: SoftDeleteProps<T, S>) {
+  function softDelete<Output = X>({ tx, where: { id, ...where }, deletedBy, select }: SoftDeleteProps<T, S>) {
     const updateData = {
       where: { id, ...where },
       data: { deletedAt: new Date(), deletedBy },
       select
     }
 
-    return ((tx ?? db)[modelName].update as any)(updateData) as PrismaPromise<X>
+    return ((tx ?? db)[modelName].update as any)(updateData) as PrismaPromise<Output>
   }
 
   function softDeletes({ tx, where: { ids, ...where }, deletedBy }: SoftDeletesProps<K>) {
@@ -92,14 +92,14 @@ const createSoftDeleteFunctions = <X, T, K, S>(modelName: model): ExtendedModel<
 }
 
 const createSoftDeleteFunctions2 = <X, T, K, S>(modelName: model): ExtendedModel<X, T, K, S> => {
-  function softDelete({ tx, where: { id, ...where }, deletedBy, select }: SoftDeleteProps<T, S>) {
+  function softDelete<Output = X>({ tx, where: { id, ...where }, deletedBy, select }: SoftDeleteProps<T, S>) {
     const updateData = {
       where: { id, ...where },
       data: { deletedAt: new Date(), deletedBy, isActive: null },
       select
     }
 
-    return ((tx ?? db)[modelName].update as any)(updateData) as PrismaPromise<X>
+    return ((tx ?? db)[modelName].update as any)(updateData) as PrismaPromise<Output>
   }
 
   function softDeletes({ tx, where: { ids, ...where }, deletedBy }: SoftDeletesProps<K>) {

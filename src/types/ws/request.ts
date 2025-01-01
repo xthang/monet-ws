@@ -183,7 +183,8 @@ export const Ws_GroupMembershipRequest_Action_RequestData = z.object({
   groupId: z.string(),
   accountId: z.string(),
   requestId: z.string(),
-  action: z.enum(['approve', 'reject'])
+  action: z.enum(['approve', 'reject', 'replace']),
+  replacedMemberId: z.string().optional()
 })
 
 export type Ws_GroupMembershipRequest_Action_RequestData = z.infer<typeof Ws_GroupMembershipRequest_Action_RequestData>

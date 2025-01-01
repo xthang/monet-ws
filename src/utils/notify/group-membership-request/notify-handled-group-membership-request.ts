@@ -18,7 +18,7 @@ export default async function notifyHandledGroupMembershipRequest(
     channel: 'email' | 'sms'
     address: string
   }[],
-  action: 'approve' | 'reject',
+  action: 'approve' | 'reject' | 'replace',
   tx: PrismaTransactionClient
 ) {
   const toEmailAddresses = to.filter((it) => it.channel === 'email')
@@ -30,7 +30,7 @@ export default async function notifyHandledGroupMembershipRequest(
         type: $Enums.TextTemplateType.textContent,
         key: {
           in:
-            action === 'approve'
+            action === 'approve' || action === 'replace'
               ? [
                   TextTemplateKey.GROUP_MEMBERSHIP_REQUEST_APPROVED__EMAIL_TITLE,
                   TextTemplateKey.GROUP_MEMBERSHIP_REQUEST_APPROVED__EMAIL_CONTENT,
@@ -55,14 +55,14 @@ export default async function notifyHandledGroupMembershipRequest(
         const locale_ = locale ?? DEFAULT_LOCALE
 
         return {
-          category: `group-membership-request-${action === 'approve' ? 'approved' : 'rejected'}`,
+          category: `group-membership-request-${action === 'approve' || action === 'replace' ? 'approved' : 'rejected'}`,
           from: NOTIFIER_SENDER_NAME,
           to: [{ ...it, emailAddress: address }],
           locale: locale_,
           subject: contentTemplates.find(
             (it) =>
               it.key ===
-                (action === 'approve'
+                (action === 'approve' || action === 'replace'
                   ? TextTemplateKey.GROUP_MEMBERSHIP_REQUEST_APPROVED__EMAIL_TITLE
                   : TextTemplateKey.GROUP_MEMBERSHIP_REQUEST_REJECTED__EMAIL_TITLE) && it.locale === locale_
           )!.content,
@@ -71,7 +71,7 @@ export default async function notifyHandledGroupMembershipRequest(
             .find(
               (it) =>
                 it.key ===
-                  (action === 'approve'
+                  (action === 'approve' || action === 'replace'
                     ? TextTemplateKey.GROUP_MEMBERSHIP_REQUEST_APPROVED__EMAIL_CONTENT
                     : TextTemplateKey.GROUP_MEMBERSHIP_REQUEST_REJECTED__EMAIL_CONTENT) && it.locale === locale_
             )!
@@ -91,14 +91,14 @@ export default async function notifyHandledGroupMembershipRequest(
         const locale_ = locale ?? DEFAULT_LOCALE
 
         return {
-          category: `group-membership-request-${action === 'approve' ? 'approved' : 'rejected'}`,
+          category: `group-membership-request-${action === 'approve' || action === 'replace' ? 'approved' : 'rejected'}`,
           to: [{ ...it, phoneNumber: address }],
           locale: locale_,
           text: contentTemplates
             .find(
               (it) =>
                 it.key ===
-                  (action === 'approve'
+                  (action === 'approve' || action === 'replace'
                     ? TextTemplateKey.GROUP_MEMBERSHIP_REQUEST_APPROVED__SMS_CONTENT
                     : TextTemplateKey.GROUP_MEMBERSHIP_REQUEST_REJECTED__SMS_CONTENT) && it.locale === locale_
             )!
