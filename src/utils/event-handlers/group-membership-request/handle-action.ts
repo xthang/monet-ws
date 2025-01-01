@@ -37,7 +37,8 @@ export default async function handleGroupMembershipRequestAction(
   try {
     // check permission
     const {
-      group: { orgId: groupOrgId, memberships, ...group }
+      group: { orgId: groupOrgId, memberships, ...group },
+      role: memberRole
     } = await findUniqueGroupMembershipOrThrow(db, groupId, accountId, orgId, {
       select: {
         group: {
@@ -50,7 +51,8 @@ export default async function handleGroupMembershipRequestAction(
               select: MEMBER_SELECT_WHERE
             }
           }
-        }
+        },
+        role: true
       }
     })
 
@@ -100,7 +102,7 @@ export default async function handleGroupMembershipRequestAction(
     }
 
     let replacedMember:
-      | (Pick<GroupMembership, 'id' | 'accountId' | 'accountAliasId'> & {
+      | (Pick<GroupMembership, 'id' | 'accountId' | 'accountAliasId' | 'role'> & {
           account: (AccountBasicInfo & { locale: $Enums.Locale | null; accountAliases: AccountAlias[] }) | null
           accountAlias: AccountAlias | null
         })
@@ -129,9 +131,21 @@ export default async function handleGroupMembershipRequestAction(
               accountAliases: { where: { verificationStatus: 'verified', deletedAt: null, isActive: true } }
             }
           },
-          accountAlias: { where: { deletedAt: null, isActive: true } } // verificationStatus: 'verified'
+          accountAlias: { where: { deletedAt: null, isActive: true } }, // verificationStatus: 'verified'
+          role: true
         }
       })
+
+      if (
+        (replacedMember.role === $Enums.GroupMemberRole.admin || replacedMember.role === $Enums.GroupMemberRole.mod) &&
+        memberRole !== $Enums.GroupMemberRole.admin
+      ) {
+        throw new WsError(
+          WsHttpCode.FORBIDDEN,
+          WsErrorCode.NOT_ALLOWED,
+          'You do not have permission to replace an admin/moderator'
+        )
+      }
     }
 
     return await db.$transaction(async (tx) => {
