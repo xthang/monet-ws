@@ -567,6 +567,8 @@ model Account {
   contactLists             ContactList[]
   contactListMappings      ContactListMapping[]
 
+  logs_Visitor Log_Visitor[]
+
   @@unique([no])
   @@unique([authAccountId])
   @@unique([username, isActive])
@@ -640,7 +642,9 @@ enum AccountAliasType {
   emailAddr
   phoneNo
   web3Wallet
+
   Clerk
+  Zalo
 }
 
 model AccountPartnerAlias {
@@ -686,6 +690,7 @@ enum Partner {
   Tiktok
   Coinbase
   LINE
+  Zalo
 }
 
 model AccountPlaceholder {
@@ -900,6 +905,7 @@ model Group {
   // Foreign Key Relations
   memberships           GroupMembership[]
   membershipRequests    GroupMembershipRequest[]
+  groupExternalLinkings GroupExternalLinking[]
   messages              Message[]
   moneyRecords          MoneyRecord[]
   currencyExchangeRates CurrencyExchangeRate[]
@@ -916,9 +922,9 @@ enum GroupType {
 }
 
 enum GroupVisibility {
-  public
-  private
   secret
+  private
+  public
 }
 
 model GroupMembership {
@@ -999,6 +1005,29 @@ model GroupMembershipRequest {
 
   @@unique([no])
   @@unique([groupId, accountId, isActive])
+}
+
+model GroupExternalLinking {
+  // Functional Fields
+  id                   String  @id @default(cuid()) @db.VarChar(25)
+  no                   Int     @default(autoincrement())
+  groupId              String  @db.VarChar(50)
+  externalParty        Partner
+  externalPartyGroupId String  @db.VarChar(100)
+
+  // Technical Fields
+  createdAt DateTime  @default(now()) @db.Timestamptz(3)
+  createdBy String    @db.VarChar(50)
+  updatedAt DateTime? @updatedAt @db.Timestamptz(3)
+  updatedBy String?   @db.VarChar(50)
+  deletedAt DateTime? @db.Timestamptz(3)
+  deletedBy String?   @db.VarChar(50)
+  isActive  Boolean?  @default(true)
+
+  group Group @relation(fields: [groupId], references: [id])
+
+  @@unique([no])
+  @@unique([externalParty, externalPartyGroupId, isActive])
 }
 
 model ActivityLog {
@@ -1316,4 +1345,30 @@ model PaymentTransaction {
   @@unique([no])
   @@unique([paymentProvider, paymentTransactionId])
   @@index([paymentProvider])
+}
+
+// Logs
+
+model Log_Visitor {
+  // Functional Fields
+  no Int @id @default(autoincrement())
+
+  account_id String? @db.VarChar(50)
+  platform   String  @db.VarChar(10)
+
+  REMOTE_ADDR     String  @db.VarChar(50)
+  geoip_id        Int?
+  HTTP_HOST       String  @db.Text
+  HTTP_REFERER    String? @db.Text
+  HTTP_URI        String  @db.Text
+  HTTP_USER_AGENT String  @db.Text
+  HTTP_DNT        Int?    @db.SmallInt
+
+  // Technical Fields
+  created_at DateTime  @default(now()) @db.Timestamptz(3)
+  created_by String    @db.VarChar(50)
+  updated_at DateTime? @updatedAt @db.Timestamptz(3)
+  updated_by String?   @db.VarChar(50)
+
+  account Account? @relation(fields: [account_id], references: [id])
 }

@@ -18,6 +18,7 @@ type Model =
   | 'Group'
   | 'GroupMembership'
   | 'GroupMembershipRequest'
+  | 'GroupExternalLinking'
   | 'GroupTab'
   | 'Message'
   | 'MoneyRecord'
@@ -38,6 +39,7 @@ type model =
   | 'group'
   | 'groupMembership'
   | 'groupMembershipRequest'
+  | 'groupExternalLinking'
   | 'groupTab'
   | 'message'
   | 'moneyRecord'
@@ -132,6 +134,7 @@ export const extendedQueries: DynamicQueryExtensionArgs<
   group: extendedQueryFunction as ExtendedQueryFunction<'Group'>,
   groupMembership: extendedQueryFunction2 as ExtendedQueryFunction<'GroupMembership'>,
   groupMembershipRequest: extendedQueryFunction2 as ExtendedQueryFunction<'GroupMembershipRequest'>,
+  groupExternalLinking: extendedQueryFunction2 as ExtendedQueryFunction<'GroupExternalLinking'>,
   groupTab: extendedQueryFunction as ExtendedQueryFunction<'GroupTab'>,
   message: extendedQueryFunction as ExtendedQueryFunction<'Message'>,
   moneyRecord: extendedQueryFunction as ExtendedQueryFunction<'MoneyRecord'>,

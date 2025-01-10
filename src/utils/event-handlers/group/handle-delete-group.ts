@@ -57,6 +57,12 @@ export default async function handleDeleteGroup(
         deletedBy: accountId
       })
 
+      await tx.groupExternalLinking.softDeletes({
+        tx,
+        where: { groupId, deletedBy: null, deletedAt: null, isActive: true },
+        deletedBy: accountId
+      })
+
       const fileDeleteResp = await fetch(`${FILE_SERVICE_URL}/sync/v1/delete-group/${groupId}`, {
         method: 'DELETE',
         headers: { 'x-api-key': FILE_SERVICE_SYSTEM_SYNC_API_KEY }

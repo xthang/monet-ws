@@ -41,6 +41,7 @@ type model =
   | 'group'
   | 'groupMembership'
   | 'groupMembershipRequest'
+  | 'groupExternalLinking'
   | 'groupTab'
   | 'message'
   | 'moneyRecord'
@@ -181,6 +182,12 @@ export const extendedModels = {
     Prisma.GroupMembershipRequestWhereInput,
     Prisma.GroupMembershipRequestSelect
   >('groupMembershipRequest'),
+  groupExternalLinking: createSoftDeleteFunctions2<
+    GroupMembershipRequest,
+    Prisma.GroupExternalLinkingWhereUniqueInput,
+    Prisma.GroupExternalLinkingWhereInput,
+    Prisma.GroupExternalLinkingSelect
+  >('groupExternalLinking'),
   groupTab: createSoftDeleteFunctions<
     GroupTab,
     Prisma.GroupTabWhereUniqueInput,
