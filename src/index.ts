@@ -150,7 +150,7 @@ async function main() {
               return
             }
             assert(auth.accountId === this.auth.accountId, 'on.message: accountId not matched')
-            assert(auth.orgId === this.auth.orgId, 'on.message: orgId not matched')
+            // assert(auth.orgId === this.auth.orgId, 'on.message: orgId not matched')
 
             this.auth = { accountId, orgId: auth.orgId, locale: this.auth.locale }
 
