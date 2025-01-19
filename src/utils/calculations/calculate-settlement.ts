@@ -23,12 +23,12 @@ export default function calculateSettlement(
   const members = Object.values(memberDict)
 
   let bests: {
-    algorithm: 'max-max' | 'min-min' | 'min-min-gt'
+    algorithm: 'max-max' | 'max-min' | 'min-min' | 'min-min-gt'
     calculated: { [id: string]: Calculated }
     transactions: number
   }[] = []
 
-  for (const algorithm of ['max-max', 'min-min', 'min-min-gt'] as const) {
+  for (const algorithm of ['max-max', 'max-min', 'min-min', 'min-min-gt'] as const) {
     const calculatedMap: { [id: string]: Calculated } = {}
 
     // store a temp _payable value inside calculated for later calculation
@@ -68,6 +68,38 @@ export default function calculateSettlement(
 
         maxPayable._payable! -= amount
         maxReceivable._payable! += amount
+      }
+    } else if (algorithm === 'max-min') {
+      // while true: max payable P pays min receivable R
+
+      while (true) {
+        const maxPayable = Object.values(calculatedMap).reduce<Calculated | undefined>(
+          (previousValue, currentValue) =>
+            calculatedMap[currentValue.id]._payable > 0 &&
+            (!previousValue || calculatedMap[currentValue.id]._payable > calculatedMap[previousValue.id]._payable)
+              ? currentValue
+              : previousValue,
+          undefined
+        )
+        const minReceivable = Object.values(calculatedMap).reduce<Calculated | undefined>(
+          (previousValue, currentValue) =>
+            calculatedMap[currentValue.id]._payable < 0 &&
+            (!previousValue || calculatedMap[currentValue.id]._payable > calculatedMap[previousValue.id]._payable)
+              ? currentValue
+              : previousValue,
+          undefined
+        )
+
+        // stop if all _payable amounts are 0
+        if (!maxPayable || !minReceivable) break
+
+        const amount = Math.min(maxPayable._payable, -minReceivable._payable!)
+
+        if (!maxPayable.payments) maxPayable.payments = []
+        maxPayable.payments!.push({ payeeMemberId: minReceivable.id, amount })
+
+        maxPayable._payable! -= amount
+        minReceivable._payable! += amount
       }
     } else if (algorithm === 'min-min-gt') {
       // while true: min payable P pays min receivable R which is greater than P
@@ -163,7 +195,7 @@ export default function calculateSettlement(
   }
 
   // prefer min-min algorithm result if it is in best list
-  const best = bests.find((it) => it.algorithm === 'min-min') ?? bests.random()
+  const best = bests.find((it) => it.algorithm === 'max-min') ?? bests.random()
 
   for (const { id, calculated } of members) {
     calculated.payments = best?.calculated[id].payments
