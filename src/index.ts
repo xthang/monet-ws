@@ -1,3 +1,5 @@
+import assert from 'assert'
+
 import { WebSocketServer, type WebSocket } from 'ws'
 
 import type { WsMessageFullPayload } from '@/types/ws/message'
@@ -12,7 +14,7 @@ import db from './db/index'
 import { verifyToken } from './security/token-verification'
 import { WsError, WsErrorCode, WsHttpCode } from './types/error'
 import type { WsRequestFullPayload } from './types/ws/request'
-import { findUniqueAccountByAuthAccIdOrThrow } from './utils/db/queries'
+import { findUniqueAccountOrThrow } from './utils/db/queries'
 import { fromDbLocale } from './utils/db/transform/locale'
 import handleDeleteGroup from './utils/event-handlers/group/handle-delete-group'
 import handleUpdateGroup from './utils/event-handlers/group/handle-update-group'
@@ -97,12 +99,11 @@ async function main() {
 
       ws.isAlive = true
 
-      const { id: accountId, locale: accountLocale } = await findUniqueAccountByAuthAccIdOrThrow(db, auth.userId)
+      const { id: accountId, locale: accountLocale } = await findUniqueAccountOrThrow(db, auth.accountId)
 
       ws.auth = {
         accountId,
-        authAccountId: auth.userId,
-        orgId: auth.ordId,
+        orgId: auth.orgId,
         locale: accountLocale && (fromDbLocale(accountLocale) as SupportedLocale)
       }
 
@@ -112,7 +113,7 @@ async function main() {
         '|',
         request.method,
         maskedUrl,
-        `[${accountId}-${auth.userId}-${auth.ordId}]`
+        `[${accountId}-${auth.orgId}]`
       )
 
       if (!wss.socketsByAccount[accountId]) wss.socketsByAccount[accountId] = { clients: new Set([ws]) }
@@ -148,8 +149,10 @@ async function main() {
               console.warn(`<-- WS [${this.auth.accountId}] received: Not authenticated`)
               return
             }
+            assert(auth.accountId === this.auth.accountId, 'on.message: accountId not matched')
+            assert(auth.orgId === this.auth.orgId, 'on.message: orgId not matched')
 
-            this.auth = { accountId, authAccountId: auth.userId, orgId: auth.ordId, locale: this.auth.locale }
+            this.auth = { accountId, orgId: auth.orgId, locale: this.auth.locale }
 
             switch (event) {
               case 'group--update':

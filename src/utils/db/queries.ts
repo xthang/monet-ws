@@ -25,24 +25,6 @@ export async function findUniqueAccountOrThrow<
   } satisfies Prisma.AccountFindUniqueArgs as any)
 }
 
-export async function findUniqueAccountByAuthAccIdOrThrow<
-  AccountSelectOrInclude extends
-    | { select?: Prisma.AccountSelect; include?: Prisma.AccountInclude }
-    | undefined = undefined
->(prisma: typeof db, authAccountId: string, selectOrInclude?: AccountSelectOrInclude) {
-  return prisma.account.findUniqueOrThrow<{
-    where: Prisma.AccountWhereUniqueInput
-    select: typeof ACCOUNT_SELECT & { locale: true } & (AccountSelectOrInclude extends undefined
-        ? object
-        : NonNullable<AccountSelectOrInclude>['select'])
-    include?: AccountSelectOrInclude extends undefined ? object : NonNullable<AccountSelectOrInclude>['include']
-  }>({
-    where: { authAccountId, OR: [{ status: null }, { status: { not: $Enums.AccountStatus.banned } }] },
-    select: { ...ACCOUNT_SELECT, locale: true, ...selectOrInclude?.select },
-    include: selectOrInclude?.include
-  } satisfies Prisma.AccountFindUniqueArgs as any)
-}
-
 export async function findUniqueGroupMembershipOrThrow<
   MembershipSelectOrInclude extends { select?: Prisma.GroupMembershipSelect; include?: Prisma.GroupMembershipInclude }
 >(

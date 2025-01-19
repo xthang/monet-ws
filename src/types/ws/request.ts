@@ -6,7 +6,7 @@ import { NUMBER_TYPES } from '@/constants/phone-number'
 
 export type Auth = {
   accountId: string
-  authAccountId: string
+  // authAccountId: string
   orgId?: string
 
   locale: SupportedLocale | null
