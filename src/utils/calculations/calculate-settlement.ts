@@ -195,7 +195,8 @@ export default function calculateSettlement(
   }
 
   // prefer min-min algorithm result if it is in best list
-  const best = bests.find((it) => it.algorithm === 'max-min') ?? bests.random()
+  const best =
+    bests.find((it) => it.algorithm === 'max-min') ?? bests.find((it) => it.algorithm === 'min-min') ?? bests.random()
 
   for (const { id, calculated } of members) {
     calculated.payments = best?.calculated[id].payments
