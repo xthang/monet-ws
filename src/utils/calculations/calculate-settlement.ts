@@ -23,12 +23,12 @@ export default function calculateSettlement(
   const members = Object.values(memberDict)
 
   let bests: {
-    algorithm: 'max-max' | 'max-min' | 'min-min' | 'min-min-gt'
+    algorithm: 'max-max' | 'max-min' | 'min-min' | 'min-max' | 'min-min-gt'
     calculated: { [id: string]: Calculated }
     transactions: number
   }[] = []
 
-  for (const algorithm of ['max-max', 'max-min', 'min-min', 'min-min-gt'] as const) {
+  for (const algorithm of ['max-max', 'max-min', 'min-min', 'min-max', 'min-min-gt'] as const) {
     const calculatedMap: { [id: string]: Calculated } = {}
 
     // store a temp _payable value inside calculated for later calculation
@@ -101,6 +101,72 @@ export default function calculateSettlement(
         maxPayable._payable! -= amount
         minReceivable._payable! += amount
       }
+    } else if (algorithm === 'min-min') {
+      // while true: min payable P pays min receivable R
+      // this tends to allocate the transactions by payables equally
+
+      while (true) {
+        const minPayable = Object.values(calculatedMap).reduce<Calculated | undefined>(
+          (previousValue, currentValue) =>
+            calculatedMap[currentValue.id]._payable > 0 &&
+            (!previousValue || calculatedMap[currentValue.id]._payable < calculatedMap[previousValue.id]._payable)
+              ? currentValue
+              : previousValue,
+          undefined
+        )
+        const minReceivable = Object.values(calculatedMap).reduce<Calculated | undefined>(
+          (previousValue, currentValue) =>
+            calculatedMap[currentValue.id]._payable < 0 &&
+            (!previousValue || calculatedMap[currentValue.id]._payable > calculatedMap[previousValue.id]._payable)
+              ? currentValue
+              : previousValue,
+          undefined
+        )
+
+        // stop if all _payable amounts are 0
+        if (!minPayable || !minReceivable) break
+
+        const amount = Math.min(minPayable._payable, -minReceivable._payable!)
+
+        if (!minPayable.payments) minPayable.payments = []
+        minPayable.payments!.push({ payeeMemberId: minReceivable.id, amount })
+
+        minPayable._payable! -= amount
+        minReceivable._payable! += amount
+      }
+    } else if (algorithm === 'min-max') {
+      // while true: min payable P pays min receivable R
+      // this tends to allocate the transactions by payables equally
+
+      while (true) {
+        const minPayable = Object.values(calculatedMap).reduce<Calculated | undefined>(
+          (previousValue, currentValue) =>
+            calculatedMap[currentValue.id]._payable > 0 &&
+            (!previousValue || calculatedMap[currentValue.id]._payable < calculatedMap[previousValue.id]._payable)
+              ? currentValue
+              : previousValue,
+          undefined
+        )
+        const maxReceivable = Object.values(calculatedMap).reduce<Calculated | undefined>(
+          (previousValue, currentValue) =>
+            calculatedMap[currentValue.id]._payable < 0 &&
+            (!previousValue || calculatedMap[currentValue.id]._payable < calculatedMap[previousValue.id]._payable)
+              ? currentValue
+              : previousValue,
+          undefined
+        )
+
+        // stop if all _payable amounts are 0
+        if (!minPayable || !maxReceivable) break
+
+        const amount = Math.min(minPayable._payable, -maxReceivable._payable!)
+
+        if (!minPayable.payments) minPayable.payments = []
+        minPayable.payments!.push({ payeeMemberId: maxReceivable.id, amount })
+
+        minPayable._payable! -= amount
+        maxReceivable._payable! += amount
+      }
     } else if (algorithm === 'min-min-gt') {
       // while true: min payable P pays min receivable R which is greater than P
       // this will try to offset the payables as many as possible, and tends to allocate payments to the highest payables' group
@@ -140,40 +206,6 @@ export default function calculateSettlement(
         minPayable._payable! -= amount
         minReceivable._payable! += amount
       }
-    } else {
-      // DEFAULT: min-min
-      // while true: min payable P pays min receivable R
-      // this tends to allocate the transactions by payables equally
-
-      while (true) {
-        const minPayable = Object.values(calculatedMap).reduce<Calculated | undefined>(
-          (previousValue, currentValue) =>
-            calculatedMap[currentValue.id]._payable > 0 &&
-            (!previousValue || calculatedMap[currentValue.id]._payable < calculatedMap[previousValue.id]._payable)
-              ? currentValue
-              : previousValue,
-          undefined
-        )
-        const minReceivable = Object.values(calculatedMap).reduce<Calculated | undefined>(
-          (previousValue, currentValue) =>
-            calculatedMap[currentValue.id]._payable < 0 &&
-            (!previousValue || calculatedMap[currentValue.id]._payable > calculatedMap[previousValue.id]._payable)
-              ? currentValue
-              : previousValue,
-          undefined
-        )
-
-        // stop if all _payable amounts are 0
-        if (!minPayable || !minReceivable) break
-
-        const amount = Math.min(minPayable._payable, -minReceivable._payable!)
-
-        if (!minPayable.payments) minPayable.payments = []
-        minPayable.payments!.push({ payeeMemberId: minReceivable.id, amount })
-
-        minPayable._payable! -= amount
-        minReceivable._payable! += amount
-      }
     }
 
     Object.values(calculatedMap).forEach((c) => {
@@ -194,9 +226,12 @@ export default function calculateSettlement(
     }
   }
 
-  // prefer max-min > min-min > other algorithms' results if it is in best list
+  // prefer min-max > max-min > min-min > other algorithms' results if it is in best list
   const best =
-    bests.find((it) => it.algorithm === 'max-min') ?? bests.find((it) => it.algorithm === 'min-min') ?? bests.random()
+    bests.find((it) => it.algorithm === 'min-max') ??
+    bests.find((it) => it.algorithm === 'max-min') ??
+    bests.find((it) => it.algorithm === 'min-min') ??
+    bests.random()
 
   for (const { id, calculated } of members) {
     calculated.payments = best?.calculated[id].payments
