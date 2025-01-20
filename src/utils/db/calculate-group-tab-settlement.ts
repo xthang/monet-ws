@@ -79,7 +79,7 @@ export default async function calculateTabSettlement(
 
   calculateBalances(memberDict, moneyRecords)
 
-  const [_bestAlgos, _selectedBestAlgo] = calculateSettlement(memberDict)
+  const [bestAlgos, selectedBestAlgo] = calculateSettlement(memberDict)
 
   await db.groupTabSuggestedSettlement.deleteMany({ where: { groupId, tabId } })
 
@@ -95,5 +95,10 @@ export default async function calculateTabSettlement(
           createdBy: accountId
         })) ?? []
     )
+  })
+
+  await db.groupTab.update({
+    where: { groupId, id: tabId },
+    data: { stlmntAlgo: bestAlgos.join(',') + '|' + selectedBestAlgo }
   })
 }

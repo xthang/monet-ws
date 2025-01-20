@@ -194,7 +194,7 @@ export default function calculateSettlement(
     }
   }
 
-  // prefer min-min algorithm result if it is in best list
+  // prefer max-min > min-min > other algorithms' results if it is in best list
   const best =
     bests.find((it) => it.algorithm === 'max-min') ?? bests.find((it) => it.algorithm === 'min-min') ?? bests.random()
 

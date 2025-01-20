@@ -1064,6 +1064,7 @@ model GroupTab {
   baseCurrency Currency
   note         String?  @db.Text
   order        Int
+  stlmntAlgo   String?  @db.VarChar(50)
 
   // Technical Fields
   createdAt DateTime  @default(now()) @db.Timestamptz(3)
