@@ -219,7 +219,7 @@ export default function calculateSettlement(
 
     if (!transactions) continue
 
-    if (!bests.length || transactions > bests[0].transactions) {
+    if (!bests.length || transactions < bests[0].transactions) {
       bests = [{ algorithm, calculated: calculatedMap, transactions }]
     } else if (transactions == bests[0].transactions) {
       bests.push({ algorithm, calculated: calculatedMap, transactions })
