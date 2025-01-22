@@ -227,8 +227,7 @@ export default function calculateSettlement(
 
   // prefer min-min-gt > min-max > other algorithms' results if it is in best list
   const best =
-    bests.find((it) => it.algorithm === 'min-min-gt') ??
-    bests.find((it) => it.algorithm === 'min-max') ??
+    [bests.find((it) => it.algorithm === 'min-min-gt'), bests.find((it) => it.algorithm === 'min-max')].random() ??
     bests.random()
 
   for (const { id, calculated } of members) {
