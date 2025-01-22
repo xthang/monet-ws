@@ -187,9 +187,8 @@ export default function calculateSettlement(
               calculatedMap[currentValue.id]._payable < 0 &&
               (!previousValue ||
                 (minPayable._payable <= -calculatedMap[currentValue.id]._payable &&
-                  -calculatedMap[currentValue.id]._payable < -calculatedMap[previousValue.id]._payable) ||
-                (minPayable._payable >= -calculatedMap[previousValue.id]._payable &&
-                  -calculatedMap[currentValue.id]._payable > minPayable._payable))
+                  (-calculatedMap[currentValue.id]._payable < -calculatedMap[previousValue.id]._payable ||
+                    -calculatedMap[previousValue.id]._payable <= minPayable._payable)))
                 ? currentValue
                 : previousValue,
             undefined
