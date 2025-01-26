@@ -1,6 +1,6 @@
 import type { AccountBasicInfo } from '@/types/db'
 
-export function getAccountName(account: AccountBasicInfo, include?: { nickname?: false; username?: false }) {
+export function getAccountName(account: Partial<AccountBasicInfo>, include?: { nickname?: false; username?: false }) {
   return (
     (include?.nickname !== false ? account.nickname : undefined) ??
     account.fullName ??

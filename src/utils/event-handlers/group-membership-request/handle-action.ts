@@ -31,7 +31,7 @@ export default async function handleGroupMembershipRequestAction(
   // Validate inputs
   const input = Ws_GroupMembershipRequest_Action_RequestData.parse(rawInput)
 
-  const { accountId, orgId } = ws.auth
+  const { accountId, orgId, otherAccountInfo } = ws.auth
   const { groupId, requestId: membershipRequestId, accountId: requestAccountId, action, replacedMemberId } = input
 
   try {
@@ -190,7 +190,7 @@ export default async function handleGroupMembershipRequestAction(
           },
           locale
         ).map((it) => ({ ...it, type: 'removed' as const }))
-        if (toSendNoti.length) await notifyUpdatedGroupMembers(group, toSendNoti, tx)
+        if (toSendNoti.length) await notifyUpdatedGroupMembers(group, toSendNoti, otherAccountInfo, tx)
       }
 
       await db.groupMembershipRequest.update({

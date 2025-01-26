@@ -30,7 +30,7 @@ export default async function handleUpsertGroupMembers(
   // Validate inputs
   const input = Ws_GroupMembers_Upsert_RequestData.parse(rawInput)
 
-  const { accountId, orgId } = ws.auth
+  const { accountId, orgId, otherAccountInfo } = ws.auth
   const {
     groupId,
     data: { members },
@@ -368,7 +368,7 @@ export default async function handleUpsertGroupMembers(
       const membersResult = { createds, updateds, deleteds }
 
       // queue Email/SMS
-      await notifyUpdatedGroupMembers(group, toSendNoti, tx)
+      await notifyUpdatedGroupMembers(group, toSendNoti, otherAccountInfo, tx)
 
       await tx.activityLog.create({
         data: {

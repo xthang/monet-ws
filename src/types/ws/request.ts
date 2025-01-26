@@ -4,12 +4,28 @@ import { z } from 'zod'
 import type { SupportedLocale } from '@/constants/locales'
 import { NUMBER_TYPES } from '@/constants/phone-number'
 
+import { AccountBasicInfo } from '../db'
+
 export type Auth = {
   accountId: string
   // authAccountId: string
   orgId?: string
 
   locale: SupportedLocale | null
+
+  otherAccountInfo: Pick<
+    AccountBasicInfo,
+    | 'authAccountId'
+    | 'imageUrl'
+    | 'username'
+    | 'firstName'
+    | 'middleName'
+    | 'lastName'
+    | 'nameOrder'
+    | 'fullName'
+    | 'nickname'
+    | 'role'
+  >
 }
 
 export type WsRequestFullPayload = { requestId: string; token: string; locale: SupportedLocale } & WsRequestData

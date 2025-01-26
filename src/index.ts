@@ -99,12 +99,17 @@ async function main() {
 
       ws.isAlive = true
 
-      const { id: accountId, locale: accountLocale } = await findUniqueAccountOrThrow(db, auth.accountId)
+      const {
+        id: accountId,
+        locale: accountLocale,
+        ...otherAccountInfo
+      } = await findUniqueAccountOrThrow(db, auth.accountId)
 
       ws.auth = {
         accountId,
         orgId: auth.orgId,
-        locale: accountLocale && (fromDbLocale(accountLocale) as SupportedLocale)
+        locale: accountLocale && (fromDbLocale(accountLocale) as SupportedLocale),
+        otherAccountInfo
       }
 
       console.log(
@@ -152,7 +157,7 @@ async function main() {
             assert(auth.accountId === this.auth.accountId, 'on.message: accountId not matched')
             // assert(auth.orgId === this.auth.orgId, 'on.message: orgId not matched')
 
-            this.auth = { accountId, orgId: auth.orgId, locale: this.auth.locale }
+            this.auth = { accountId, orgId: auth.orgId, locale: this.auth.locale, otherAccountInfo }
 
             switch (event) {
               case 'group--update':

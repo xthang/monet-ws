@@ -4,7 +4,9 @@ import { TextTemplateKey } from '@/constants/data'
 import { HOST_NAME, NOTIFIER_SENDER_NAME } from '@/constants/env'
 import { DEFAULT_LOCALE, type SupportedLocale } from '@/constants/locales'
 import type { PrismaTransactionClient } from '@/db/types'
+import type { Auth } from '@/types/ws/request'
 import { fromDbLocale } from '@/utils/db/transform/locale'
+import { getAccountName } from '@/utils/get-name-display'
 import queueSendEmails from '@/utils/queue/queue-send-email'
 import queueSendSms from '@/utils/queue/queue-send-sms'
 
@@ -19,6 +21,7 @@ export default async function notifyUpdatedGroupMembers(
     address: string
     type: 'added' | 'removed'
   }[],
+  by: Auth['otherAccountInfo'],
   tx: PrismaTransactionClient
 ) {
   const toEmailAddresses = to.filter((it) => it.channel === 'email')
@@ -72,6 +75,7 @@ export default async function notifyUpdatedGroupMembers(
                     : TextTemplateKey.GROUP_REMOVED_MEMBER__EMAIL_CONTENT) && it.locale === locale_
             )!
             .content.replace('{{member_name}}', name ? ` <b>${name}</b>` : '')
+            .replace('{{by_whom}}', getAccountName(by) ?? '-')
             .replace(
               '{{group}}',
               `<a href="https://${HOST_NAME}/i/${group.id}"><b>${group.name || '<i>[no name]</i>'}</b></a>`
@@ -99,6 +103,7 @@ export default async function notifyUpdatedGroupMembers(
                     : TextTemplateKey.GROUP_REMOVED_MEMBER__SMS_CONTENT) && it.locale === locale_
             )!
             .content.replace('{{member_name}}', name ? ` ${name}` : '')
+            .replace('{{by_whom}}', getAccountName(by) ?? '-')
             .replace('{{group_name}}', group.name ? `: ${group.name}` : '')
             .replace('{{group_link}}', `https://${HOST_NAME}/i/${group.id}`)
         }
