@@ -300,7 +300,7 @@ export default async function handleUpsertGroupMembers(
                 addedByAccountId: accountId,
                 role,
                 order,
-                nickname,
+                nickname: nickname ? nickname.trim() : null,
                 updatedBy: accountId
               }
             })
