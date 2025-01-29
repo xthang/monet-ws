@@ -18,7 +18,7 @@ export default async function queueSendEmails(
       | 'group-membership-request-rejected'
       // | 'remind-payor'
       | 'settled-item'
-    from: string
+    fromName: string
     to: { accountId?: string; accountAliasId?: string; emailAddress: string }[]
     cc?: { accountId?: string; accountAliasId?: string; emailAddress: string }[]
     bcc?: { accountId?: string; accountAliasId?: string; emailAddress: string }[]

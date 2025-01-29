@@ -55,7 +55,7 @@ export default async function notifySettleItems(
 
           return {
             category: 'settled-item',
-            from: NOTIFIER_SENDER_NAME,
+            fromName: NOTIFIER_SENDER_NAME,
             to: [{ ...it, emailAddress: address }],
             locale: locale ?? DEFAULT_LOCALE,
             subject: contentTemplates.find(

@@ -56,7 +56,7 @@ export default async function notifyHandledGroupMembershipRequest(
 
         return {
           category: `group-membership-request-${action === 'approve' || action === 'replace' ? 'approved' : 'rejected'}`,
-          from: NOTIFIER_SENDER_NAME,
+          fromName: NOTIFIER_SENDER_NAME,
           to: [{ ...it, emailAddress: address }],
           locale: locale_,
           subject: contentTemplates.find(

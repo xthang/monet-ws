@@ -370,7 +370,8 @@ enum NotificationStatus {
 model TaskSendEmail {
   id       Int     @id @default(autoincrement())
   category String
-  from     String
+  from     String?
+  fromName String?
   to       Json[]
   cc       Json[]
   bcc      Json[]
@@ -397,6 +398,9 @@ model TaskSendEmail {
 model TaskSendSms {
   id       Int     @id @default(autoincrement())
   category String
+  provider String? @db.VarChar(15)
+  fromID   String? @db.VarChar(50)
+  fromNo   String? @db.VarChar(20)
   to       Json[]
   locale   Locale?
   content  String  @db.Text

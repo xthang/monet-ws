@@ -55,7 +55,7 @@ export default async function notifyUpdatedGroupMembers(
 
         return {
           category: `group-${type}-member`,
-          from: NOTIFIER_SENDER_NAME,
+          fromName: NOTIFIER_SENDER_NAME,
           to: [{ ...it, emailAddress: address }],
           locale: locale_,
           subject: contentTemplates.find(

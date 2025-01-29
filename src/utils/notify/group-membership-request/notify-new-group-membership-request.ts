@@ -49,7 +49,7 @@ export default async function notifyNewGroupMembershipRequest(
 
         return {
           category: 'group-new-membership-request',
-          from: NOTIFIER_SENDER_NAME,
+          fromName: NOTIFIER_SENDER_NAME,
           to: [{ ...it, emailAddress: address }],
           locale: locale_,
           subject: contentTemplates.find(
