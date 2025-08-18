@@ -37,7 +37,7 @@ import './utils/polyfills/Date'
 
 const TAG = '🟢'
 
-console.log(TAG, '------- STARING ...')
+console.log(TAG, '------- STARTING ...')
 
 process
   .on('SIGINT', (signals) => {

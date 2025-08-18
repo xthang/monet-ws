@@ -20,7 +20,7 @@ module.exports = {
     }
   ],
   format: 'po',
-  orderBy: 'messageId',
+  // orderBy: 'messageId',
   rootDir: '.',
   runtimeConfigModule: ['@lingui/core', 'i18n'],
   sourceLocale: 'en-US',

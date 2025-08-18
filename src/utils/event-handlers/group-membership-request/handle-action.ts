@@ -179,18 +179,21 @@ export default async function handleGroupMembershipRequestAction(
           }
         })
 
-        // queue Email/SMS to replaced member
-        const toSendNoti = getNotificationRecipientInfoFromMembership(
-          {
-            ...replacedMember,
-            account: replacedMember.account && {
-              ...replacedMember.account,
-              locale: replacedMember.account.locale && (fromDbLocale(replacedMember.account.locale) as SupportedLocale)
-            }
-          },
-          locale
-        ).map((it) => ({ ...it, type: 'removed' as const }))
-        if (toSendNoti.length) await notifyUpdatedGroupMembers(group, toSendNoti, otherAccountInfo, tx)
+        if (!replacedMember.account || replacedMember.account.id !== accountId) {
+          // queue Email/SMS to replaced member
+          const toSendNoti = getNotificationRecipientInfoFromMembership(
+            {
+              ...replacedMember,
+              account: replacedMember.account && {
+                ...replacedMember.account,
+                locale:
+                  replacedMember.account.locale && (fromDbLocale(replacedMember.account.locale) as SupportedLocale)
+              }
+            },
+            locale
+          ).map((it) => ({ ...it, type: 'removed' as const }))
+          if (toSendNoti.length) await notifyUpdatedGroupMembers(group, toSendNoti, otherAccountInfo, tx)
+        }
       }
 
       await db.groupMembershipRequest.update({

@@ -19,14 +19,14 @@ msgstr ""
 msgid "{0} has"
 msgstr "{0} has"
 
+#: src/utils/notify/message/money-record/notify-settled-item.ts:72
+msgid "<i>You</i> have"
+msgstr "<i>You</i> have"
+
 #: src/utils/notify/message/money-record/notify-settled-item.ts:73
 #: src/utils/notify/message/money-record/notify-settled-item.ts:99
 msgid "you"
 msgstr "you"
-
-#: src/utils/notify/message/money-record/notify-settled-item.ts:72
-msgid "<i>You</i> have"
-msgstr "<i>You</i> have"
 
 #: src/utils/notify/message/money-record/notify-settled-item.ts:98
 msgid "You have"
