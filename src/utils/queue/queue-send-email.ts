@@ -32,6 +32,7 @@ export default async function queueSendEmails(
     data: emails.map(({ locale, html, ...em }) => ({
       ...em,
       locale: toDbLocale(locale),
+      subject: `[Amonet] ${em.subject}`,
       html: EMAIL_HTML_TEMPLATE_GENERAL[locale].replace('{{content}}', html),
       createdBy: 'system'
     }))

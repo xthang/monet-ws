@@ -7,6 +7,7 @@ import db from '@/db'
 import type { WsMoneyRecord } from '@/types/ws/message'
 import { Ws_MoneyRecordPartakers_Upsert_RequestData } from '@/types/ws/request'
 import type { WsResponseFullPayload, Ws_MoneyRecord_Update_Receipt } from '@/types/ws/response'
+import calculateMyPayables from '@/utils/db/calculate-money-record-of-mine'
 
 import calculateTabSettlement from '../../../db/calculate-group-tab-settlement'
 import { findUniqueMoneyRecordOrThrow } from '../../../db/queries'
@@ -111,6 +112,7 @@ export default async function handleUpsertMoneyRecordPartakers(
     const res = await db.$transaction(calls)
 
     await calculateTabSettlement(accountId, db, groupId, tabId, groupTab)
+    await calculateMyPayables(accountId, orgId, db)
 
     // BROADCAST ...
 

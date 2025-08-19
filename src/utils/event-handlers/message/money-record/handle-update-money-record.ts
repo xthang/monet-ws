@@ -7,6 +7,7 @@ import db from '@/db'
 import type { WsMoneyRecord } from '@/types/ws/message'
 import { Ws_MoneyRecord_Update_RequestData } from '@/types/ws/request'
 import type { WsResponseFullPayload, Ws_MoneyRecord_Update_Receipt } from '@/types/ws/response'
+import calculateMyPayables from '@/utils/db/calculate-money-record-of-mine'
 
 import calculateTabSettlement from '../../../db/calculate-group-tab-settlement'
 import { findUniqueMessageOrThrow } from '../../../db/queries'
@@ -61,7 +62,10 @@ export default async function handleUpdateMoneyRecord(
         data.ratePerBase !== undefined ||
         data.rate !== undefined ||
         data.amountPerPartaker !== undefined
-      if (affectedUpdate) await calculateTabSettlement(accountId, tx, groupId, tabId, tab)
+      if (affectedUpdate) {
+        await calculateTabSettlement(accountId, tx, groupId, tabId, tab)
+        await calculateMyPayables(accountId, orgId, tx)
+      }
 
       await tx.activityLog.create({
         data: {

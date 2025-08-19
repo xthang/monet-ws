@@ -8,6 +8,7 @@ import db from '@/db'
 import { WsError, WsErrorCode, WsHttpCode } from '@/types/error'
 import type { Ws_Message_Delete_RequestData } from '@/types/ws/request'
 import type { Ws_Message_Delete_Receipt, WsResponseFullPayload } from '@/types/ws/response'
+import calculateMyPayables from '@/utils/db/calculate-money-record-of-mine'
 
 import calculateTabSettlement from '../../db/calculate-group-tab-settlement'
 import { findUniqueGroupMembershipOrThrow } from '../../db/queries'
@@ -58,6 +59,7 @@ export default async function handleDeleteMessage(
 
         if (deletedMoneyRecord) {
           await calculateTabSettlement(accountId, tx, groupId, deleted.tabId, (deleted as any).groupTab)
+          await calculateMyPayables(accountId, orgId, tx)
 
           await tx.activityLog.create({
             data: {

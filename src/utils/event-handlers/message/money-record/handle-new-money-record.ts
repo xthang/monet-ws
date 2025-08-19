@@ -7,6 +7,7 @@ import db from '@/db'
 import type { WsMoneyRecord } from '@/types/ws/message'
 import { Ws_MoneyRecord_Create_RequestData } from '@/types/ws/request'
 import type { Ws_Message_Send_Receipt, WsResponseFullPayload } from '@/types/ws/response'
+import calculateMyPayables from '@/utils/db/calculate-money-record-of-mine'
 
 import calculateTabSettlement from '../../../db/calculate-group-tab-settlement'
 import { findUniqueGroupMembershipOrThrow } from '../../../db/queries'
@@ -76,6 +77,7 @@ export default async function handleCreateMoneyRecord(
       })
 
       await calculateTabSettlement(accountId, tx, groupId, tabId, tab)
+      await calculateMyPayables(accountId, orgId, tx)
 
       await tx.activityLog.create({
         data: {

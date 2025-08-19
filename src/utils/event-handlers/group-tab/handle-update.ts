@@ -7,6 +7,7 @@ import db from '@/db'
 import { Ws_GroupTab_Update_RequestData } from '@/types/ws/request'
 import type { Ws_GroupTab_Update_Receipt, WsResponseFullPayload } from '@/types/ws/response'
 import calculateTabSettlement from '@/utils/db/calculate-group-tab-settlement'
+import calculateMyPayables from '@/utils/db/calculate-money-record-of-mine'
 
 import { findUniqueGroupMembershipOrThrow } from '../../db/queries'
 import { broadcastToGroupMembersExceptMe } from '../../ws/broadcast-to-group-members-except-me'
@@ -49,6 +50,8 @@ export async function handleUpdateGroupTab(
 
       for (const { id, baseCurrency } of tabs)
         if (baseCurrency != undefined) await calculateTabSettlement(accountId, tx, groupId, id, { baseCurrency })
+
+      if (tabs.some((t) => t.baseCurrency != null)) await calculateMyPayables(accountId, orgId, tx)
 
       await tx.activityLog.create({
         data: {

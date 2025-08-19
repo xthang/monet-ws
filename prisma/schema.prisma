@@ -553,6 +553,9 @@ model Account {
   // Admin related
   notifiedAt DateTime? @db.Timestamptz(3)
 
+  // Business summary
+  payables Json?
+
   // Foreign Key Relations
   organizationMemberships  OrganizationMembership[]
   accountAliases           AccountAlias[]
