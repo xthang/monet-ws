@@ -70,7 +70,7 @@ export default async function handleUpsertGroupMembers(
         memberships.some(
           (m) =>
             m.role === $Enums.GroupMemberRole.admin &&
-            m.account?.subscriptionPlan &&
+            m.account?.subscriptionOrder &&
             m.account.subscriptionEndedAt! > new Date()
         )
 

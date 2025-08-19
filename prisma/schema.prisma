@@ -526,10 +526,10 @@ model Account {
   clerkBanned Boolean?
 
   // Subscription
-  subscriptionPlan           SubscriptionPlan?
-  subscriptionPaymentTransId String?           @db.VarChar(50)
-  subscribeAt                DateTime?         @db.Timestamptz(3)
-  subscriptionEndedAt        DateTime?         @db.Timestamptz(3)
+  subscriptionOrderId        String?   @db.VarChar(50)
+  subscriptionPaymentTransId String?   @db.VarChar(50)
+  subscribeAt                DateTime? @db.Timestamptz(3)
+  subscriptionEndedAt        DateTime? @db.Timestamptz(3)
 
   // Technical Fields
   createdAt         DateTime  @default(now()) @db.Timestamptz(3)
@@ -564,7 +564,8 @@ model Account {
   deletedMoneyRecords      MoneyRecord[]            @relation(name: "MoneyRecord_deletedByAccount")
   createdExpenseDocuments  ExpenseDocument[]        @relation("ExpenseDocument_createdByAccount")
   uploadedExpenseDocuments ExpenseDocument[]        @relation("ExpenseDocument_uploadedByAccount")
-  orders                   Order[]
+  orders                   Order[]                  @relation("Account_Orders")
+  subscriptionOrder        Order?                   @relation("Account_subscriptionOrders", fields: [subscriptionOrderId], references: [id])
   subscriptionPaymentTrans PaymentTransaction?      @relation(fields: [subscriptionPaymentTransId], references: [id])
   contacts                 Contact[]                @relation("Contact_account")
   contacts_contactAccount  Contact[]                @relation("Contact_contactAccount")
@@ -576,6 +577,7 @@ model Account {
   @@unique([no])
   @@unique([authAccountId])
   @@unique([username, isActive])
+  @@unique([subscriptionOrderId])
   @@unique([subscriptionPaymentTransId])
 }
 
@@ -750,6 +752,7 @@ model Organization {
 
   // Foreign Key Relations
   memberships OrganizationMembership[]
+  orders      Order[]
 
   @@unique([no])
 }
@@ -1275,10 +1278,101 @@ model GroupTabSuggestedSettlement {
   @@unique([no])
 }
 
+//
+
+enum product_category {
+  subscription_plan
+}
+
+model product {
+  // Technical Fields
+  id         String    @id @default(cuid()) @db.VarChar(25)
+  created_at DateTime  @default(now()) @db.Timestamptz(3)
+  created_by String    @db.VarChar(50)
+  updated_at DateTime? @updatedAt @db.Timestamptz(3)
+  updated_by String?   @db.VarChar(50)
+  deleted_at DateTime? @db.Timestamptz(3)
+  deleted_by String?   @db.VarChar(50)
+
+  category    product_category
+  code        String           @db.VarChar(100)
+  name        Json
+  description Json?
+  features    Json?
+  priority    Int?
+  attributes  Json?
+
+  order_items      order_item[]
+  product_prices   product_price[]
+  product_external product_external[]
+
+  @@unique([code])
+}
+
+model product_price {
+  // Technical Fields
+  id         String    @id @default(cuid()) @db.VarChar(25)
+  created_at DateTime  @default(now()) @db.Timestamptz(3)
+  created_by String    @db.VarChar(50)
+  updated_at DateTime? @updatedAt @db.Timestamptz(3)
+  updated_by String?   @db.VarChar(50)
+  deleted_at DateTime? @db.Timestamptz(3)
+  deleted_by String?   @db.VarChar(50)
+
+  product_id       String    @db.VarChar(25)
+  currency         Currency
+  listed_price     Decimal
+  discount_amount  Decimal?
+  discount_percent Decimal?
+  price            Decimal
+  started_at       DateTime? @db.Timestamptz(3)
+  ended_at         DateTime? @db.Timestamptz(3)
+  attributes       Json?
+
+  product product @relation(fields: [product_id], references: [id])
+
+  @@index([product_id])
+}
+
+enum PaymentProvider {
+  // global
+  Paypal
+  Stripe
+  // Vietnam
+  NAPAS
+  Momo
+  VNPAY
+  Zalopay
+  ViettelMoney
+  VNPTMoney
+}
+
+model product_external {
+  // Technical Fields
+  id         String    @id @default(cuid()) @db.VarChar(25)
+  created_at DateTime  @default(now()) @db.Timestamptz(3)
+  created_by String    @db.VarChar(50)
+  updated_at DateTime? @updatedAt @db.Timestamptz(3)
+  updated_by String?   @db.VarChar(50)
+  deleted_at DateTime? @db.Timestamptz(3)
+  deleted_by String?   @db.VarChar(50)
+
+  product_id       String          @db.VarChar(50)
+  payment_provider PaymentProvider
+  external_id      String          @db.VarChar(50)
+  attributes       Json?
+
+  product product @relation(fields: [product_id], references: [id])
+
+  @@unique([product_id, payment_provider])
+  @@unique([external_id])
+}
+
 model Order {
   id           String  @id @default(cuid()) @db.VarChar(25)
   no           Int     @default(autoincrement())
-  accountId    String  @db.VarChar(50)
+  accountId    String? @db.VarChar(50)
+  orgId        String? @db.VarChar(50)
   currencyCode String  @db.VarChar(5)
   amount       Decimal
 
@@ -1297,10 +1391,12 @@ model Order {
   deletedAt DateTime? @db.Timestamptz(3)
   deletedBy String?   @db.VarChar(50)
 
-  account             Account              @relation(fields: [accountId], references: [id])
-  // items OrderItem[]
-  paymentTransactions PaymentTransaction[]
-  lastTransaction     PaymentTransaction?  @relation("Order_lastTransaction", fields: [lastTransactionId], references: [id])
+  account              Account?             @relation("Account_Orders", fields: [accountId], references: [id])
+  account_subscription Account?             @relation("Account_subscriptionOrders")
+  organization         Organization?        @relation(fields: [orgId], references: [id])
+  items                order_item[]
+  paymentTransactions  PaymentTransaction[]
+  lastTransaction      PaymentTransaction?  @relation("Order_lastTransaction", fields: [lastTransactionId], references: [id])
 
   @@unique([no])
   @@unique([paymentProvider, paymentRequestId])
@@ -1308,17 +1404,29 @@ model Order {
   @@index([paymentProvider])
 }
 
-enum PaymentProvider {
-  // global
-  Paypal
-  Stripe
-  // Vietnam
-  NAPAS
-  Momo
-  VNPAY
-  Zalopay
-  ViettelMoney
-  VNPTMoney
+model order_item {
+  // Technical Fields
+  id         String    @id @default(cuid()) @db.VarChar(25)
+  created_at DateTime  @default(now()) @db.Timestamptz(3)
+  created_by String    @db.VarChar(50)
+  updated_at DateTime? @updatedAt @db.Timestamptz(3)
+  updated_by String?   @db.VarChar(50)
+  deleted_at DateTime? @db.Timestamptz(3)
+  deleted_by String?   @db.VarChar(50)
+
+  order_id         String   @db.VarChar(25)
+  product_id       String   @db.VarChar(25)
+  quantity         Int?
+  unit_price       Decimal?
+  discount_amount  Decimal?
+  discount_percent Decimal?
+  amount           Decimal?
+
+  order   Order   @relation(fields: [order_id], references: [id])
+  product product @relation(fields: [product_id], references: [id])
+
+  @@unique([order_id, product_id])
+  @@index([order_id])
 }
 
 model PaymentTransaction {

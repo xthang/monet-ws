@@ -16,7 +16,10 @@ export const ACCOUNT_SELECT = {
 
 export const ACCOUNT_SELECT__SUBSCRIPTION = {
   ...ACCOUNT_SELECT,
-  subscriptionPlan: true,
+  subscriptionOrder: {
+    where: { deletedAt: null, deletedBy: null },
+    select: { items: { where: { deleted_at: null, deleted_by: null }, select: { product: { select: { id: true } } } } }
+  },
   subscriptionEndedAt: true
 } as const satisfies Prisma.AccountSelect
 

@@ -88,7 +88,7 @@ export default async function handleGroupMembershipRequestAction(
       const hasProGroupAdmin = memberships.some(
         (m) =>
           m.role === $Enums.GroupMemberRole.admin &&
-          m.account?.subscriptionPlan &&
+          m.account?.subscriptionOrder &&
           m.account.subscriptionEndedAt! > new Date()
       )
 
