@@ -167,6 +167,7 @@ export const MONEY_RECORD_SELECT = {
     select: MONEY_RECORD_PARTAKER_SELECT
   },
   amountPerPartaker: true,
+  order: true,
   createdAt: true,
   createdBy: true,
   updatedAt: true,

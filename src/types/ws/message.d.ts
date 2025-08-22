@@ -72,6 +72,11 @@ type WsMessagePayload =
       data: RequiredProps<WsChatMessage, 'moneyRecord'>
     }
   | {
+      event: 'money-record--updated-many'
+      orgId: string | undefined
+      data: { groupId: string; tabId: string }
+    }
+  | {
       event: 'money-record--expense-docs--upserted'
       orgId: string | undefined
       data: RequiredProps<WsChatMessage, 'moneyRecord'>

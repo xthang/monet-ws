@@ -53,6 +53,7 @@ export enum ActivityLogType {
   moneyRecord_upsert = 'moneyRecord_upsert',
   moneyRecord_create = 'moneyRecord_create',
   moneyRecord_update = 'moneyRecord_update',
+  moneyRecord_updateMany = 'moneyRecord_updateMany',
   moneyRecord_delete = 'moneyRecord_delete',
   groupTabSettlement_settle = 'groupTabSettlement_settle'
 }

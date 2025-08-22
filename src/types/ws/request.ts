@@ -88,6 +88,10 @@ export type WsRequestData =
       data: Ws_MoneyRecord_Update_RequestData
     }
   | {
+      event: 'money-record--update-many'
+      data: Ws_MoneyRecord_UpdateMany_RequestData
+    }
+  | {
       event: 'money-record-partakers--upsert'
       data: Ws_MoneyRecordPartakers_Upsert_RequestData
     }
@@ -156,7 +160,7 @@ export const Ws_GroupMembers_Upsert_RequestData = z.object({
       creates: z
         .array(
           z.intersection(
-            z.object({ order: z.number(), role: z.nativeEnum($Enums.GroupMemberRole).optional() }),
+            z.object({ order: z.number(), role: z.enum($Enums.GroupMemberRole).optional() }),
             AccountOrPlaceholderCreate
           )
         )
@@ -166,7 +170,7 @@ export const Ws_GroupMembers_Upsert_RequestData = z.object({
           z.intersection(
             z.object({
               id: z.string(),
-              role: z.nativeEnum($Enums.GroupMemberRole).nullish(),
+              role: z.enum($Enums.GroupMemberRole).nullish(),
               nickname: z.string().nullish(),
               order: z.number().optional()
             }),
@@ -295,6 +299,14 @@ export const Ws_MoneyRecord_Update_RequestData = z.object({
 })
 
 export type Ws_MoneyRecord_Update_RequestData = z.infer<typeof Ws_MoneyRecord_Update_RequestData>
+
+export const Ws_MoneyRecord_UpdateMany_RequestData = z.object({
+  groupId: z.string(),
+  tabId: z.string(),
+  data: z.array(z.object({ messageId: z.string(), moneyRecordId: z.string(), order: z.int() }))
+})
+
+export type Ws_MoneyRecord_UpdateMany_RequestData = z.infer<typeof Ws_MoneyRecord_UpdateMany_RequestData>
 
 export const Ws_MoneyRecordPartakers_Upsert_RequestData = z.object({
   groupId: z.string(),

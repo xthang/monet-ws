@@ -29,6 +29,7 @@ import handleUpsertMoneyRecordPartakers from './utils/event-handlers/message/mon
 import handleCreateMoneyRecord from './utils/event-handlers/message/money-record/handle-new-money-record'
 import handleSettleUpPayable from './utils/event-handlers/message/money-record/handle-settle-up-payable'
 import handleUpdateMoneyRecord from './utils/event-handlers/message/money-record/handle-update-money-record'
+import handleUpdateMoneyRecords from './utils/event-handlers/message/money-record/handle-update-money-records'
 import handleUpsertExpenseDocuments from './utils/event-handlers/message/money-record/handle-upsert-expense-documents'
 import { transformError } from './utils/ws/transform-error'
 
@@ -201,6 +202,9 @@ async function main() {
                 break
               case 'money-record--update':
                 await handleUpdateMoneyRecord(wss, this, requestId, locale, data)
+                break
+              case 'money-record--update-many':
+                await handleUpdateMoneyRecords(wss, this, requestId, locale, data)
                 break
               case 'money-record-partakers--upsert':
                 await handleUpsertMoneyRecordPartakers(wss, this, requestId, locale, data)

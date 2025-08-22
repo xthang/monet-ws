@@ -71,7 +71,7 @@ export default async function handleUpdateMoneyRecord(
         data: {
           objectType: $Enums.ActivityLogObjectType.group,
           objectId: groupId,
-          type: ActivityLogType.moneyRecord_upsert,
+          type: ActivityLogType.moneyRecord_update,
           details: data,
           detailsVersion: '1.0.0',
           createdBy: accountId

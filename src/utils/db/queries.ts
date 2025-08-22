@@ -178,6 +178,36 @@ export async function findUniqueMessageOrThrow<
   return [membership, message] as const
 }
 
+export async function findMessagesOrThrow<
+  MembershipSelectOrInclude extends { select?: Prisma.GroupMembershipSelect; include?: Prisma.GroupMembershipInclude },
+  MessageSelectOrInclude extends { select?: Prisma.MessageSelect; include?: Prisma.MessageInclude }
+>(
+  prisma: typeof db,
+  groupId: string,
+  tabId: string,
+  messageIds: string[],
+  accountId: string,
+  orgId: string | undefined,
+  selectOrInclude?: {
+    membership?: MembershipSelectOrInclude
+    message?: MessageSelectOrInclude
+  }
+) {
+  const membership = await findUniqueGroupMembershipOrThrow(
+    prisma,
+    groupId,
+    accountId,
+    orgId,
+    selectOrInclude?.membership
+  )
+  const messages = await prisma.message.findMany<{ where: Prisma.MessageWhereInput } & MessageSelectOrInclude>({
+    where: { id: { in: messageIds }, groupId, tabId },
+    ...selectOrInclude?.message
+  } satisfies Prisma.MessageFindManyArgs as any)
+  assert(messages.length === messageIds.length)
+  return [membership, messages] as const
+}
+
 export async function findUniqueMoneyRecordOrThrow<
   MembershipSelectOrInclude extends { select?: Prisma.GroupMembershipSelect; include?: Prisma.GroupMembershipInclude },
   MessageSelectOrInclude extends { select?: Prisma.MessageSelect; include?: Prisma.MessageInclude },
