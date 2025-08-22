@@ -110,9 +110,9 @@ export const Ws_Group_Update_RequestData = z.object({
     name: z.string().nullable().optional(),
     description: z.string().nullable().optional(),
     photo: z.string().nullable().optional(),
-    visibility: z.nativeEnum($Enums.GroupVisibility).optional(),
+    visibility: z.enum($Enums.GroupVisibility).optional(),
     emoji: z.string().optional(),
-    defaultCurrency: z.nativeEnum($Enums.Currency).optional(),
+    defaultCurrency: z.enum($Enums.Currency).optional(),
     note: z.string().nullable().optional()
   })
 })
@@ -214,7 +214,7 @@ export const Ws_GroupTab_Create_RequestData = z.object({
   data: z.object({
     title: z.string(),
     color: z.string().optional(),
-    baseCurrency: z.nativeEnum($Enums.Currency),
+    baseCurrency: z.enum($Enums.Currency),
     order: z.number()
   })
 })
@@ -228,7 +228,7 @@ export const Ws_GroupTab_Update_RequestData = z.object({
       id: z.string(),
       title: z.string().optional(),
       color: z.string().optional(),
-      baseCurrency: z.nativeEnum($Enums.Currency).optional(),
+      baseCurrency: z.enum($Enums.Currency).optional(),
       order: z.number().optional()
     })
   )
@@ -265,12 +265,12 @@ export const Ws_MoneyRecord_Create_RequestData = z.object({
   data: z.object({
     uiId: z.string(),
     time: z.coerce.date().nullable().optional(),
-    type: z.nativeEnum($Enums.MoneyRecordType).optional(),
+    type: z.enum($Enums.MoneyRecordType).optional(),
     description: z.string(),
     note: z.string().nullable().optional(),
     payerMemberId: z.string(),
     amount: z.number().nullable().optional(),
-    currency: z.nativeEnum($Enums.Currency),
+    currency: z.enum($Enums.Currency),
     rate: z.number().nullable().optional(),
     ratePerBase: z.boolean().nullable().optional(),
     amountPerPartaker: z.number().nullable().optional(),
@@ -291,7 +291,7 @@ export const Ws_MoneyRecord_Update_RequestData = z.object({
     note: z.string().nullable().optional(),
     payerMemberId: z.string().optional(),
     amount: z.number().nullable().optional(),
-    currency: z.nativeEnum($Enums.Currency).optional(),
+    currency: z.enum($Enums.Currency).optional(),
     ratePerBase: z.boolean().nullable().optional(),
     rate: z.number().nullable().optional(),
     amountPerPartaker: z.number().nullable().optional()

@@ -8,7 +8,7 @@ import { Ws_MoneyRecord_UpdateMany_RequestData } from '@/types/ws/request'
 import type { WsResponseFullPayload, Ws_MoneyRecord_UpdateMany_Receipt } from '@/types/ws/response'
 
 import { findMessagesOrThrow } from '../../../db/queries'
-import { MESSAGE_SELECT, MONEY_RECORD_SELECT } from '../../../db/query-constants'
+import { MONEY_RECORD_SELECT } from '../../../db/query-constants'
 import { broadcastToGroupMembersExceptMe } from '../../../ws/broadcast-to-group-members-except-me'
 import { transformError } from '../../../ws/transform-error'
 
@@ -34,10 +34,8 @@ export default async function handleUpdateMoneyRecords(
       data.map((it) => it.messageId),
       accountId,
       orgId,
-      {
-        membership: { select: { group: { select: { lastActiveAccounts: true } } } },
-        message: { select: MESSAGE_SELECT }
-      }
+      { membership: { select: { group: { select: { lastActiveAccounts: true } } } } },
+      true
     )
     const { group } = membership
 

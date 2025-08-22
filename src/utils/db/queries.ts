@@ -191,7 +191,8 @@ export async function findMessagesOrThrow<
   selectOrInclude?: {
     membership?: MembershipSelectOrInclude
     message?: MessageSelectOrInclude
-  }
+  },
+  getDeleted: boolean = false
 ) {
   const membership = await findUniqueGroupMembershipOrThrow(
     prisma,
@@ -201,7 +202,12 @@ export async function findMessagesOrThrow<
     selectOrInclude?.membership
   )
   const messages = await prisma.message.findMany<{ where: Prisma.MessageWhereInput } & MessageSelectOrInclude>({
-    where: { id: { in: messageIds }, groupId, tabId },
+    where: {
+      id: { in: messageIds },
+      groupId,
+      tabId,
+      ...(getDeleted ? { deletedAt: undefined, deletedBy: undefined } : undefined)
+    },
     ...selectOrInclude?.message
   } satisfies Prisma.MessageFindManyArgs as any)
   assert(messages.length === messageIds.length)
