@@ -1147,7 +1147,7 @@ model MoneyRecord {
   ratePerBase       Boolean?
   rate              Decimal?
   amountPerPartaker Decimal?
-  order             Int                @default(-1)
+  order             Int
   status            MoneyRecordStatus?
 
   settlementId String? @db.VarChar(50)

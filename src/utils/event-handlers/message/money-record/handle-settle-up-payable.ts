@@ -68,6 +68,14 @@ export default async function handleSettleUpPayable(
         }
       })
 
+      const maxOrder = (
+        await tx.moneyRecord.findFirst({
+          where: { groupId, tabId },
+          orderBy: { order: 'desc' },
+          select: { order: true }
+        })
+      )?.order
+
       const { amount, rate, amountPerPartaker, payerMember, partakers, ...moneyRecord } = await tx.moneyRecord.create({
         data: {
           groupId,
@@ -83,6 +91,7 @@ export default async function handleSettleUpPayable(
 
           partakers: { create: { memberId: payeeMemberId, proportion: 1, createdBy: accountId } },
 
+          order: (maxOrder ?? 0) + 1,
           createdBy: accountId
         },
         select: {

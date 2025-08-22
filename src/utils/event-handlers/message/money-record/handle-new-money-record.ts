@@ -46,12 +46,21 @@ export default async function handleCreateMoneyRecord(
         select: MESSAGE_SELECT
       })
 
+      const maxOrder = (
+        await tx.moneyRecord.findFirst({
+          where: { groupId, tabId },
+          orderBy: { order: 'desc' },
+          select: { order: true }
+        })
+      )?.order
+
       const moneyRecord = await tx.moneyRecord.create({
         data: {
           ...data,
           groupId,
           tabId,
           messageId: createdMsg_.id,
+          order: (maxOrder ?? 0) + 1,
           createdBy: accountId
         },
         select: {
