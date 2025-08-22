@@ -96,6 +96,7 @@ type WsGroup = Pick<Group, 'id'> &
 
 type WsChatMessage = Omit<Message, 'no' | 'uiId'> & {
   moneyRecord?: WsMoneyRecord | null
+  moneyRecordDeleted?: { id: string; order: number }
   deletedByAccount?: AccountBasicInfo | null
 }
 

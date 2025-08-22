@@ -1,4 +1,4 @@
-import { ActivityLogObjectType } from '@prisma/client'
+import { ActivityLogObjectType, type Message } from '@prisma/client'
 import type { WebSocketServer, WebSocket } from 'ws'
 
 import { ActivityLogType } from '@/constants/data'
@@ -6,6 +6,7 @@ import { FILE_SERVICE_SYSTEM_SYNC_API_KEY, FILE_SERVICE_URL } from '@/constants/
 import type { SupportedLocale } from '@/constants/locales'
 import db from '@/db'
 import { WsError, WsErrorCode, WsHttpCode } from '@/types/error'
+import type { WsChatMessage } from '@/types/ws/message'
 import type { Ws_Message_Delete_RequestData } from '@/types/ws/request'
 import type { Ws_Message_Delete_Receipt, WsResponseFullPayload } from '@/types/ws/response'
 import calculateMyPayables from '@/utils/db/calculate-money-record-of-mine'
@@ -32,7 +33,9 @@ export default async function handleDeleteMessage(
     })
 
     const deleted = await db.$transaction(async (tx) => {
-      const deleted = await tx.message.softDelete({
+      const { moneyRecord, ...deleted } = await tx.message.softDelete<
+        Message & { moneyRecord: { id: string; order: number } }
+      >({
         tx,
         where: { id: messageId, groupId, tabId },
         deletedBy: accountId,
@@ -46,7 +49,8 @@ export default async function handleDeleteMessage(
           deletedBy: true,
           deletedByAccount: true,
           sentAt: true,
-          sentBy: true
+          sentBy: true,
+          moneyRecord: { select: { id: true, order: true } }
         }
       })
 
@@ -96,7 +100,7 @@ export default async function handleDeleteMessage(
         data: { lastActivityAt: new Date(), lastActiveAccounts }
       })
 
-      return deleted
+      return { ...deleted, moneyRecordDeleted: moneyRecord } as WsChatMessage
     })
 
     // BROADCAST ...
