@@ -53,7 +53,7 @@ export default async function handleDeleteMessage(
       if (deleted.moneyRecordId) {
         const deletedMoneyRecord = await tx.moneyRecord.softDelete({
           tx,
-          where: { id: deleted.moneyRecordId, groupId_messageId: { groupId, messageId } },
+          where: { id: deleted.moneyRecordId, groupId, messageId },
           deletedBy: accountId
         })
 
