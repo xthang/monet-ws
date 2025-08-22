@@ -48,7 +48,7 @@ export default async function handleCreateMoneyRecord(
 
       const maxOrder = (
         await tx.moneyRecord.findFirst({
-          where: { groupId, tabId },
+          where: { groupId, tabId, deletedAt: undefined, deletedBy: undefined },
           orderBy: { order: 'desc' },
           select: { order: true }
         })

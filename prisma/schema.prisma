@@ -1173,9 +1173,9 @@ model MoneyRecord {
   // settledBy        GroupTabSuggestedSettlement? @relation("MoneyRecord_settledBy", fields: [settledById], references: [id])
   deletedByAccount Account?              @relation("MoneyRecord_deletedByAccount", fields: [deletedBy], references: [id])
 
+  // @@unique([tabId, order])
   @@unique([no])
   @@unique([messageId])
-  @@unique([groupId, messageId])
 }
 
 enum MoneyRecordType {
