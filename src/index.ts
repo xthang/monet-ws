@@ -27,6 +27,7 @@ import handleDeleteMessage from './utils/event-handlers/message/handle-delete-me
 import handleNewMessage from './utils/event-handlers/message/handle-new-message'
 import handleUpsertMoneyRecordPartakers from './utils/event-handlers/message/money-record/handle-bunk-upsert-money-record-partakers'
 import handleCreateMoneyRecord from './utils/event-handlers/message/money-record/handle-new-money-record'
+import handleResetMoneyRecordOrder from './utils/event-handlers/message/money-record/handle-reset-money-record-order'
 import handleSettleUpPayable from './utils/event-handlers/message/money-record/handle-settle-up-payable'
 import handleUpdateMoneyRecord from './utils/event-handlers/message/money-record/handle-update-money-record'
 import handleUpdateMoneyRecords from './utils/event-handlers/message/money-record/handle-update-money-records'
@@ -205,6 +206,9 @@ async function main() {
                 break
               case 'money-record--update-many':
                 await handleUpdateMoneyRecords(wss, this, requestId, locale, data)
+                break
+              case 'money-record--reset-order':
+                await handleResetMoneyRecordOrder(wss, this, requestId, locale, data)
                 break
               case 'money-record-partakers--upsert':
                 await handleUpsertMoneyRecordPartakers(wss, this, requestId, locale, data)

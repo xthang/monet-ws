@@ -29,6 +29,7 @@ type WsResponseData =
   | Ws_Message_Delete_Receipt
   | Ws_MoneyRecord_Update_Receipt
   | Ws_MoneyRecord_UpdateMany_Receipt
+  | Ws_MoneyRecord_ResetOrder_Receipt
   | Ws_Payable_SettleUp_Receipt
 
 type Ws_Group_Update_Receipt = {
@@ -137,6 +138,14 @@ type Ws_MoneyRecord_UpdateMany_Receipt = {
   group_id: string
   tab_id: string
   updated?: { message_id: string; money_record_id: string }[]
+  sent_to?: string[]
+  error?: WsErrorData
+}
+
+type Ws_MoneyRecord_ResetOrder_Receipt = {
+  group_id: string
+  tab_id: string
+  updated?: { count: number }
   sent_to?: string[]
   error?: WsErrorData
 }

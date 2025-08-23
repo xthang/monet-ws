@@ -92,6 +92,10 @@ export type WsRequestData =
       data: Ws_MoneyRecord_UpdateMany_RequestData
     }
   | {
+      event: 'money-record--reset-order'
+      data: Ws_MoneyRecord_ResetOrder_RequestData
+    }
+  | {
       event: 'money-record-partakers--upsert'
       data: Ws_MoneyRecordPartakers_Upsert_RequestData
     }
@@ -307,6 +311,14 @@ export const Ws_MoneyRecord_UpdateMany_RequestData = z.object({
 })
 
 export type Ws_MoneyRecord_UpdateMany_RequestData = z.infer<typeof Ws_MoneyRecord_UpdateMany_RequestData>
+
+export const Ws_MoneyRecord_ResetOrder_RequestData = z.object({
+  groupId: z.string(),
+  tabId: z.string(),
+  data: z.undefined()
+})
+
+export type Ws_MoneyRecord_ResetOrder_RequestData = z.infer<typeof Ws_MoneyRecord_ResetOrder_RequestData>
 
 export const Ws_MoneyRecordPartakers_Upsert_RequestData = z.object({
   groupId: z.string(),

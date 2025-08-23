@@ -1,4 +1,4 @@
-import type { Group, Message, MoneyRecord, MoneyRecordPartaker } from '@prisma/client'
+import type { ExpenseDocument, Group, Message, MoneyRecord, MoneyRecordPartaker } from '@prisma/client'
 
 import type { AccountBasicInfo } from '../db/index'
 import type { ParticipantMember } from '../participant-member'
@@ -73,6 +73,11 @@ type WsMessagePayload =
     }
   | {
       event: 'money-record--updated-many'
+      orgId: string | undefined
+      data: { groupId: string; tabId: string }
+    }
+  | {
+      event: 'money-record--order-reset'
       orgId: string | undefined
       data: { groupId: string; tabId: string }
     }
