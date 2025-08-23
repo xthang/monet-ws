@@ -40,7 +40,7 @@ export default async function handleResetMoneyRecordOrder(
           WHERE "groupId" = ${groupId} AND "tabId" = ${tabId}
         )
         UPDATE "MoneyRecord"
-        SET order = data.order
+        SET "order" = data.order
         FROM data
         WHERE "MoneyRecord"."id" = data.id;`
 

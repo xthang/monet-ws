@@ -315,7 +315,7 @@ export type Ws_MoneyRecord_UpdateMany_RequestData = z.infer<typeof Ws_MoneyRecor
 export const Ws_MoneyRecord_ResetOrder_RequestData = z.object({
   groupId: z.string(),
   tabId: z.string(),
-  data: z.undefined()
+  data: z.undefined().optional()
 })
 
 export type Ws_MoneyRecord_ResetOrder_RequestData = z.infer<typeof Ws_MoneyRecord_ResetOrder_RequestData>
