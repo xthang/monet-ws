@@ -16,5 +16,6 @@
   "exec-2-ok": "node --loader ts-node/esm src/index.ts",
   "exec-3": "babel-node -x .ts -- src/index.ts",
   "exec-4": "SWCRC=true swc-node --loader @swc-node/register/esm --enable-source-maps src/index.ts",
-  "exec": "SWCRC=true node --loader @swc-node/register/esm --enable-source-maps src/index.ts"
+  "exec": "SWCRC=true node --loader @swc-node/register/esm --enable-source-maps src/index.ts",
+  "exec-window": "set SWCRC=true && node --loader @swc-node/register/esm --enable-source-maps src/index.ts"
 }
