@@ -66,7 +66,7 @@ export default async function handleUpsertExpenseDocuments(
       let updated
       if (update?.length)
         for (const { id, ...it } of update)
-          await tx.expenseDocument.update({
+          updated = await tx.expenseDocument.update({
             where: { id, groupId, tabId, moneyRecordId },
             data: { ...it, updatedBy: accountId }
           })
